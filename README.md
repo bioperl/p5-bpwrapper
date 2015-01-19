@@ -1,20 +1,22 @@
-bp-utils
+## bp-utils
 
-== Purpose ==
-Provide convenient command-line access to popular BioPerl classes (e.g., Bio::Seq, Bio::SimpleAlign) so one has no need to write full scripts for routine operations like reverse complement, translate, slice, pick, and delete sequences.
+Provides convenient command-line access to popular BioPerl classes (e.g., Bio::Seq, Bio::SimpleAlign) so one has no need to write full scripts for routine operations like reverse complement, translate, slice, pick, and delete sequences.
 
-== Dependency ==
-BioPerl
+#### Dependency
 
-== Install ==
-git pull;
-setting path:
+* BioPerl
 
-== Help ==
-A help file with use cases is maintained at: http://diverge.hunter.cuny.edu/labwiki/Bioutils
+#### Install
 
-== Developers ==
+* git pull
+* setting path:
 
-Yozen Hernandez
-Pedro Pagan
-Weigang Qiu
+#### Help
+A help file with use cases is maintained at: [Bioutils](http://diverge.hunter.cuny.edu/labwiki/Bioutils)
+
+### Developers
+
+* Yozen Hernandez
+* Pedro Pagan
+* Weigang Qiu
+
