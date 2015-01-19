@@ -77,8 +77,8 @@ my $in = Bio::AlignIO->new(
 
 my $aln = $in->next_aln();
 
-if ($opts{"columnfrom"}) {
-    my ($id, $pos) = split /\s*,\s*/, $opts{"columnfrom"};
+if ($opts{"index"}) {
+    my ($id, $pos) = split /\s*,\s*/, $opts{"index"};
     print $aln->column_from_residue_number($id, $pos), "\n";
     exit;
 }
@@ -123,8 +123,8 @@ my $out = Bio::AlignIO->new( -format => $out_format, -fh => \*STDOUT );
 get_consensus()
     if ( $opts{"consensus"} );
 
-$aln = $aln->set_new_reference( $opts{"ref"} )
-    if ( $opts{"ref"} );
+$aln = $aln->set_new_reference( $opts{"refseq"} )
+    if ( $opts{"refseq"} );
 
 if ( $opts{"uniq"} ) {
     $aln->verbose(1);
@@ -154,7 +154,7 @@ $aln->uppercase()
     if ( $opts{"uppercase"} );
 
 sample_seqs()
-    if ( defined( $opts{"rsample"} ) );    # defined since default value is 0
+    if ( defined( $opts{"resample"} ) );    # defined since default value is 0
 
 # if ( !( defined $opts{"var"} ) && ( defined $opts{"nogaps"} ) ) {
 #     my $new_aln = new Bio::SimpleAlign();
@@ -1265,8 +1265,6 @@ __END__
  Seq6                   VIEELKYEKAAEAFVPNISEDASGKIRLKLMSVKSYKMYN
                         **************:********** *******::***:*
  
-
- 
 =item B<--resample, -R> [n]
  
  Picks n random sequences from input alignment and produces a new alignment
@@ -1307,7 +1305,7 @@ __END__
  Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
                         **** ******:***********************:****
  
-=item B<--ref, -r> 'seq_id'
+=item B<--refseq, -r> 'seq_id'
  
  Change the reference sequence to be seq_id.
  
