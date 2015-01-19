@@ -1,0 +1,1643 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use 5.010;
+use Bio::AlignIO;
+use Bio::SimpleAlign;
+use Bio::LocatableSeq;
+use Getopt::Long qw(:config gnu_getopt);
+use Pod::Usage;
+use Bio::Align::DNAStatistics;
+use Data::Dumper;
+use Bio::Tools::Phylo::Phylip::ProtDist;
+use List::Util qw(shuffle);
+use Bio::PopGen::Utilities;
+use Bio::PopGen::Population;
+
+################################################################################
+# Option parsing
+################################################################################
+my %opts;
+GetOptions(
+    \%opts,
+    "help|h",
+    "man",
+    "input|i=s",
+    "output|o=s",
+    "numseq|n",
+    "slice|s=s",
+    "match|m",
+    "length|l",
+    "pick|p=s",
+    "del|d=s",
+    "refseq|r=s",
+    "codon-view|b:20",    # Optional value, default 20
+    "nogaps|g", 
+    "avgpercentid|a",
+    "window|w:30",
+    "consensus|C:50",
+    "index|I=s",
+    "resample|R:i",    # Optional value, default is floor of num_sequences/2
+    "conblocks|B:6",
+    "listids|L",
+    "uniq|u",
+    "uppercase|U", # make upper case (for DNAStatistics)
+    "shuffle-sites|S",
+    "erasecol|E=s",
+    "var|v"
+  #  "inform|Z",    Retired for now
+  #  "noflatname|F",Retired for now
+  #  "dnadist|D=s", Needs fixing 
+) or pod2usage(2);
+
+pod2usage(1) if $opts{"help"};
+pod2usage( -exitstatus => 0, -verbose => 2 ) if $opts{"man"};
+
+################################################################################
+# Main
+################################################################################
+
+# This is the format that aln-manipulations expects by default
+my $default_format = "clustalw";
+
+my $file = shift
+    || "STDIN";    # If no more arguments were given on the command line,
+
+# assume we're getting input from standard input
+
+my $in_format = $opts{"input"} || $default_format;
+
+my $in = Bio::AlignIO->new(
+    -format => $in_format,
+    ( $file eq "STDIN" )
+    ? ( -fh => \*STDIN )
+    : ( -file => $file )
+);
+
+my $aln = $in->next_aln();
+
+if ($opts{"columnfrom"}) {
+    my ($id, $pos) = split /\s*,\s*/, $opts{"columnfrom"};
+    print $aln->column_from_residue_number($id, $pos), "\n";
+    exit;
+}
+# Avoid unnecessarily opening an output file.
+#### Options which *do not require opening an output FH* go here ####
+remove_gapped_cols_in_one_seq() 
+    if  $opts{"removecol"};
+
+if ( $opts{"length"} ) {
+    say $aln->length();
+    exit;
+}
+
+if ( $opts{"numseq"} ) {
+    say $aln->num_sequences();
+    exit;
+}
+
+if ( $opts{"avgpercentid"} ) {
+    say $aln->average_percentage_identity();
+    exit;
+}
+
+if ( $opts{"listids"} ) {
+    my @ids;
+    foreach my $seq ( $aln->each_seq ) {
+        push @ids, $seq->display_id();
+    }
+    say join "\n", @ids;
+    exit;
+}
+
+if ( $opts{"window"} ) {    # average identity by windows, default to 30
+    avg_id_by_win();
+    exit;
+}
+
+#### Options which *require an output FH* go *after* this ####
+my $out_format = $opts{"output"} || $default_format;
+my $out = Bio::AlignIO->new( -format => $out_format, -fh => \*STDOUT );
+
+get_consensus()
+    if ( $opts{"consensus"} );
+
+$aln = $aln->set_new_reference( $opts{"ref"} )
+    if ( $opts{"ref"} );
+
+if ( $opts{"uniq"} ) {
+    $aln->verbose(1);
+    $aln = $aln->uniq_seq();
+}
+
+del_seqs()
+    if ( $opts{"del"} );
+
+pick_seqs()
+    if ( $opts{"pick"} );
+
+aln_slice()
+    if ( $opts{"slice"} );
+
+#extract_sites()
+remove_gaps()
+    if $opts{"nogaps"};
+
+variable_sites()
+    if $opts{"var"};
+
+$aln->match()
+    if ( $opts{"match"} );
+
+$aln->uppercase()
+    if ( $opts{"uppercase"} );
+
+sample_seqs()
+    if ( defined( $opts{"rsample"} ) );    # defined since default value is 0
+
+# if ( !( defined $opts{"var"} ) && ( defined $opts{"nogaps"} ) ) {
+#     my $new_aln = new Bio::SimpleAlign();
+#     my $length  = $aln->length();
+#     my $ntax    = $aln->num_sequences();
+#     my $flags   = flag_sites($length);
+#
+#     print STDERR "Gap sites:\n";
+#     extract_sites( $new_aln, $length, $ntax, $flags );
+#
+#     $aln = $new_aln;
+# }
+
+if ( $opts{"codon-view"} ) {
+    draw_codon_view($aln);
+}
+
+if ( $opts{"shuffle-sites"} ) {
+    shuffle_sites();
+}
+
+if ( $opts{"conblocks"} ) {
+    conserved_blocks($aln);
+}
+
+if ( $opts{"dnadist"} ) {
+    dnadist();
+}
+# Past this point, $new_aln is assumed to be initialized
+# by some option. Check if it is, and if not, set it to
+# be equal to $aln
+#$new_aln = $aln if ( !$new_aln );
+
+unless ( $opts{"noflatname"} ) {
+    $aln->set_displayname_flat();
+}
+
+$out->write_aln($aln);
+
+exit;
+
+################################################################################
+# Subroutines
+################################################################################
+
+sub remove_gapped_cols_in_one_seq {
+    my $id = $opts{"removecol"};
+    my $nmatch=0;
+    my $ref_seq;
+    foreach my $seq ($aln->each_seq) {
+	if ($seq->id() =~ /$id/) {
+	    $nmatch++;
+	    $ref_seq = $seq;
+	}
+    }
+    die "Quit. No ref seq found or more than one ref seq!\n" if !$nmatch || $nmatch > 1;
+    my ($ct_gap, $ref) = &_get_gaps($ref_seq);
+    warn "Original length: " . $aln->length() . "\n";
+    if ($ct_gap) {
+	my @args;
+	foreach my $pos (@$ref) {
+	    push @args, [$pos, $pos];
+	}
+	$aln = $aln->remove_columns(@args);
+	warn "New length: " . $aln->length() . "\n";
+    } else {
+	warn "No gap: " . $aln->length() . "\n";
+    }
+}
+
+sub _get_gaps {
+    my $seq = shift;
+    my $seq_str = $seq->seq();
+    my @chars = split //, $seq_str;
+    my $cts = 0;
+    my @pos=();
+    for (my $i=0; $i<=$#chars; $i++) {
+	if ( $chars[$i] eq '-' ) { 
+	    push @pos, $i;
+	    $cts++;
+	}
+    }
+    warn "Found " . scalar(@pos) ." gaps at (@pos) on " . $seq->id() . "\n";
+    return ($cts, \@pos);
+}
+
+sub shuffle_sites {
+    my $new_aln = Bio::SimpleAlign->new();
+    my $len=$aln->length();
+    my $nseq = $aln->num_sequences();
+    my %seq_ids;
+
+    die "Alignment contains only one sequence: $file\n" if $nseq < 2;
+
+    my @sites;
+    for (my $i=1; $i<=$len; $i++) {
+	my ($ref_bases, $ref_ids) = &_get_a_site($i);
+	%seq_ids = %{$ref_ids};
+	push @sites, $ref_bases;
+    }
+
+    @sites = shuffle( @sites );
+
+    my @order;
+    foreach my $site (@sites) {
+	my $char = $site->[0];
+	push @order, $char->{pos};
+    }
+    print STDERR "Shuffled site order:\t", join(",", @order);
+    print STDERR "\n";
+
+    foreach my $id ( sort keys %seq_ids ) {
+	my $seq_str;
+	foreach my $aln_site ( @sites ) {
+	    foreach my $char (@$aln_site) {
+		$seq_str .= $char->{nt} if $char->{id} eq $id;
+	    }
+	}
+
+	my $loc_seq = Bio::LocatableSeq->new(
+	    -seq   => $seq_str,
+	    -id    => $id,
+	    -start => 1,
+	    );	
+
+        my $end = $loc_seq->end;
+        $loc_seq->end($end);
+
+	$new_aln->add_seq($loc_seq);
+    }
+    $aln = $new_aln;
+}
+
+sub conserved_blocks {
+    my $len=$aln->length();
+    my $nseq = $aln->num_sequences();
+    my $min_block_size = $opts{"conblocks"};
+    my %seq_ids;
+
+    die "Alignment contains only one sequence: $file\n" if $nseq < 2;
+
+    my (@blocks, $block);
+    my $in_block=0;
+    for (my $i=1; $i<=$len; $i++) {
+	my ($ref_bases, $ref_ids) = &_get_a_site($i);
+	%seq_ids = %{$ref_ids};
+	my $is_constant = &_is_constant( &_paste_nt($ref_bases) );
+	if ($in_block) { # previous site is a contant one
+	    if ($is_constant) {
+		$block->{length} ++;
+		my @sites = @{$block->{sites}};
+		push @sites, $ref_bases;
+		$block->{sites} = \@sites;
+		if ( $i == $len ) {
+		    warn "Leaving a constant block at the end of alignment: $i\n";
+		    push @blocks, $block if $block->{length} >= $min_block_size;
+		} 
+	    } else {
+	    $in_block = 0;
+	    push @blocks, $block if $block->{length} >= $min_block_size;
+	    warn "Leaving a constant block at $i\n";
+	    }
+	} else { # previous site not a constant one
+	    if ($is_constant) { # entering a block
+		warn "Entering a constant block at site $i ...\n";
+	    $in_block=1;
+		$block = { # start a new block
+		    start => $i,
+		    length => 1,
+		    num_seq => $nseq,
+		    sites => [ ( $ref_bases ) ],
+		};
+	    }
+	}
+    }
+    
+    foreach my $bl (@blocks) {
+	my $out = Bio::AlignIO->new(-file=> ">$file" . ".slice-". $bl->{start} . ".aln" , -format=>'clustalw');
+	my $block_aln = Bio::SimpleAlign->new();
+	foreach my $id ( sort keys %seq_ids ) {
+	    my ($seq_str, $ungapped_start, $ungapped_end);
+	    my @sites = @{ $bl->{sites} };
+	    for (my $i = 0; $i <= $#sites; $i++) {
+		my $ref_chars = $sites[$i];
+		foreach my $char (@$ref_chars) {
+		    next unless $char->{id} eq $id;
+		    $ungapped_start = $char->{ungapped_pos} if $i == 0;
+		    $ungapped_end = $char->{ungapped_pos} if $i == $#sites;
+		    $seq_str .= $char->{nt}; 
+		}
+	    }
+
+	    my $loc_seq = Bio::LocatableSeq->new(
+		-seq   => $seq_str,
+		-id    => $id,
+		-start => $ungapped_start,
+		-end => $ungapped_end,
+		);
+	    
+	    $block_aln->add_seq($loc_seq);
+	}
+	$out->write_aln($block_aln);
+    }
+    exit;
+}
+
+sub _paste_nt {
+    my $ref = shift;
+    my @nts;
+    foreach my $char ( @$ref ) {
+	push @nts, $char->{nt};
+    }
+    return \@nts;
+}
+
+sub _get_a_site {
+    my $pos = shift;
+    my (@chars, %seq_ids);
+
+    foreach my $seq ( $aln->each_seq ) {
+	my $ungapped = 0;
+	$seq_ids{ $seq->id() }++;
+	my $state;
+	for (my $i = 1; $i <= $pos; $i++) {
+	    $state = $seq->subseq($i, $i);
+	    $ungapped++ unless $state eq '-';
+	}
+
+	push @chars, {
+	    nt => $seq->subseq( $pos, $pos ),
+	    ungapped_pos => ($state eq '-') ? "gap" : $ungapped++,
+	    id => $seq->id(),
+	    pos => $pos,
+	};
+    }
+
+    return (\@chars, \%seq_ids);
+}
+
+sub _is_constant {
+    my %count;
+    my $ref   = shift;
+    my @array = @$ref;
+    my $constant = 1;
+
+    foreach my $char (@array) {
+        $count{$char}++;
+    }
+
+    my @keys = keys %count;
+
+    if ( @keys > 1 ) {  
+        $constant = 0;
+    }
+
+    return $constant;
+
+}
+
+sub variable_sites {
+    $aln = $aln->remove_gaps();
+    my $new_aln = Bio::SimpleAlign->new();
+    my $len=$aln->length();
+    my (%seq_ids, @sites);
+    
+# Goes through each column and takes variable ones
+    for (my $i=1; $i<=$len; $i++)
+        {
+            my ($ref_bases, $ref_ids) = &_get_a_site($i);
+            %seq_ids = %{$ref_ids};
+            my $is_constant = &_is_constant( &_paste_nt($ref_bases) );
+            if ($is_constant < 1)
+            {
+                push @sites, $ref_bases;
+            }
+        }
+
+# Recreate the object for output
+    foreach my $id ( sort keys %seq_ids )
+    {
+        my $seq_str;
+            foreach my $aln_site ( @sites )
+            {
+                foreach my $char (@$aln_site)
+                {
+                    $seq_str .= $char->{nt} if $char->{id} eq $id;
+                }
+            }
+
+        my $loc_seq = Bio::LocatableSeq->new(
+            -seq   => $seq_str,
+            -id    => $id,
+            -start => 1,
+            );
+
+        my $end = $loc_seq->end;
+        $loc_seq->end($end);
+        $new_aln->add_seq($loc_seq);
+        
+    }
+    
+    $aln = $new_aln;
+    
+}
+
+sub remove_gaps {
+    $aln= $aln->remove_gaps();
+}
+
+sub dnadist {
+    my $method = $opts{"dnadist"} || "Uncorrected";
+    my $stats = Bio::Align::DNAStatistics->new();
+    my $dist = $stats->distance(-align => $aln, 
+				-method => $method);
+    print $dist->print_matrix;
+    warn "Available methods:\n";
+    foreach  ($stats->available_distance_methods() ) {
+	warn "$_\n";
+    }
+}
+
+
+sub get_consensus {
+    my $percent_threshold = $opts{"consensus"};
+    my $consense          = Bio::LocatableSeq->new(
+        -seq   => $aln->consensus_string($percent_threshold),
+        -id    => "Consensus_$percent_threshold",
+        -start => 1,
+        -end   => $aln->length()
+    );
+    $aln->add_seq($consense);
+}
+
+# Function: _del_or_pick
+# Desc: Internal function. Generic code for either picking or deleting a
+#  sequence from an alignment. Used by del_seqs and pick_seqs.
+# Input:
+#   $id_list, a user-supplied string consisting of comma-separated seq id values
+#   $method, the name of the Bio::SimpleAlign method to use (remove_seq or add_seq)
+#   $need_new, a flag indicating whether a new Bio::SimpleAlign object is needed
+# Returns: Nothing; uses the $aln global variable
+
+sub _del_or_pick {
+    my ( $id_list, $method, $need_new ) = @_;
+    my $new_aln
+        = ($need_new)
+        ? Bio::SimpleAlign->new()
+        : $aln;
+
+    my @selected = split( /\s*,\s*/, $id_list );
+    foreach my $seq ( $aln->each_seq ) {
+        my $seqid = $seq->display_id();
+        foreach my $id (@selected) {
+            next unless $seqid eq $id;
+            $new_aln->$method($seq);
+        }
+    }
+    $aln = $new_aln if ( $need_new == 1 );
+}
+
+sub del_seqs {
+    _del_or_pick( $opts{"del"}, "remove_seq", 0 );
+}
+
+sub pick_seqs {
+    _del_or_pick( $opts{"pick"}, "add_seq", 1 );
+}
+
+sub aln_slice {    # get alignment slice
+    my ( $begin, $end ) = split( /\s*,\s*/, $opts{"slice"} );
+
+    # Allow for one parameter to be omitted. Default $begin to the
+    # beginning of the alignment, and $end to the end.
+    $begin = 1            if ( $begin eq "-" );
+    $end   = $aln->length if ( $end   eq "-" );
+    $aln = $aln->slice( $begin, $end );
+}
+
+sub avg_id_by_win {
+    my $window_sz = $opts{"window"};
+
+    for my $i ( 1 .. ( $aln->length() - $window_sz + 1 ) ) {
+        my $slice = $aln->slice( $i, $i + $window_sz - 1 );
+        my $pi = ( 100 - $slice->average_percentage_identity() ) / 100;
+        printf "%d\t%d\t%.4f\n", $i, $i + $window_sz - 1, $pi;
+    }
+}
+
+sub column_status {
+    my %count;
+    my $ref   = shift;
+    my @array = @$ref;
+    my $st    = {
+        gap         => 0,
+        informative => 1,
+        constant    => 1
+    };
+
+    foreach my $char (@array) {
+        $count{$char}++;
+        $st->{gap} = 1 if $char =~ /[\-\?]/;
+    }
+
+    my @keys = keys %count;
+
+    foreach my $ct ( values %count ) {
+        if ( $ct < 2 ) {
+            $st->{informative} = 0;    # including gap
+            last;
+        }
+    }
+
+    if ( @keys > 1 ) {                 # variable (including gaps)
+        $st->{constant} = 0;
+    }
+
+    return $st;
+}
+
+sub cal_A {
+    my $num = shift;
+    my $A   = 0;
+
+    for my $i ( 1 .. $num - 1 ) {
+        $A += 1 / $i;
+    }
+
+    return $A;
+}
+
+=begin DEL
+
+sub extract_sites {
+    my $new_aln = new Bio::SimpleAlign();
+    my $length  = $aln->length();
+    my $ntax    = $aln->num_sequences();
+    my $flags   = flag_sites($length);
+    my $gaps_only
+        = ( defined( $opts{"nogaps"} ) && !defined( $opts{"var"} ) );
+    my $msg = ($gaps_only) ? "Gap" : "Variable";
+
+    warn "$msg sites:\n";
+
+    # Produce consistent output: If option nogaps is given, we print
+    # the list of gap sites, but the alignment has them *removed*.
+    my $keep_bit = ($gaps_only)
+        ? "0"     # If removing gaps and not extracting variable sites
+        : "1";    # If extracting variable sites.
+
+    # Print the gap or variable site (wherever the flag is '1')
+    for ( my $i = 0; $i < $length; $i++ ) {
+        print STDERR $i + 1, "\t" if substr( $flags, $i, 1 );
+    }
+
+    print STDERR "\n";
+    for ( my $i = 1; $i <= $ntax; $i++ ) {    # extract variable sites
+        my $seq     = $aln->get_seq_by_pos($i);
+        my $id      = $seq->display_id;
+        my $seq_str = $seq->seq();
+
+# Use $flag_str as a mask to avoid looping and calling Bio::Seq->substr() each time
+        $seq_str
+            =~ s/(.)/substr($flags, pos $seq_str, 1) eq $keep_bit ? $1 : ''/eg;
+
+       # Read: For each character in $seq_str, if there is a $keep_bit in that
+       # same position in the mask, then leave the character alone. Otherwise,
+       # replace with '' (removing the char and truncating $seq_str).
+
+        my $loc_seq = Bio::LocatableSeq->new(
+            -seq   => $seq_str,
+            -id    => $id,
+            -start => 1
+        );
+
+        #### This is a workaround to some strange behavior:####
+    # Let LocatableSeq::end calculate the appropriate end value. Then manually
+    # set it so that other functions, like match(), do not break.
+        my $end = $loc_seq->end;
+        $loc_seq->end($end);
+
+        #print Dumper ($loc_seq);
+        $new_aln->add_seq($loc_seq);
+    }
+
+    $aln = $new_aln;
+}
+
+=end DEL
+
+=cut
+
+sub flag_sites {
+    my $length = shift;
+    my $flags;
+    for ( my $i = 1; $i <= $length; $i++ ) {    # 2. flag the variable sites
+        my @char = ();
+        foreach my $seq ( $aln->each_seq ) {
+            push @char, $seq->subseq( $i, $i );
+        }
+
+        my $status = column_status( \@char );
+
+        # Omitting gaps, not interested in variable sites
+        if ( $opts{"nogaps"} && !$opts{"var"} ) {
+            if   ( $status->{gap} ) { $flags .= 1; }
+            else                    { $flags .= 0; }
+        }
+        else {    # If extracting variable sites, but excluding gaps
+            if ( $status->{gap} && $opts{"nogaps"} ) { $flags .= 0; }
+            elsif ( $status->{constant} ) { $flags .= 0; }
+            elsif ( !$status->{informative} && $opts{"inform"} ) {
+                $flags .= 0;
+            }
+            else { $flags .= 1; }
+        }
+    }
+
+    return $flags;
+}
+
+sub sample_seqs {
+
+# If option was given with no number, take the integer part of num_sequences/2
+# Its OK to use int() here (especially since we want to round towards 0)
+    my $num_seqs = $aln->num_sequences;
+    my $sample_size
+        = ( $opts{"rsample"} == 0 ) ? int( $num_seqs / 2 ) : $opts{"rsample"};
+
+    die
+        "Error: sample size ($sample_size) exceeds number of sequences in alignment: ($num_seqs)"
+        if ( $sample_size > $num_seqs );
+
+    # Use Reservoir Sampling to pick random sequences.
+    my @sampled = ( 1 .. $sample_size );
+    for my $j ( $sample_size + 1 .. $num_seqs ) {
+        $sampled[ rand(@sampled) ] = $j
+            if ( rand() <= ( $sample_size / $j ) );
+    }
+
+    warn "Sampled the following sequences: @sampled\n\n";
+    my $tmp_aln = $aln->select_noncont(@sampled);
+    $aln = $tmp_aln;
+}
+
+# For use in draw_codon_view
+# Pad display ids with a minimum of 4 spaces using the longest display id
+# as a reference point for length. Pass-by-reference, so don't return array.
+# Return length of longest id plus padding.
+sub pad_display_id {
+    my $display_id = shift;
+    my $max_len    = shift;
+
+    my $padding = ( $max_len - length($display_id) );
+    $display_id .= " " x $padding;
+
+    return $display_id;
+}
+
+# Used by draw_codon_view. Calculates position of final position in alinged
+# block, prints the current position there.
+sub print_positions {
+    my $nuc_count    = shift;
+    my $aln_length   = shift;
+    my $block_length = 3 * $opts{"codon-view"};
+    my $max_id_len   = shift;
+    my $num_spaces   = 0;
+
+    my $start_pos = $nuc_count + 1;
+    my $last_pos  = 0;
+    my $offset    = 0;
+    if ( ( $nuc_count + $block_length ) >= $aln_length ) {
+        $last_pos = $aln_length;
+        my $diff = $aln_length - $nuc_count;
+
+        # $diff % 3 gives the number of extra non-codon nucleotides
+        $offset = $diff + ($diff) / 3 + ( $diff % 3 ) - 2;
+    }
+    else {
+        $last_pos = $nuc_count + $block_length;
+        $offset = $block_length + ($block_length) / 3 - 2;
+    }
+
+    # -1 since we are also printing the starting position.
+    $num_spaces += $offset - 1;
+
+ # $last_pos_len = length of last_pos treated as a string (ie length(335) = 3)
+    my $last_pos_len = length($last_pos);
+
+    # Pad $start_pos with $num_blanks blanks if it is shorter than $last_pos
+    my $num_blanks = $last_pos_len - length($start_pos);
+    $start_pos = " " x $num_blanks . "$start_pos"
+        if ( length($start_pos) < $last_pos_len );
+
+    for ( my $i = 0; $i < $last_pos_len; $i++ ) {
+        print " " x $max_id_len
+            . substr( $start_pos, $i, 1 )
+            . " " x ($num_spaces)
+            . substr( $last_pos, $i, 1 ) . "\n";
+    }
+}
+
+sub find_max_id_len {
+    my $seqs = shift;
+    my @sorted_by_length
+        = sort { length $a->display_id <=> length $b->display_id } @$seqs;
+
+    return length $sorted_by_length[-1]->display_id;
+}
+
+# Draw a CLUSTALW-like alignment to standard out. Strange formatting errors when
+# alignment length not divisible by 3. Does not output an alignment in a
+# traditional format.
+
+sub draw_codon_view {
+    my $aln = shift;
+    # Is 20 by default. Blocks are measured in CODONS, so mult by 3
+    my $block_length = 3 * $opts{"codon-view"};
+    my $aln_length   = $aln->length();
+    my $num_seqs     = $aln->num_sequences();
+    my $min_pad = 4;    # Minimum padding between sequence and ID
+    my $seq_matrix;
+    my @seqs = ( $aln->each_seq );
+    my @display_ids;
+
+    # Find longest id length, add id/sequence padding
+    my $max_id_len = find_max_id_len( \@seqs );
+
+    # id length includes padding
+    $max_id_len += $min_pad;
+
+    # Extract display_ids and sequences from AlignIO object.
+    foreach my $seq (@seqs) {
+        my @seq_str = split '', $seq->seq();
+        push @$seq_matrix, \@seq_str;
+        push @display_ids, $seq->display_id;
+
+       # Pad display ids so that space between them and sequence is consistent
+        $display_ids[-1] = pad_display_id( $display_ids[-1], $max_id_len );
+    }
+
+    my $nuc_count = 0;
+
+    # Loop over each sequence.
+    for ( my $i = 0; $i < $num_seqs; $i++ ) {
+
+        # Print count at end of block when we are starting out a new block
+        if ( $i == 0 ) {
+            print_positions( $nuc_count, $aln_length, $max_id_len );
+        }
+
+        # Loop over nucleotides
+        for ( my $j = $nuc_count; $j < $aln_length; $j++ ) {
+
+       # When we're starting, or starting a new block, print the display id's.
+            print $display_ids[$i] if ( $j % $block_length == 0 );
+
+            print "$$seq_matrix[$i]->[$j]";
+            print " " if ( ( ( $j + 1 ) % 3 ) == 0 );
+
+            # When we've reached the end of the alignment or a block
+            if (   ( $j + 1 == $aln_length )
+                || ( ( ( $j + 1 ) % $block_length ) == 0 ) )
+            {
+
+              # If this is the last sequence, save the ending (next) position.
+                if ( $i + 1 == $num_seqs ) {
+                    $nuc_count = $j + 1;
+                }
+
+                # Otherwise, start on the next line.
+                else {
+                    print "\n";
+                }
+
+                # In either case, need to exit this loop.
+                last;
+            }
+        }    # END for LOOP OVER NUCLEOTIDES
+
+     # Finish if we've reached the end of the alignment, and the last sequence
+        if ( ( $i + 1 == $num_seqs ) && ( $nuc_count == $aln_length ) ) {
+            print "\n";
+            last;
+        }
+
+      # If we haven't reached the end of the alignment, but we've run through
+      # all sequences, print final block position and start at first sequence.
+        elsif ( ( $i + 1 == $num_seqs ) && ( $nuc_count < $aln_length ) ) {
+            $i = -1
+                ;  # Always increments after a loop; next increment sets to 0.
+            print "\n\n";
+        }
+    }    # END for LOOP OVER SEQUENCES
+
+  # Can't let script terminate normally: produces traditional alignment output
+    exit 0;
+}
+
+################# POD Documentation ############
+
+__END__
+
+=head1 NAME
+ 
+ bioaln - Alignment tools based on BioPerl
+ 
+=head1 SYNOPSIS
+
+=over 4
+
+=item B<bioaln> [options] [alignment file]
+ 
+=back
+ 
+=head1 DESCRIPTION
+
+=over 4
+
+=item B<bioaln> will read an alignment file and
+ do slice, display match characters, etc. By default, B<bioaln>
+ will assume both the input and the output are in clustalw format.
+ 
+=back
+ 
+=head1 OPTIONS and EXAMPLES
+
+=over 4
+
+=item B<--help, -h>
+ 
+ Print a brief help message and exits.
+ 
+=item B<--man>
+ 
+ Prints the manual page and exits.
+ 
+=item B<--input, -i> 'format'
+ 
+ Input file format. By default, this is 'clustalw'.
+ 
+=item B<--output, -o> 'format'
+ 
+ Output file format. By default, this is 'clustalw'.
+ 
+=item B<--numseq, -n>
+ 
+ Get number of sequences in alignment
+ 
+ Usage: bioaln -n [alignment_file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -n input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ Seq2                   ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+ Seq3                   ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+ Seq4                   ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+ Seq5                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ Seq6                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                        ******** ** * *** *************** **** ***  *****
+ 
+ OUTPUT:
+ 
+ 6
+ 
+=item B<--lengths, -l>
+ 
+ Print alignment length.
+ 
+ Usage: bioaln -l [alignment_file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -l input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+ Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+ Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+ Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                 ******** ** * *** *************** **** ***  *****
+ 
+ OUTPUT:
+ 
+ 50
+ 
+=item B<--match, -m>
+ 
+ Go through all columns and change residues identical to the reference sequence
+ to be the match character, '.'
+ 
+ Usage: bioaln -m [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -m input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        **:* ******:**********:************:****
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   ..K.T.................S............H....
+ Seq3                   ..K...................S.................
+ Seq4                   ..K...................S.................
+ Seq5                   ..K...................S.................
+ Seq6                   ..K........V..........S.................
+                          :                   :
+
+=item B<--slice, -s> 'min,max'
+ 
+ Get a slice of the alignment.
+ 
+ Using a '-' character in the first or second position defaults to the beginning or end, respectively.
+ Therefore specifying -s'-,-' is the same as grabbing the whole alignment.
+ 
+ Usage: bioaln -s'-,-' [alignment file]
+ 
+ -s'20,80' or --slice'20,80' or -s='20,80' or --slice='20,80'   Slice from position 20 to 80, inclusive.
+ -s'-,80'  Slice from beginning up to, and including position 80
+ -s'20,-'  Slice from position 20 up to, and including, the end of the alignment
+ 
+ NOTE: --slice'-,x' (where x is '-' or a position) does NOT work. Use --slice='-,x' instead.
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -s'-,10' input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        **:* ******:**********:************:****
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   MNNKIYSIEE
+ Seq2                   MNKKTYSIEE
+ Seq3                   MNKKIYSIEE
+ Seq4                   MNKKIYSIEE
+ Seq5                   MNKKIYSIEE
+ Seq6                   MNKKIYSIEE
+                        **:* *****
+ 
+=item B<--pick, -p> 'seq_id_1, seq_id_2, ... , seq_id_n'
+ 
+ Pick sequences based on their id. Option takes a comma-separated list of ids.
+ 
+ Usage: bioaln -p [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -p 'Seq1,Seq2' input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        **:* ******:**********:************:****
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+                        **:* *****************:************:****
+ 
+=item B<--del, -d> 'seq_id_1, seq_id_2, ... , seq_id_n'
+ 
+ Delete sequences based on their id. Option takes a comma-separated list of ids.
+ 
+ Usage: bioaln -d [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -d 'Seq1,Seq2' input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        **:* ******:**********:************:****
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        ***********:****************************
+
+=item B<--avgpercentid, -a>
+ 
+ Calculate the average percent identity of an alignment. Returns the value alone.
+ 
+ Usage: bioaln -a [input_alignment]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -a input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ Seq2                   ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+ Seq3                   ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+ Seq4                   ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+ Seq5                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ Seq6                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                        ******** ** * *** *************** **** ***  *****
+ 
+ OUTPUT:
+ 
+ 93.3425797503467
+ 
+ 
+=item B<--uniq, -u>
+ 
+ Extract the alignment of unique sequences.
+ 
+ Usage: bioaln -u [input_alignment]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -u input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ seq1                   ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ seq11                  ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ seq2                   ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+ seq3                   ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+ seq4                   ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+ seq5                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ seq7                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ seq6                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                        ******** ** * *** *************** **** ***  *****
+ 
+ OUTPUT:
+ 
+ seq1	ST1
+ seq11	ST1
+ seq2	ST2
+ seq3	ST3
+ seq4	ST4
+ seq5	ST5
+ seq7	ST5
+ seq6	ST6
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ ST1                    ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ ST2                    ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+ ST3                    ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+ ST4                    ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+ ST5                    ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ ST6                    ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                        ******** ** * *** *************** **** ***  *****
+
+=item B<--uppercase, -U>
+ 
+ Make an uppercase alignment.
+ 
+ Usage: bioaln -U [input_alignment]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -U  input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ seq1            atgaataaaaagatatatagcatagaagaattagtagataaa--ataagt
+ seq1            atgaataaaaagatatatagcatagaagaattagtagataaa--ataagt
+ seq2            atgaataaaaagatatacagcatagaagaattaatagataaacgataagc
+ seq5            atgaataaaaaaatatatagcatagaagaattaatagacaaac-ataagc
+ seq3            atgaataataaaatatacagcatagaagaattaatagataaa--ataagc
+ seq4            atgaataaaaaaacatatagcatagaagaattaatagataaa--ataagt
+ seq5            atgaataaaaaaatatatagcatagaagaattaatagacaaac-ataagc
+ seq6            atgaataaaaaaatatatagcatagaagaattaatagacaaa--ataagt
+                 ******** ** * *** *************** **** ***  *****
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+ Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+ Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+ Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                 ******** ** * *** *************** **** ***  *****
+ 
+=item B<--listids, -L>
+ 
+ List all sequence ids
+ 
+ Usage: bioaln -L [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -L input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        **:* ******:**********:************:****
+ 
+ OUTPUT:
+ 
+ Seq1
+ Seq2
+ Seq3
+ Seq4
+ Seq5
+ Seq6
+ 
+=item B<--shuffle-sites, -S>
+ 
+ Make a shuffled (not bootstraped) alignment
+ 
+ Usage: bioaln -S [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -S input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        **:* ******:**********:************:****
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVNAYKMYN
+ Seq2                   VIEELKYEKAAEAFIPNISEDASGKTRLKLMSVKSYKMHN
+ Seq3                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVKSYKMYN
+ Seq4                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVKSYKMYN
+ Seq5                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVKSYKMYN
+ Seq6                   VIEELKYEKAAEAFVPNISEDASGKIRLKLMSVKSYKMYN
+                        **************:********** *******::***:*
+ 
+
+ 
+=item B<--resample, -R> [n]
+ 
+ Picks n random sequences from input alignment and produces a new alignment
+ consisting of those sequences.
+ 
+ If n is not given, default is the number of sequences in alignment divided by 2,
+ rounded down.
+ 
+ This functionality uses an implementation of Reservoir Sampling, based on the
+ algorithm found here:
+ http://blogs.msdn.com/b/spt/archive/2008/02/05/reservoir-sampling.aspx
+ 
+ Usage: bioaln -R[n][alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -R4 input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        **:* ******:**********:************:****
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        **** ******:***********************:****
+ 
+=item B<--ref, -r> 'seq_id'
+ 
+ Change the reference sequence to be seq_id.
+ 
+ Usage: bioaln -r 'seq_id' [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -r 'Seq3' input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        **:* ******:**********:************:****
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        **:* ******:**********:************:****
+ 
+=item B<--consensus, -C> 'percent'
+ 
+ Add a consensus sequence to the end of the alignment with a certain threshold
+ percent and id Consensus_<percent>. By default percent is 50.
+ 
+ Usage: bioaln -C 'seq_id' [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -C '90' input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                        **:* ******:**********:************:****
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1:                  MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+ Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+ Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+ Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+ Consensus_90           MN?K?YSIEEL?DKISMPVVAY?GEAKSFLREALE?AKNK
+                        ** * ****** ********** ************ ****
+ 
+=item B<--codon-view, -c>
+ 
+ Prints a CLUSTALW-like alignment, but separated by codons. Intended for
+ use with DNA sequences. Block-final position numbers are printed at the end of
+ every alignment block at the point of wrapping, and block-initial counts appear
+ over first nucleotide in a block.
+ 
+ If invoked as --codon-view=n where n is some number, will print n codons per
+ line. Other normally stackable options, such as -m, can be used alongside it.
+ If piping through bioaln, ensure codon-view is used in the last
+ invocation.
+ 
+ Usage: bioaln -c [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -c input_DNA.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1    ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAAATAAGC
+ Seq2    ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAAATAAGC
+ Seq3    ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAAATAAGT
+ Seq4    ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAAATAAGT
+ Seq5    ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGC
+ Seq6    ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGT
+         ******** ** * *** *************** **** ********
+ 
+ OUTPUT:
+                                                                       4
+         1                                                             8
+ Seq1    ATG AAT AAA AAG ATA TAC AGC ATA GAA GAA TTA ATA GAT AAA ATA AGC
+ Seq2    ATG AAT AAT AAA ATA TAC AGC ATA GAA GAA TTA ATA GAT AAA ATA AGC
+ Seq3    ATG AAT AAA AAG ATA TAT AGC ATA GAA GAA TTA GTA GAT AAA ATA AGT
+ Seq4    ATG AAT AAA AAA ACA TAT AGC ATA GAA GAA TTA ATA GAT AAA ATA AGT
+ Seq5    ATG AAT AAA AAA ATA TAT AGC ATA GAA GAA TTA ATA GAC AAA ATA AGC
+ Seq6    ATG AAT AAA AAA ATA TAT AGC ATA GAA GAA TTA ATA GAC AAA ATA AGT
+ 
+=item B<--nogaps, -g>
+ 
+ Remove gaps (and returns an de-gapped alignment).
+ 
+ Usage: bioaln -g [alignment file]
+ 
+ EXAMPLE:
+ 
+ bioaln -g input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+ Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+ Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+ Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                 ******** ** * *** *************** **** ***  *****
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAAATAAGT
+ Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAAATAAGC
+ Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAAATAAGC
+ Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAAATAAGT
+ Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGC
+ Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGT
+                 ******** ** * *** *************** **** ********
+ 
+=item B<--conblocks, -B>
+ 
+ Extract perfectly conserved blocks (PCBs, gap excluded) from an alignment,
+ each to a new clustalw file. Default minimum length of PCB is 6 sites.
+ 
+ Usage: bioaln -B [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -B input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+ Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+ Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+ Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                 ******** ** * *** *************** **** ***  *****
+ 
+ OUTPUT:  files containing perfectly conserved blocks
+ 
+ nuc.aln.slice-1.aln : file contents below. Site positions indicated after the '/'
+ 
+ Seq1/1-8               ATGAATAA
+ Seq2/1-8               ATGAATAA
+ Seq3/1-8               ATGAATAA
+ Seq4/1-8               ATGAATAA
+ Seq5/1-8               ATGAATAA
+ Seq6/1-8               ATGAATAA
+                        ********
+ nuc.aln.slice-19.aln:
+ 
+ Seq1/19-33             AGCATAGAAGAATTA
+ Seq2/19-33             AGCATAGAAGAATTA
+ Seq3/19-33             AGCATAGAAGAATTA
+ Seq4/19-33             AGCATAGAAGAATTA
+ Seq5/19-33             AGCATAGAAGAATTA
+ Seq6/19-33             AGCATAGAAGAATTA
+                        ***************
+ 
+ nuc.aln.slice-40.aln
+ 
+ Seq1/40-47             AAAATAAG
+ Seq2/40-47             AAAATAAG
+ Seq3/40-47             AAAATAAG
+ Seq4/40-47             AAAATAAG
+ Seq5/40-47             AAAATAAG
+ Seq6/40-47             AAAATAAG
+                        ********
+ 
+=item B<--window, -w> 'window_size'
+ 
+ Calculate pairwise average sequence difference by windows (overlapping windows
+ with fixed step of 1). Default value for window_size is 30.
+ 
+ Usage: bioaln -w[size|default is 30]  [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -w input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAAATAAGC
+ Seq2            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAAATAAGC
+ Seq3            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAAATAAGT
+ Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAAATAAGT
+ Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGC
+ Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGT
+                 ******** ** * *** *************** **** ********
+ 
+ OUTPUT:
+ 
+ 1       30      0.0578
+ 2       31      0.0578
+ 3       32      0.0578
+ 4       33      0.0578
+ 5       34      0.0689
+ 6       35      0.0689
+ 7       36      0.0689
+ 8       37      0.0689
+ 9       38      0.0689
+ 10      39      0.0756
+ 11      40      0.0756
+ 12      41      0.0756
+ 13      42      0.0578
+ 14      43      0.0578
+ 15      44      0.0467
+ 16      45      0.0467
+ 17      46      0.0467
+ 18      47      0.0467
+ 19      48      0.0489
+ 
+=item B<--erasecol, -E> 'seq_id'
+ 
+ Remove columns with gap in designated sequence.
+ 
+ Usage: bioaln -E 'seq_id'  [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command: bioaln -E 'Seq5' input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+ Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+ Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+ Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                 ******** ** * *** *************** **** ***  *****
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA-ATAAGT
+ Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACATAAGC
+ Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA-ATAAGC
+ Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA-ATAAGT
+ Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAACATAAGC
+ Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA-ATAAGT
+                 ******** ** * *** *************** **** *** *****
+ 
+ 
+=item B<--var, -v>
+ 
+ Extracts variable sites.
+ 
+ B<Used in conjunction with -g:> do not show sites with gaps in any sequence.
+ 
+ Usage: bioaln -v [alignment file]
+ 
+ EXAMPLE:
+ 
+ Command:   bioaln -v input.aln
+ 
+ INPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1              ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAAATAAGT
+ Seq2              ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAAATAAGC
+ Seq3              ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAAATAAGC
+ Seq4              ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAAATAAGT
+ Seq5              ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGC
+ Seq6              ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGT
+                   ******** ** * *** *************** **** ********
+ 
+ OUTPUT:
+ 
+ CLUSTAL W (1.81) multiple sequence alignment
+ 
+ Seq1              AGTTGTT
+ Seq2              AGTCATC
+ Seq3              TATCATC
+ Seq4              AACTATT
+ Seq5              AATTACC
+ Seq6              AATTACT
+ 
+=back
+ 
+=head1 REQUIRES
+ 
+ Perl 5.100, Modern::Perl, BioPerl
+ 
+=head1 SEE ALSO
+ 
+ perl(1)
+ 
+=head1 AUTHOR(S)
+ 
+ Weigang Qiu <weigang.qiu@genectr.hunter.cuny.edu>
+ William McCaig
+ Che Martin
+ Yoezen Hernandez <yzhernand@gmail.com>
+ Levy Vargas <levy.vargas@gmail.com>
+ 
+=cut
+ 
+ ##################### End ##########################
