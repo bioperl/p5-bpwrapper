@@ -35,22 +35,22 @@ my %opt_dispatch = (
     'dotplot'       => \&draw_dotplot,
     'extract'       => \&reading_frame_ops,
     'leadgaps'      => \&count_leading_gaps,
-    'lengths'       => \&print_lengths,
+    'length'       => \&print_lengths,
     'linearize'     => \&linearize,
     'longest-orf'   => \&reading_frame_ops,
     'nogaps'        => \&remove_gaps,    
-    'noseq'         => \&print_seq_count,
+    'numseq'         => \&print_seq_count,
     'pick'          => \&filter_seqs,
     'prefix'        => \&anonymize,
     'rename'        => \&rename_id,
     'reloop'        => \&reloop_at,
     'removestop'    => \&remove_stop,
-    'retrieveseq'   => \&retrieve_seqs,
+    'fetch'   => \&retrieve_seqs,
     'revcom'        => \&make_revcom,
-    'shred'         => \&shred_seq,
+    'break'         => \&shred_seq,
     'slidingwindow' => \&sliding_window,
     'split'         => \&split_seqs,
-    'sub'           => \&print_subseq,
+    'subseq'           => \&print_subseq,
     'translate'     => \&reading_frame_ops,
 );
 
@@ -515,7 +515,7 @@ sub remove_stop {
 
 sub retrieve_seqs {
     my $gb  = Bio::DB::GenBank->new();
-    my $seq = $gb->get_Seq_by_acc($opts{'retrieveseq'}); # Retrieve sequence with Accession Number
+    my $seq = $gb->get_Seq_by_acc($opts{'fetch'}); # Retrieve sequence with Accession Number
     $out->write_seq($seq);
 }
 
