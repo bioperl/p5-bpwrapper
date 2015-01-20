@@ -388,7 +388,7 @@ sub print_seq_count {
 sub print_subseq {
     while ( $seq = $in->next_seq() ) {
         my $id = $seq->id();
-        my ( $start, $end ) = split /\s*,\s*/, $opts{"sub"};
+        my ( $start, $end ) = split /\s*,\s*/, $opts{"subseq"};
         die "end out of bound: $id\n" if $end > $seq->length();
         my $new = Bio::Seq->new(
             -id  => $seq->id() . ":$start-$end",

@@ -27,7 +27,7 @@ GetOptions(
     "translate|t=i", #Needs error checking
     "nogaps|g",
     "composition|c",
-    "fetch|f=s" # Retrieve sequence by accession number
+    "fetch|f=s", # Retrieve sequence by accession number
     "subseq|s=s",
     "anonymize|A:10",    # default 10 char (for phylip) (prefix + num_digits)  
     "break|B", 
@@ -80,7 +80,7 @@ __END__
 
 =head1 NAME
 
-bioseq - Fasta sequence editing module based on BioPerl.
+bioseq - FASTA file utility based on BioPerl Bio::Seq.
 
 =head1 SYNOPSIS
 
