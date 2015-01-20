@@ -85,7 +85,7 @@ if ($opts{"index"}) {
 # Avoid unnecessarily opening an output file.
 #### Options which *do not require opening an output FH* go here ####
 remove_gapped_cols_in_one_seq() 
-    if  $opts{"removecol"};
+    if  $opts{"erasecol"};
 
 if ( $opts{"length"} ) {
     say $aln->length();
@@ -201,7 +201,7 @@ exit;
 ################################################################################
 
 sub remove_gapped_cols_in_one_seq {
-    my $id = $opts{"removecol"};
+    my $id = $opts{"erasecol"};
     my $nmatch=0;
     my $ref_seq;
     foreach my $seq ($aln->each_seq) {
@@ -681,7 +681,7 @@ sub sample_seqs {
 # Its OK to use int() here (especially since we want to round towards 0)
     my $num_seqs = $aln->num_sequences;
     my $sample_size
-        = ( $opts{"rsample"} == 0 ) ? int( $num_seqs / 2 ) : $opts{"rsample"};
+        = ( $opts{"resample"} == 0 ) ? int( $num_seqs / 2 ) : $opts{"resample"};
 
     die
         "Error: sample size ($sample_size) exceeds number of sequences in alignment: ($num_seqs)"
