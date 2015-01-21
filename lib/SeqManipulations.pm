@@ -27,32 +27,18 @@ my ( $in, $out, $seq, %opts, $filename, $in_format, $out_format );
 
 ## For new options, just add an entry into this table with the same key as in
 ## the GetOpts function in the main program. Make the key be a reference to
-## the handler subroutine (defined below), and test that it works.
-my %opt_dispatch = (
-    'anonymize'     => \&anonymize,
-    'composition'   => \&print_composition,
-    'del'           => \&filter_seqs,
-    'dotplot'       => \&draw_dotplot,
-    'extract'       => \&reading_frame_ops,
-    'leadgaps'      => \&count_leading_gaps,
-    'length'       => \&print_lengths,
-    'linearize'     => \&linearize,
-    'longest-orf'   => \&reading_frame_ops,
-    'nogaps'        => \&remove_gaps,    
-    'numseq'         => \&print_seq_count,
-    'pick'          => \&filter_seqs,
-    'prefix'        => \&anonymize,
-    'rename'        => \&rename_id,
-    'reloop'        => \&reloop_at,
-    'removestop'    => \&remove_stop,
-    'fetch'   => \&retrieve_seqs,
-    'revcom'        => \&make_revcom,
-    'break'         => \&shred_seq,
-    'slidingwindow' => \&sliding_window,
-    'split'         => \&split_seqs,
-    'subseq'           => \&print_subseq,
-    'translate'     => \&reading_frame_ops,
-);
+## the handler subroutine (defined below), and test that it works.  
+my %opt_dispatch = ( 'anonymize' => \&anonymize, 'composition' =>
+\&print_composition, 'del' => \&filter_seqs, 'dotplot' =>
+\&draw_dotplot, 'extract' => \&reading_frame_ops, 'leadgaps' =>
+\&count_leading_gaps, 'length' => \&print_lengths, 'linearize' =>
+\&linearize, 'longest-orf' => \&reading_frame_ops, 'nogaps' =>
+\&remove_gaps, 'numseq' => \&print_seq_count, 'pick' => \&filter_seqs,
+'prefix' => \&anonymize, 'rename' => \&rename_id, 'reloop' =>
+\&reloop_at, 'removestop' => \&remove_stop, 'fetch' =>
+\&retrieve_seqs, 'revcom' => \&make_revcom, 'break' => \&shred_seq,
+'slidingwindow' => \&sliding_window, 'split' => \&split_seqs, 'subseq'
+=> \&print_subseq, 'translate' => \&reading_frame_ops, );
 
 my %filter_dispatch = (
     'find_by_order'  => \&find_by_order,
@@ -528,21 +514,21 @@ sub print_composition {
         my %seen;
 
         foreach (@chars) {
-
+	  next unless /[a-zA-Z]/;
             # If character hasn't been seen, get its count and print that.
-            if ( !$seen{$_}++ ) {   # This ensures the char gets into the hash
-                my $count = ( $string =~ s/$_/$_/g );
-                printf "\t'$_' => '%6d\t%.2f%s'\n", $count,
-                    $count * 100 / $ct,
-                    ' %';
-            }
+	  if ( !$seen{$_}++ ) {   # This ensures the char gets into the hash
+	    my $count = ( $string =~ s/$_/$_/g );
+	    printf "\t'$_' => '%6d\t%.2f%s'\n", $count,
+	      $count * 100 / $ct,
+		' %';
+	  }
         }
-
+	
         print Dumper( \%seen )
-            if ( $ENV{'DEBUG'} );
+	  if ( $ENV{'DEBUG'} );
         print "\n";
-    }
-}
+      }
+  }
 
 sub update_longest_reading_frame {
     my $seqobj  = shift;

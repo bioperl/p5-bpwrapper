@@ -31,7 +31,7 @@ GetOptions(
     "subseq|s=s",
     "anonymize|A:10",    # default 10 char (for phylip) (prefix + num_digits)  
     "break|B", 
-    "reloop|P=i", # recircularize a genome at "loop_at"
+    "reloop|R=i", # recircularize a genome at "loop_at"
     "linearize|L",
     "removestop|X", # for PAML/codeml    
     "leadgaps|G",
@@ -109,63 +109,11 @@ Prints the manual page and exit.
 
 	Usage: bioseq -m <keyword> 
 
-=item B<--input, -i> 'format'
+=item B<--composition, -c>
 
-Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'.
+Base or AA composition.
 
-	Usage: bioseq -i 'genbank' input_file
-
-=item B<--output, -o> 'format'
-
-Output file format. By default, this is 'fasta'.For Genbank format, use 'genbank'. For EMBL format, use 'embl'.
-
-	Usage: bioseq -o 'EMBL' input_file
-
-=item B<--numseq, -n>
-
-Print number of sequences specified by n.
-
-	Usage: bioseq -n input_file
-
-=item B<--subseq, -s> 'min,max'
-
-Select substring (of 1st sequence), 
-
-	Usage: bioseq -s '<beginning index>, <ending index>' input_file
-
-        Example:  bioseq -s'20,80' input_file (or --sub'20,80' or -s='20,80' or --sub='20,80')
-
-=item B<--length, -l>
-
-Print all sequence lengths.
-
-	Usage: bioseq -l
-
-=item B<--leadgaps, -G>
-
-Count and return the number of leading gaps in each sequence.
-
-	Usage: bioseq -G
-
-=item B<--reloop, -P>
-
-Assuming a circular genome (e.g., pseudomonas)
-
-	Usage: bioseq -reloop 1000
-
-=item B<--pick, -p> 'tag:value'
-
-Select a single sequence or a comma-separated list of sequences, e.g,
- --pick 'id:foo'        by id
- --pick 'order:2'       by order
- --pick 're:REGEX'      using a regular expression (only one regex is expected)
-
-Specifically for a list of sequences,
- --pick 'id:foo,bar'    list by id
- --pick 'order:2,3'     list by order
- --pick 'order:2-10'    list by range
-
-	Usage: bioseq -p 'id:<number>' input_file
+	Usage: bioseq -c input_file
 
 =item B<--del, -d> 'tag:value'
 
@@ -177,59 +125,7 @@ Specifically for a list of sequences,
  --del 'id:foo,bar'	list by id
  --del 're:REGEX'       using a regular expression (only one regex is expected)
 
-	Usage: bioseq --del 'id:<number>' input_file
-
-=item B<--revcom, -r>
-
-Reverse complement
-
-	Usage: bioseq -r input_file
-
-=item B<--translate, -t> [1|3|6]
-
-Translate in 1, 3, or 6 frames. eg, -t1, -t3, or -t6.
-
-	Usage: bioseq -t3 input_file
-
-=item B<--break, -B>
-
-Shred into individual sequences
-
-	Usage: bioseq -B input_file
-
-=item B<--linearize, -L>
-
-Linearize FASTA.
-
-	Usage: bioseq -L fasta_file
-
-=item B<--nogaps, -g>
-
-Remove gaps
-
-	Usage: bioseq -g input_file
-
-=item B<--removestop, -X>
-
-Remove stop codons (for e.g., PAML input)
-
-	Usage: bioseq -X input_file
-
-=item B<--anonymize, -A> 'n'
-
-Replace sequence IDs with serial IDs 'n' characters long, including a leading 'S' (e.g., -a'5' gives S0001).
-Produces a sed script file with a '.sed' suffix that may be used with sed's '-f' argument.
-If the filename is '-', the sed file is named STDOUT.sed instead.
-The sed filename is specified on STDERR.
-
-	Usage: bioseq -A <number> input_file
-
-
-=item B<--composition, -c>
-
-Base or AA composition.
-
-	Usage: bioseq -c input_file
+    Usage: bioseq --del 'id:<number>' input_file
 
 =item B<--fetch, -f> 'sequence retriever using GenBank accession'
 
@@ -254,6 +150,111 @@ Base or AA composition.
     AAAACACATGGGACTAACGATAAGGGTGCTAAAGAACTTAAAGAGTTATCTGAATCAGTA
     GAAAGCTTGGCAAAAGCAGCTCAAGCAGCATTAGCTAATTCAGTTAAAGAGCTTACAAGT
     CCTGTTGTGGCAGAAAGTCCAAAAAAACCTTAA
+
+=item B<--nogaps, -g>
+
+Remove gaps
+
+	Usage: bioseq -g input_file
+
+=item B<--input, -i> 'format'
+
+Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'.
+
+	Usage: bioseq -i 'genbank' input_file
+
+=item B<--length, -l>
+
+Print all sequence lengths.
+
+	Usage: bioseq -l
+
+=item B<--numseq, -n>
+
+Print number of sequences specified by n.
+
+	Usage: bioseq -n input_file
+
+=item B<--output, -o> 'format'
+
+Output file format. By default, this is 'fasta'.For Genbank format, use 'genbank'. For EMBL format, use 'embl'.
+
+	Usage: bioseq -o 'EMBL' input_file
+
+=item B<--pick, -p> 'tag:value'
+
+Select a single sequence or a comma-separated list of sequences, e.g,
+ --pick 'id:foo'        by id
+ --pick 'order:2'       by order
+ --pick 're:REGEX'      using a regular expression (only one regex is expected)
+
+Specifically for a list of sequences,
+ --pick 'id:foo,bar'    list by id
+ --pick 'order:2,3'     list by order
+ --pick 'order:2-10'    list by range
+
+	Usage: bioseq -p 'id:<number>' input_file
+
+=item B<--revcom, -r>
+
+Reverse complement
+
+	Usage: bioseq -r input_file
+
+=item B<--subseq, -s> 'min,max'
+
+Select substring (of 1st sequence), 
+
+	Usage: bioseq -s '<beginning index>, <ending index>' input_file
+
+        Example:  bioseq -s'20,80' input_file (or --sub'20,80' or -s='20,80' or --sub='20,80')
+
+=item B<--translate, -t> [1|3|6]
+
+Translate in 1, 3, or 6 frames. eg, -t1, -t3, or -t6.
+
+	Usage: bioseq -t3 input_file
+
+
+=item B<--anonymize, -A> 'n'
+
+Replace sequence IDs with serial IDs 'n' characters long, including a leading 'S' (e.g., -a'5' gives S0001).
+Produces a sed script file with a '.sed' suffix that may be used with sed's '-f' argument.
+If the filename is '-', the sed file is named STDOUT.sed instead.
+The sed filename is specified on STDERR.
+
+	Usage: bioseq -A <number> input_file
+
+=item B<--break, -B>
+
+Shred into individual sequences
+
+	Usage: bioseq -B input_file
+
+=item B<--leadgaps, -G>
+
+Count and return the number of leading gaps in each sequence.
+
+	Usage: bioseq -G
+
+
+=item B<--linearize, -L>
+
+Linearize FASTA.
+
+	Usage: bioseq -L fasta_file
+
+=item B<--reloop, -R>
+
+Assuming a circular genome (e.g., pseudomonas)
+
+	Usage: bioseq --reloop 1000
+
+=item B<--removestop, -X>
+
+Remove stop codons (for e.g., PAML input)
+
+	Usage: bioseq -X input_file
 
 =back
 
