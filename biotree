@@ -1,0 +1,1104 @@
+#!/usr/bin/env perl
+# =============================================================================
+# biotree version:
+my $version = "v2.4, Apr 12, 2012";
+# A wrapper script for bioperl functions to manipulate phylogenetic trees
+# Original Author: (Yozen Hernandez) | Date: ???
+# Additional Author: Pedro Pagan | Date: Apr 12, 2012
+#
+# 2.4	ADDED --bin
+# 2.4	ADDED --version
+# 2.3	FIXED bug introduced into --prune in 2.2. 
+# 2.2	ADDED --random. Tweaked --prune to interact with --random.
+# 2.2	FIXED --prune removing internal nodes it should have kept
+# 2.2	FIXED --prune to properly join internal nodes
+# 2.2	ADDED --lengthall
+# 2.1	ADDED --allchildout and tweaked --walk output 
+# 2.0	FIXED --rename to offer the option to write the output to file
+# 1.9	ADDED --walk
+# 1.8   FIXED STDIN issue, removed some option handling and streamlined
+#           some things. Fixed documentation for options which take lists
+# 1.7	ADDED --joindata
+# 1.6	FIXED --subset behavior (properly joins nodes, to-root branch removed
+# 1.6	ADDED Ability to handle input either from file or through piping
+# 1.5	ADDED Ability to read multiple newick trees from a single input file
+# 1.5	ADDED --rename
+# 1.4	ADDED --subset, --collabel
+# 1.3	ADDED --collapse
+# 1.2	CHANGED printout behavor of a few functions (added bool $print_tree)
+# 1.2	CHANGED -z to represent --distanceall
+# 1.2	CHANGED -D to represent --depth
+# 1.2	CHANGED -n to represent --labelnodes
+# 1.2	ADDED --labelnodes, --prune, --lca
+# 1.2	CHANGED depth to take multiple entries
+# 1.2	CHANGED Put --output last to be processed
+# 1.2	FIXED -m and -h
+# TODO: REDO --joindata to open files in the function, not at the start
+# TODO: Make join_trees more efficient. It repeats a LOT of things.
+# TODO: Add ability for --distance to look across multiple nodes
+# TODO: FIX STDIN vs filename handling. VERY HACKISH right now.
+# TODO: Add --compnames (compare names of multiple trees)
+# TODO: Add --congruent (compare ancestory of provided trees)
+# TODO: Add image generation. Requiress PostScript::TextBlock or SVG::Graph
+# TODO: Improve error checking!
+#			Separate warnings from actual output text
+#			Check that input data matches a tree type
+# TODO:	Make sure using multiple tree-modifying commands at once works
+# =============================================================================
+use strict;
+use warnings;
+use 5.010;
+use Bio::TreeIO;
+use Bio::Tree::Tree;
+use Bio::Tree::Node;
+use Data::Dumper;
+use Getopt::Long qw(:config gnu_getopt);
+use Pod::Usage;
+use POSIX qw(strftime);
+################################################################################
+# Getopt parsing and global variable initialization
+################################################################################
+pod2usage(1) if ( scalar(@ARGV) < 1);
+my %opts;
+GetOptions(
+    \%opts,          "help|h",        "man|m",         "input|i:s",
+    "output|o:s",    "length|l",      "otu|u",         "lca|a=s@",
+    "reroot|e=s",    "getroot|g",     "bootclean|b:f", "rmbl|r",
+    "distance|d=s@", "distanceall|z", "depth|D=s@",    "labelnodes|n",
+    "collapse|c=s@", "collabel|C:s",  "prune|p=s@",    "subset|s=s@",
+    "rename|N",      "compnames|x",   "joindata|j=s@", "walk|w=s",
+	"allchildotu|A:s@", "lengthall|L", "random|R:i",   "ltt|t=s", "comptrees|X",
+	"version|v",	"tree2table|T", "tree2tableid|I:s"
+) or pod2usage(2);
+
+pod2usage(1) if $opts{"help"};
+pod2usage( -exitstatus => 0, -verbose => 2 ) if $opts{"man"};
+if ( $opts{'version'} ){
+	say "\t$version";
+	exit;
+}
+
+my $in_format = $opts{"input"} // 'newick';  # This doesn't work...or does it?
+my $out_format = $opts{"output"} // "newick";
+my $print_tree = 0;    # Trigger printing the tree.
+my $run_once = 0;    # Trigger exit when running multi-tree commands.
+################################################################################
+# Build array of trees from file. A little hackish...
+################################################################################
+my ( @trees, @trees_as_text, @trees_files );
+
+# If no more arguments were given on the command line,
+# assume we're getting input from standard input
+my $file = shift
+    || "STDIN";
+
+my $in = Bio::TreeIO->new(
+    -format => $in_format,
+    ( $file eq "STDIN" )
+    ? ( -fh => \*STDIN )
+    : ( -file => $file )
+);
+
+# If multiple trees in one file, read each one
+while ( my $in_tree = $in->next_tree() ) {
+    push @trees, $in_tree;
+    push @trees_files, [$in_tree, $file] unless ($file eq "STDIN")
+}
+
+if ( @ARGV > 0 ) {    # There are more files given on the command line
+                      # Read each tree file and save all trees in each
+    for my $f (@ARGV) {
+        my $tf = Bio::TreeIO->new(
+            -format => $in_format, # NOTE All files MUST be in the same format
+            -file   => $f
+        );
+
+        while ( my $in_tree = $tf->next_tree() ) {
+            push @trees, $in_tree;
+            push @trees_files, [$in_tree, $f];
+        }
+    }
+}
+
+################################################################################
+# Switches. Run each per tree.
+################################################################################
+our $tree
+    ; # Use 'our' to avoid passing each time ## NOTE WE MAY REGRET THIS DECISION
+my $out;
+my @nodes;
+my $rootnode;
+for $tree (@trees) {
+    $out      = Bio::TreeIO->new( -format => $out_format );
+    @nodes    = $tree->get_nodes;
+    $rootnode = $tree->get_root_node;
+
+########################################
+    # Multi-tree commands
+########################################
+    say join( "\n", comp_names() )
+        if ( $opts{'compnames'} );
+
+    join_trees()
+        if ( $opts{'joindata'} );
+########################################
+    # Information-printing commands
+########################################
+
+	say pod2usage(1)
+        if ( defined( $opts{'collabel'} ) and !$opts{'collapse'} );
+
+    say $tree->total_branch_length()
+        if ( $opts{'length'} );
+
+    getroot()
+        if ( $opts{'getroot'} );
+
+    print_leaves_lengths()
+        if ( $opts{'otu'} );
+
+    print_all_lengths()
+        if ( $opts{'lengthall'} );
+
+    getdistance()
+        if ( $opts{'distance'} );
+
+    listdistance()
+        if ( $opts{'distanceall'} );
+
+    depth_to_root()
+        if ( $opts{'depth'} );
+
+    getlca()
+        if ( $opts{'lca'} );
+
+    walk()
+        if ( $opts{'walk'} );
+
+	alldesc()
+		if ( $opts{'allchildotu'} );
+
+########################################
+    # Tree-modifying commands
+########################################
+    reroot()
+        if ( $opts{'reroot'} );
+
+    bootclean()
+        if ( $opts{'bootclean'} );
+
+    collapse_subtree()
+        if ( $opts{'collapse'} );
+
+    collapseall_subtree()
+        if ( $opts{'collapseall'} );
+
+    prune()
+        if ( $opts{'prune'} );
+
+    reverse_prune()
+        if ( $opts{'reverseprune'} );
+
+    remove_brlengths()
+        if ( $opts{'rmbl'} );
+
+    subset()
+        if ( $opts{'subset'} );
+
+    label_nodes()
+        if ( $opts{'labelnodes'} );
+
+    rename_leaves()
+        if ( $opts{'rename'} );
+
+	random_tree()
+        if ( defined($opts{'random'}) );
+
+	bin()
+        if ( $opts{'ltt'} );
+
+
+    # Print the tree when all is done, if asked to do so
+    $print_tree = 1
+        if ( defined( $opts{'output'} ) );
+
+    say $tree->as_text($out_format)
+        if ($print_tree);
+
+if ( $opts{'tree2table'}  and $opts{'tree2tableid'}) {
+my $out = tree2table(@ARGV);
+print @$out;
+}
+if ($opts{'tree2table'} and !$opts{'tree2tableid'}){
+  print "Please declare treefile and tree_id\n";
+}
+sub tree2table {
+
+  my $timestampinput = $opts{'tree2tableid'};  
+  my @output=(); #output strings to return
+   my $header = [qw/tree_id parent child branch_length/];
+    
+push @output, join("\t",@$header),"\n"; 
+
+ for my $tree (@trees){
+        my @relationships; # store tree data
+
+        #get all nodes in the tree
+        for my $node (@nodes){
+                #get all decendents of the nodes
+                my @children_of_node = $node->each_Descendent;
+                #for each children obtained, we put into an array with id, parent, child, branchlength 
+                for my $child (@children_of_node) {
+						              if ($timestampinput){
+						  push @relationships, [$timestampinput, $node->id, $child->id, $child->branch_length];
+            }else{
+              push @relationships, [$node->id, $child->id, $child->branch_length];
+                  }
+                }
+              } 
+          
+        for my $r (@relationships) {
+                push @output, join("\t",@$r),"\n";
+              }
+       return \@output;
+   }
+}
+
+} #close for loop above biotree
+
+################################################################################
+# Tree switches that operate on groups of trees (not one-by-one)
+################################################################################
+	comp_trees()
+        if ( $opts{'comptrees'} );
+
+
+################################################################################
+# General Subroutines
+################################################################################
+# n2n - NAMES TO NODES
+# Input: An $opts{'SWITCH'} array reference of potential node names
+# Output: An array of Bio::Tree:Node objects corresponding to those node names
+# Prints a warning if a node matching a given name is not found
+sub n2n( $ ) {
+    my $arr_ref = $_[0];
+    my $nd;
+    my @node_objects;
+
+    for my $node_name (@$arr_ref) {
+        $nd = $tree->find_node( -id => $node_name )
+            || $tree->find_node( -internal_id => $node_name );
+        if ($nd) {
+            push( @node_objects, $nd );
+        }
+        else { say "Node/leaf '$node_name' not found. Ignoring..."; }
+    }
+    return @node_objects;
+}
+
+# RUN _ONCE - ensures script completes after one run and checks for
+# at least two trees (called for functions requiring 2+ trees).
+sub run_once {
+    if ( @trees < 2 ) {
+        say "Must provide at least two trees to use this feature.";
+        exit;
+    }
+    $run_once = 1;
+}
+# each_leaf ($node)
+# returns a list of all OTU's descended from this node, if any
+sub each_leaf {
+	my @leaves;
+	for my $nd ( $_[0]->get_all_Descendents ){
+		push (@leaves, $nd) if ( $nd->is_Leaf );
+	}
+	return @leaves;
+}
+# Walk Up
+# "Walks" up from a given node and returned an order array
+# representing the order that each node descended from the given
+# node was visited.
+sub walk_up{
+	my %visited;
+	my @node_list = $_[0];
+	#say $node_list[0]->internal_id;#<-DEBUG
+	wu ( $_[0], \%visited, \@node_list );
+	return @node_list;
+}
+sub wu {
+	my (@lf, @nd);
+	my $curnode   = $_[0];
+	my @decs      = $_[0]->each_Descendent;
+	my $visitref  = $_[1];
+	my %visited   = %$visitref;
+	my $node_list_ref  = $_[2];
+
+	for (@decs){
+		if ($_->is_Leaf){
+			push(@lf, $_);
+		}else{
+			push(@nd, $_);
+		}
+	}
+	for (@lf){
+		if ( ! exists($visited{$_}) ){
+			$visited{$_} = 1;
+			push (@$node_list_ref, $_);
+			#print $_->internal_id, " " for (@$node_list_ref); #<-DEBUG
+			#print "\n"; #<-DEBUG
+		}
+	}
+	for (@nd){
+		if ( ! exists($visited{$_}) ){
+			$visited{$_} = 1;
+			push (@$node_list_ref, $_);
+			#print $_->internal_id, " " for (@$node_list_ref);#<-DEBUG
+			#print "\n";# <- DEBUG
+			wu( $_, \%visited, $node_list_ref); 
+		}
+	}
+}
+sub treeheight{
+	my $height = 0;
+	my $tree = $_[0];
+	for my $nd ($$tree->get_nodes){
+		$height = $nd->depth	if ( $nd->depth > $height );
+	}
+	return $height;
+}
+################################################################################
+# Function-specific Subroutines
+################################################################################
+sub bin{
+	my $treeheight = treeheight(\$tree);
+	my $bincount = $opts{'ltt'};
+	my $binsize = $treeheight/$bincount;
+	my @bins;
+	while ( $treeheight > 0 ){
+		unshift @bins, $treeheight;
+		$treeheight -= $binsize;
+	}
+	# Handle imperfect division. When approaching 0, if a tiny number is found,
+	# such as 2e-17, assign it as 0 and ignore negatives that may follow.
+	for ( @bins ){
+		shift @bins if ( $_ < 1e-10 );
+	}
+	unshift @bins, 0;
+
+	for (my $i=0;$i+1<@bins;$i++){
+		my $branchcount = 1; # branch from root
+		# Starting from the root, add a branch for each found descendent
+		$branchcount += binrecursive(\$rootnode, $bins[$i+1]);
+		say $i+1, "\t$branchcount\t$bins[$i]\t", $bins[$i+1];
+	}
+}
+
+sub binrecursive{
+	my $branchcount = 0;
+	my $noderef = $_[0];
+	my $upper = $_[1];
+	my @desc = $$noderef->each_Descendent;
+	$branchcount-- unless ( $$noderef->is_Leaf ); 
+
+	for my $nd( @desc ){
+		$branchcount++;
+		if ( $nd->depth <= $upper ){
+			$branchcount += binrecursive(\$nd, $upper);	
+		}
+	}
+	return $branchcount;
+}
+
+sub random_tree{
+	my @otus = each_leaf($rootnode);
+	my @sample;
+	my $sample_size
+		= ( $opts{"random"} == 0 ) ? int( scalar(@otus) / 2 ) 
+			: $opts{"random"};
+
+	die "Error: sample size ($sample_size) exceeds number of OTUs (", 
+		scalar(@otus), ")" if ( $sample_size > scalar(@otus) );
+
+	# Use Reservoir Sampling to pick random otus.
+	my @sampled = ( 1 .. $sample_size );
+	for my $k ( $sample_size + 1 .. scalar(@otus) ) {
+		$sampled[ rand(@sampled) ] = $k
+			if ( rand() < ( $sample_size / $k) );
+    }
+	push @sample, $otus[--$_] for ( @sampled );
+	subset ( \@sample );
+}
+
+sub print_all_lengths{
+	for my $nd ( @nodes ){
+        next if ( $nd == $rootnode );
+		say $nd->internal_id, "\t", $nd->id || 'NOID', "\t", $nd->branch_length
+	}
+}
+
+sub alldesc{
+	my @inodes;
+	my $inode_ids_ref = $opts{'allchildotu'};
+
+	if ($$inode_ids_ref[0] eq 'all'){
+		for my $nd ( walk_up($rootnode) ){	
+			push (@inodes, $nd);
+		}
+	}else{
+		push ( @inodes, $tree->find_node( -internal_id => $_ ) )
+			for ( @$inode_ids_ref );
+	}
+
+	for my $nd ( @inodes ){
+		print $nd->internal_id, " ";
+		if ($nd->is_Leaf){
+			print $nd->id;
+		}else{
+			print $_->id, " " for ( each_leaf($nd) );
+		}
+		print "\n";
+	}
+}
+
+# Walks from starting OTU
+sub walk{
+	my $startleaf = $tree->find_node( $opts{'walk'} );
+	my $curnode   = $startleaf->ancestor;
+	my $last_curnode = $startleaf;
+	my @decs;
+	my %visited;
+	my $totlen = 0;
+	my @dpair; 
+	my $vcount = 0;
+
+    $visited{$startleaf} = 1;
+	
+	while ( $curnode ){
+		$visited{$curnode} = 1;
+		@dpair = ($last_curnode, $curnode);
+		$totlen += $tree->distance( -nodes => \@dpair );
+		desclen ($curnode, \%visited, \$totlen, \$vcount);
+		$last_curnode = $curnode;
+		$curnode = $curnode->ancestor;
+	}
+}
+
+# Starting at a node that has 2 descendents,
+# print the distance from start to desc if it's a leaf
+# or call itself passing the internal-node descendent
+# In: basenode, internal node
+sub desclen {
+	# startlear, curnode
+	my (@dpair, @lf, @nd);
+	my $curnode   = $_[0];
+	my @decs      = $_[0]->each_Descendent;
+	my $visitref  = $_[1];
+	my $totlen    = $_[2];
+	my $vcountref = $_[3];
+	my %visited   = %$visitref;
+	my $dist;
+
+	for (@decs){
+		if ($_->is_Leaf){
+			push(@lf, $_);
+		}else{
+			push(@nd, $_);
+		}
+	}
+	for (@lf){
+		if ( ! exists($visited{$_}) ){
+			$visited{$_} = 1;
+			$dpair[0] = $curnode;
+			$dpair[1] = $_;
+			$dist = $tree->distance( -nodes => \@dpair );
+			$$totlen += $dist;
+			$$vcountref++;
+			say	$_->id, "\t$$totlen\t$$vcountref";# $tree->distance( -nodes => \@dpair );
+		}
+	}
+	for (@nd){
+		if ( ! exists($visited{$_}) ){
+			$visited{$_} = 1;
+			$dpair[0] = $curnode;
+			$dpair[1] = $_;
+			$dist = $tree->distance( -nodes => \@dpair );
+			$$totlen += $dist;
+			desclen($_, \%visited, $totlen, $vcountref); 
+		}
+	}
+}
+# Takes the distance data from one newick tree and the bootstrap data
+# from another and joins them together
+sub join_trees {
+    my $dtree = $trees[0];
+    my $btree = $trees[1];
+    my $nd0;
+    my $nd1;
+    my $an0;
+    my $an1;
+
+    for $nd0 ( $trees[0]->get_nodes ) {
+        if ( $nd0->is_Leaf ) {
+            $nd1 = $trees[1]->find_node( $nd0->id );
+            while ( $nd0->ancestor ) {
+                $nd0->bootstrap( $nd1->branch_length );
+
+   #				say $nd0->internal_id, " ", $nd0->id || " NoID ", $nd0->branch_length,
+   #					" ", $nd0->bootstrap || "NoBoot";
+                $nd0 = $nd0->ancestor;
+                $nd1 = $nd1->ancestor;
+            }
+        }
+    }
+
+    $out_format = $opts{'output'} // "nhx";
+    $print_tree = 1;
+    $run_once   = 1;
+}
+
+# Compare Names between trees
+sub comp_names {
+    run_once();
+    my $counter = 0;
+    my ( @leaves, @nodes );
+    my %names;
+    my @lone_names;
+
+    for my $tr (@trees) {
+        @nodes  = $tr->get_nodes;
+        @leaves = ();
+        for my $nd (@nodes) {
+            push( @leaves, $nd ) if ( $nd->is_Leaf );
+        }
+        $names{ $_->id }++ for (@leaves);
+    }
+    for ( keys(%names) ) {
+        push( @lone_names, $_ ) if ( $names{$_} < @trees );
+    }
+    return @lone_names;
+}
+
+# Rename leaves one by one
+sub rename_leaves {
+   	my $newname;
+	my $filename;
+    for my $nd (@nodes) {
+		if ( $nd->is_Leaf ) {
+            if ( -t STDIN ) {
+                print STDERR $nd->id, ": ";
+                chomp( $newname = <> );
+                $nd->id($newname) unless ( $newname eq '' );
+            }
+            else {
+                say "Cannot use --rename with piped data";
+                exit;
+            }
+        }
+    }
+ 	$print_tree = 1;
+}
+
+# Subset a tree
+sub subset {
+	# Collect the subset of nodes from STDIN or from $_
+    my @keep_nodes;
+	if ( $opts{'subset'} ){
+    	@keep_nodes = n2n( $opts{'subset'} );
+	}else{
+		my $ar = $_[0];
+		@keep_nodes = @$ar;
+	}
+
+	# Collect list of descendents
+    my @descendents;
+    for my $nd ( @keep_nodes ) {
+         push @descendents, $_ for ( $nd->get_all_Descendents );
+    }
+
+    # Collect list of ancestors
+	my @ancestors;
+	my $tmp;
+    for ( @keep_nodes ) {
+		$tmp = $_;
+        while ( $tmp->ancestor ) {
+			push @ancestors, $tmp->ancestor;
+			$tmp = $tmp->ancestor;
+	     }
+    }
+	
+	# Make a hash of nodes to keep
+    my %keep = map { $_->internal_id => $_ } @keep_nodes;
+	$keep{$_->internal_id} = $_ for ( @descendents );
+	$keep{$_->internal_id} = $_ for ( @ancestors );
+
+	# Remove all nodes but those in %keep
+    for my $nd (@nodes) {
+        $tree->remove_Node($nd)
+            unless ( exists( $keep{ $nd->internal_id } ) );
+    }
+
+	# Clean up internal single-descendent nodes
+    my @desc;
+    my $nd_len;
+    my $desc_len;
+    for my $nd ( $tree->get_nodes ) {
+        next if ( $nd == $rootnode );
+        @desc = $nd->each_Descendent;
+        if ( scalar(@desc) == 1 ) {
+            $nd_len   = $nd->branch_length()      || 0;
+            $desc_len = $desc[0]->branch_length() || 0;
+            $desc[0]->branch_length( $nd_len + $desc_len );
+            $nd->ancestor->add_Descendent( $desc[0] );
+            $tree->remove_Node($nd);
+        }
+    }
+	
+	# Take care of the a single-descendent root node
+	@desc = $rootnode->each_Descendent;
+    if ( scalar(@desc) == 1 ) {
+		for my $nd ( $desc[0]->each_Descendent ){
+			$rootnode->add_Descendent( $nd );
+		}
+       $tree->remove_Node($desc[0]);
+    }
+    $print_tree = 1;
+}
+
+# Prune a tree
+sub prune {
+    $tree->remove_Node($_) for ( n2n( $opts{'prune'} ) );
+	
+	# Clean up internal single-descendent nodes
+    my @desc;
+    my $nd_len;
+    my $desc_len;
+    for my $nd ( $tree->get_nodes ) {
+        next if ( $nd == $rootnode );
+        @desc = $nd->each_Descendent;
+        if ( scalar(@desc) == 1 ) {
+            $nd_len   = $nd->branch_length()      || 0;
+            $desc_len = $desc[0]->branch_length() || 0;
+            $desc[0]->branch_length( $nd_len + $desc_len );
+            $nd->ancestor->add_Descendent( $desc[0] );
+            $tree->remove_Node($nd);
+        }
+    }
+    $print_tree = 1;
+}
+
+# Collapse nodes
+sub collapseall_subtree {
+    for my $parent ( n2n( $opts{'collapseall'} ) ) {
+        for my $descendent ( $parent->get_all_Descendents ) {
+            if ( $descendent->is_Leaf ) {
+                $parent->add_Descendent($descendent);
+            }
+            else {
+                $tree->remove_Node($descendent);
+            }
+        }
+    }
+    $print_tree = 1;
+}
+
+# Collapse nodes
+sub collapse_subtree {
+    my $collapsed_label = $opts{'collabel'} || "COLLAPSED";
+    for my $parent ( n2n( $opts{'collapse'} ) ) {
+        if ( defined( $opts{'collabel'} ) && $opts{'collabel'} eq '' ) {
+            my $leaf_count;
+            for my $nd ( $parent->get_all_Descendents ) {
+                $leaf_count++ if ( $nd->is_Leaf );
+            }
+            $collapsed_label .= "_$leaf_count\_OTUs";
+        }
+        elsif ( defined( $opts{'collabel'} ) && $opts{'collabel'} eq 'ids' ) {
+            for ( $parent->get_all_Descendents ) {
+                $collapsed_label .= "_" . $_->id if ( $_->is_Leaf );
+            }
+        }
+        $tree->remove_Node($_) for ( $parent->each_Descendent );
+        $parent->id($collapsed_label);
+    }
+    $print_tree = 1;
+}
+
+# Get LCA
+sub getlca {
+    my @lca_nodes;
+	if ( n2n( $opts{'lca'} ) ) {
+		@lca_nodes = n2n( $opts{'lca'} );
+	} else {
+		my $ar = $_[0];
+		@lca_nodes = @$ar;
+	} 
+    my @nd_pair;
+    my $lca;
+
+    $nd_pair[0] = $lca_nodes[0];
+    if ( @lca_nodes > 1 ) {
+        for ( my $index = 1; $index < @lca_nodes; $index++ ) {
+            $nd_pair[1] = $lca_nodes[$index];
+            $lca = $tree->get_lca( -nodes => \@nd_pair );
+            $nd_pair[0] = $lca;
+        }
+		if ( n2n( $opts{'lca'} ) ) {
+        	say $lca->internal_id;
+		}else{
+			return $lca;
+		}
+    }
+    elsif ( @lca_nodes == 1 ) {
+		if ( n2n( $opts{'lca'} ) ) {
+        	say $lca_nodes[0]->ancestor->internal_id;
+  		}else{
+        	return $lca_nodes[0]->ancestor->internal_id; 
+		}
+	}
+}
+
+# Label nodes with their internal ID's
+sub label_nodes {
+    for (@nodes) {
+        next if ( $_ == $rootnode );
+        my $suffix = ( defined( $_->id ) ) ? "_" . $_->id : "";
+        $_->id( $_->internal_id . $suffix );
+    }
+    $print_tree = 1;
+}
+
+# Depth to the root for a node
+sub depth_to_root {
+    say $_->depth for ( n2n( $opts{'depth'} ) );
+}
+
+# Print half-tree id distances between all pairs of nodes
+sub listdistance {
+    my ( @leaves, @sortedleaf_names, @leafnames );
+    foreach my $nd (@nodes) {
+        if ( $nd->is_Leaf() ) {
+            push( @leaves, $nd );
+        }
+    }
+
+    # Make an alphabetical list of OTU names
+    foreach ( sort { lc( $a->id ) cmp lc( $b->id ) } @leaves ) {
+        push( @sortedleaf_names, $_->id );
+    }
+
+    @leaves = ();
+
+    #Rebuld leaf array with new alphabetical order
+    foreach (@sortedleaf_names) {
+        push( @leaves, $tree->find_node( -id => $_ ) );
+    }
+
+    # Prints a half-matrix of distance values
+    my $i = 1;
+    for my $firstleaf (@leaves) {
+        my @dnodes;
+        for ( my $x = $i; $x < scalar(@leaves); $x++ ) {
+            @dnodes = ( $firstleaf, $leaves[$x] );
+            print $firstleaf->id(), "\t",
+                $leaves[$x]->id(), "\t",
+                $tree->distance( -nodes => \@dnodes ), "\n";
+        }
+        $i++;
+    }
+}
+
+# Get the distance between nodes
+sub getdistance {
+    my @dnodes = n2n( $opts{'distance'} );
+
+    if ( scalar(@dnodes) != 2 ) {
+        say "Error: Provide exactly two nodes/leaves to use with --distance";
+    }
+    else {
+        print $tree->distance( -nodes => \@dnodes ), "\n";
+    }
+}
+
+# Get the root of the tree
+sub getroot {
+    if ( !defined( $rootnode->id() ) ) {
+        say "Unrooted";
+    }
+    else {
+        say( join ':', $rootnode->id(), $rootnode->branch_length() );
+    }
+}
+
+# Reroot the tree
+sub reroot {
+
+    #	print "Before:\t", $tree->as_text($out_format), "\n";
+    my $outgroup_id = $opts{'reroot'};
+    my $outgroup    = $tree->find_node($outgroup_id);
+    my $newroot     = $outgroup->create_node_on_branch(
+        -FRACTION => 0.5,
+        -ANNOT    => { id => 'newroot' }
+    );
+    $tree->reroot($newroot);
+    $print_tree = 1;
+
+    #	print "After:\t";
+    #    $out->write_tree($tree);
+}
+
+# Print OTU names and lengths
+sub print_leaves_lengths {
+    foreach my $nd (@nodes) {
+        if ( $nd->is_Leaf() ) {
+            print $nd->id(), "\t", $nd->branch_length(), "\n";
+        }
+    }
+}
+
+# Create polytomy based on bootstrap values
+sub bootclean {
+    my $threshold = $opts{'bootclean'} // 0.5;
+    foreach my $nd (@nodes) {
+        next if ( $nd eq $rootnode );    # skip root node
+        if ( $nd->is_Leaf() ) {
+            $nd->bootstrap(1);
+        }
+        else {
+            $nd->bootstrap( $nd->id() );
+        }
+
+        if ( $nd->bootstrap() < $threshold ) {
+            my @desc     = $nd->get_all_Descendents();
+            my $ancestor = $nd->ancestor();
+            foreach my $desc (@desc) {
+                $ancestor->add_Descendent($desc);
+
+                # or
+                # $desc->ancestor($ancestor);
+            }
+
+            warn "Removing node ", $nd->id, ":", $nd->branch_length(), "\n";
+            $tree->remove_Node($nd);
+        }
+    }
+    $print_tree = 1;
+}
+
+# Remove Branch Lenghts
+sub remove_brlengths {
+    foreach my $node (@nodes) {
+        $node->branch_length(0)
+            if defined $node->branch_length;
+    }
+    $print_tree = 1;
+}
+
+# Compare two or more newick trees
+sub comp_trees {
+
+  my %tree_nodes;
+  for my $tree_file_combo (@trees_files) {
+    my ($tree, $fn) = @$tree_file_combo;
+
+    # Store the pre-order traversal
+    my @ids = map { $_->id || 'INTERNAL' } $tree->get_root_node->get_all_Descendents;
+    $tree_nodes{$fn} = [@ids];
+    #print "IDS @ids\n";
+  }
+
+  my %fingerprints;
+  for my $fn (sort keys %tree_nodes) {
+    my @set = @{ $tree_nodes{$fn} };
+    my $fingerprint = join "|", @set;
+    #print "fp $fingerprint\n";
+    $fingerprints{$fn} = $fingerprint;
+  }
+
+  # for each file compare its fingerprint to others
+  my %mismatches;
+  for my $fn (sort keys %tree_nodes) {
+    for my $fp (sort keys %fingerprints) {
+      next if ($fn eq $fp); # skip self comparison
+      if ($fingerprints{$fn} ne $fingerprints{$fp})
+      {
+        my @mismatched_files = sort ($fp, $fn);
+        $mismatches{$mismatched_files[0].'-SEPERATOR-'.$mismatched_files[1]}++
+      }
+    }
+  }
+
+  # show mismatches
+  for my $mm (sort keys %mismatches) {
+    my ($f1, $f2) = split("-SEPERATOR-", $mm);
+    print "File $f1 does not match file $f2\n";
+  }
+}
+
+exit;
+## TODO Collapse nodes, remove nodes, add nodes
+
+################# POD Documentation ##################
+
+__END__
+
+=head1 NAME
+
+biotree - Fasta tools based on BioPerl
+
+=head1 SYNOPSIS
+
+B<biotree> [options] <tree file>
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<--help, -h>
+
+Print a brief help message and exits.
+
+=item B<--man, -m>
+
+Print the manual page and exits.
+
+=item B<--input, -i> 'format'
+
+Input file format. Accepts newick and nhx.
+
+=item B<--output, -o> 'format'
+
+Output file format. Accepts newick, nhx, and tabtree.
+
+=item B<--length, -l>
+
+Print total branch length.
+
+=item B<--lengthall, -L>
+
+Prints all nodes and branch lengths.
+
+=item B<--otu, -u>
+
+Print leaf nodes with branch lengths.
+
+=item B<--reroot, -e> 'newroot'
+
+Reroot tree to specified node by creating new branch.
+
+=item B<--getroot, -g>
+
+Return root node. If tree is unrooted, return "Unrooted".
+
+=item B<--bootclean, -b> [threshold]
+
+Remove branches with a support value below 'threshold' and create polytomy.
+
+'threshold' is between 0 and 1. Default is 0.5 (50%).
+
+=item B<--rmbl, -r>
+
+Remove branch lengths from tree.
+
+=item B<--distance, -d> 'node1' -d 'node2'
+
+Prints the distance between a pair of nodes or leaves.
+
+=item B<--distanceall, -z> 
+
+Prints half-matrix list of distances between ALL leaves.
+
+=item B<--depth, -D> 'node' [-D 'node'] [-D 'node']...
+
+Prints depth to root. Accepts node names and/or IDs.  
+
+=item B<--labelnodes, -n> 
+
+Prepends ID to each leaf/node label. Useful when identifying unlabed nodes, such as when using --prune.
+
+=item B<--lca, -a> 'node1' [-a 'node2'] [-a 'node3']...
+
+Returns ID of most recent common ancestor across provided nodes. Returns direct ancestor if single leaf/node provided. 
+
+=item B<--collapse, -c> 'node' [-c 'node'] [-c 'node']...
+
+Collapses node and gives it the label "COLLAPSED".
+
+=item B<--collabel, -C> [ids] | ['label']
+
+Used with --collapse, changes collapsed node label. Defaults to appending number of OTU's hidden. 'ids' appends a list of each OTU id.
+
+=item B<--prune, -p> 'node1' [-s 'node2'] [-s 'node3']...
+
+Removes specified leaves/nodes and their descendants.
+
+=item B<--subset, -s> 'node1' [-s 'node2'] [-s 'node3']...
+
+Creates a tree of only the specified leaves/nodes and their descendants. Specifying a single internal node produces a subtree from that node.
+
+=item B<--rename, -N>
+
+Iterates through each leaf on the tree and offers the option to rename it.
+
+=item B<--compnames, -x>
+
+Compares the names of the leaves in each tree and prints those not found in all trees
+
+=item B<--comptrees, -X>
+
+Compares the structures of two or more trees and reports which do not match. Based on pre-order traversal of tree (tree identity is based on branch and OTU structure). 
+
+=item B<--joindata, -j> 'DISTANCE_tree' 'BOOSTRAP_tree'
+
+Takes two identical newick formatted trees, each containing either distance or bootstrap values, and merges them into a single tree. Output tree format defaults to NHX (can be changed with --output). 
+
+=item B<--walk, -w> 'otu'
+
+Walks along the tree starting from the specified OTU and prints the total distance traveled while reaching each other OTU. Does not count any segment more than once.
+
+=item B<--allchildotu, -A> 'internal_node_id' | 'all'
+
+Prints all OTU's that are descended from the given internal node. If no node is provided, a complete list of all internal nodes and their descendents is returned instead (given in the order of "walking" through the tree from the root node).
+
+=item B<--random, -R> [sample_size]
+
+Builds a tree of a random subset of the original tree's OTUs. Defults to selecting half of the original tree's nodes.
+
+=item B<--ltt, -t> 'number_of_bins'
+
+Linear through time. Divides tree into number of specified segments and counts branches up to height the segment. Returns: bin_number, branch_count, bin_floor, bin_ceiling.
+
+=item B<--tree2table, -T> 'newick tree file' -I [tree_id_stamp]
+
+Takes in a newick tree file and outputs parent, child, branch length in tab delimiated format suited for database table. Requires a tree_id which is given using the '-I' switch which accepts a string and ouputs the tree_id stamp along with the data. 
+
+=head1 DESCRIPTION
+
+B<biotree> will read a tree file and do reformating of branches
+and nodes.
+
+Trees can be in any format supported by Bio::TreeIO in BioPerl. However,
+tree-manipulations has not been tested on all possible formats, so behavior
+may be unexpected with some.
+
+Currently, tree-manipulations does not support multiple trees per file or
+the ability to read from standard input.
+
+=over 4
+
+=back
+
+=head1 REQUIRES
+
+Perl 5.004, Getopt::Long, Pod::Usage, BioPerl
+
+=head1 SEE ALSO
+
+  perl(1)
+
+=head1 AUTHOR
+
+Yozen Hernandez, Pedro Pagan
+
+=cut
+
+##################### End ##########################
