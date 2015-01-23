@@ -29,7 +29,7 @@ my ( $in, $out, $seq, %opts, $filename, $in_format, $out_format );
 ## the GetOpts function in the main program. Make the key be a reference to
 ## the handler subroutine (defined below), and test that it works.  
 my %opt_dispatch = ( 'anonymize' => \&anonymize, 'composition' =>
-\&print_composition, 'del' => \&filter_seqs, 'dotplot' =>
+\&print_composition, 'delete' => \&filter_seqs, 'dotplot' =>
 \&draw_dotplot, 'extract' => \&reading_frame_ops, 'leadgaps' =>
 \&count_leading_gaps, 'length' => \&print_lengths, 'linearize' =>
 \&linearize, 'longest-orf' => \&reading_frame_ops, 'nogaps' =>

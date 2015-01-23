@@ -10,10 +10,7 @@ use Getopt::Long qw(:config gnu_getopt);
 use Pod::Usage;
 use Bio::Align::DNAStatistics;
 use Data::Dumper;
-use Bio::Tools::Phylo::Phylip::ProtDist;
 use List::Util qw(shuffle);
-use Bio::PopGen::Utilities;
-use Bio::PopGen::Population;
 
 ################################################################################
 # Option parsing
@@ -30,11 +27,11 @@ GetOptions(
     "match|m",
     "length|l",
     "pick|p=s",
-    "del|d=s",
+    "delete|d=s",
     "refseq|r=s",
     "codon-view|b:20",    # Optional value, default 20
     "nogaps|g", 
-    "avgpercentid|a",
+    "avpid|a",
     "window|w:30",
     "consensus|C:50",
     "index|I=s",
@@ -45,7 +42,7 @@ GetOptions(
     "uppercase|U", # make upper case (for DNAStatistics)
     "shuffle-sites|S",
     "erasecol|E=s",
-    "var|v"
+    "varsites|v"
   #  "inform|Z",    Retired for now
   #  "noflatname|F",Retired for now
   #  "dnadist|D=s", Needs fixing 
@@ -97,7 +94,7 @@ if ( $opts{"numseq"} ) {
     exit;
 }
 
-if ( $opts{"avgpercentid"} ) {
+if ( $opts{"avpid"} ) {
     say $aln->average_percentage_identity();
     exit;
 }
@@ -132,7 +129,7 @@ if ( $opts{"uniq"} ) {
 }
 
 del_seqs()
-    if ( $opts{"del"} );
+    if ( $opts{"delete"} );
 
 pick_seqs()
     if ( $opts{"pick"} );
@@ -145,7 +142,7 @@ remove_gaps()
     if $opts{"nogaps"};
 
 variable_sites()
-    if $opts{"var"};
+    if $opts{"varsites"};
 
 $aln->match()
     if ( $opts{"match"} );
@@ -516,7 +513,7 @@ sub _del_or_pick {
 }
 
 sub del_seqs {
-    _del_or_pick( $opts{"del"}, "remove_seq", 0 );
+    _del_or_pick( $opts{"delete"}, "remove_seq", 0 );
 }
 
 sub pick_seqs {
@@ -858,545 +855,53 @@ sub draw_codon_view {
 __END__
 
 =head1 NAME
- 
- bioaln - Alignment tools based on BioPerl
- 
+
+=over
+
+=item B<bioaln> - Alignment utility based on BioPerl
+
+=back
+
 =head1 SYNOPSIS
 
-=over 4
+B<bioaln> [options] <alignment_file>
 
-=item B<bioaln> [options] [alignment file]
- 
-=back
- 
 =head1 DESCRIPTION
 
-=over 4
+B<bioaln> will read an alignment file and do slice, display match characters, etc. By default, B<bioaln> will assume both the input and the output are in clustalw format so that multiple B<bioaln> runs can be chained with UNIX pipes.
 
-=item B<bioaln> will read an alignment file and
- do slice, display match characters, etc. By default, B<bioaln>
- will assume both the input and the output are in clustalw format.
- 
-=back
- 
 =head1 OPTIONS and EXAMPLES
 
-=over 4
+=head2 --help, -h
 
-=item B<--help, -h>
- 
- Print a brief help message and exits.
- 
-=item B<--man>
- 
- Prints the manual page and exits.
- 
-=item B<--input, -i> 'format'
- 
- Input file format. By default, this is 'clustalw'.
- 
-=item B<--output, -o> 'format'
- 
- Output file format. By default, this is 'clustalw'.
- 
-=item B<--numseq, -n>
- 
- Get number of sequences in alignment
- 
- Usage: bioaln -n [alignment_file]
- 
- EXAMPLE:
- 
- Command: bioaln -n input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
- Seq2                   ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
- Seq3                   ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
- Seq4                   ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
- Seq5                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
- Seq6                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
-                        ******** ** * *** *************** **** ***  *****
- 
- OUTPUT:
- 
- 6
- 
-=item B<--lengths, -l>
- 
- Print alignment length.
- 
- Usage: bioaln -l [alignment_file]
- 
- EXAMPLE:
- 
- Command: bioaln -l input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
- Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
- Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
- Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
- Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
- Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
-                 ******** ** * *** *************** **** ***  *****
- 
- OUTPUT:
- 
- 50
- 
-=item B<--match, -m>
- 
- Go through all columns and change residues identical to the reference sequence
- to be the match character, '.'
- 
- Usage: bioaln -m [alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -m input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        **:* ******:**********:************:****
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   ..K.T.................S............H....
- Seq3                   ..K...................S.................
- Seq4                   ..K...................S.................
- Seq5                   ..K...................S.................
- Seq6                   ..K........V..........S.................
-                          :                   :
+Print a brief help message and exit.
 
-=item B<--slice, -s> 'min,max'
- 
- Get a slice of the alignment.
- 
- Using a '-' character in the first or second position defaults to the beginning or end, respectively.
- Therefore specifying -s'-,-' is the same as grabbing the whole alignment.
- 
- Usage: bioaln -s'-,-' [alignment file]
- 
- -s'20,80' or --slice'20,80' or -s='20,80' or --slice='20,80'   Slice from position 20 to 80, inclusive.
- -s'-,80'  Slice from beginning up to, and including position 80
- -s'20,-'  Slice from position 20 up to, and including, the end of the alignment
- 
- NOTE: --slice'-,x' (where x is '-' or a position) does NOT work. Use --slice='-,x' instead.
- 
- EXAMPLE:
- 
- Command: bioaln -s'-,10' input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        **:* ******:**********:************:****
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   MNNKIYSIEE
- Seq2                   MNKKTYSIEE
- Seq3                   MNKKIYSIEE
- Seq4                   MNKKIYSIEE
- Seq5                   MNKKIYSIEE
- Seq6                   MNKKIYSIEE
-                        **:* *****
- 
-=item B<--pick, -p> 'seq_id_1, seq_id_2, ... , seq_id_n'
- 
- Pick sequences based on their id. Option takes a comma-separated list of ids.
- 
- Usage: bioaln -p [alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -p 'Seq1,Seq2' input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        **:* ******:**********:************:****
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
-                        **:* *****************:************:****
- 
-=item B<--del, -d> 'seq_id_1, seq_id_2, ... , seq_id_n'
- 
- Delete sequences based on their id. Option takes a comma-separated list of ids.
- 
- Usage: bioaln -d [alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -d 'Seq1,Seq2' input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        **:* ******:**********:************:****
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        ***********:****************************
+=head2 --avpid, -a
 
-=item B<--avgpercentid, -a>
- 
- Calculate the average percent identity of an alignment. Returns the value alone.
- 
- Usage: bioaln -a [input_alignment]
- 
- EXAMPLE:
- 
- Command: bioaln -a input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
- Seq2                   ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
- Seq3                   ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
- Seq4                   ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
- Seq5                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
- Seq6                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
-                        ******** ** * *** *************** **** ***  *****
- 
- OUTPUT:
- 
- 93.3425797503467
- 
- 
-=item B<--uniq, -u>
- 
- Extract the alignment of unique sequences.
- 
- Usage: bioaln -u [input_alignment]
- 
- EXAMPLE:
- 
- Command: bioaln -u input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- seq1                   ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
- seq11                  ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
- seq2                   ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
- seq3                   ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
- seq4                   ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
- seq5                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
- seq7                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
- seq6                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
-                        ******** ** * *** *************** **** ***  *****
- 
- OUTPUT:
- 
- seq1	ST1
- seq11	ST1
- seq2	ST2
- seq3	ST3
- seq4	ST4
- seq5	ST5
- seq7	ST5
- seq6	ST6
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- ST1                    ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
- ST2                    ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
- ST3                    ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
- ST4                    ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
- ST5                    ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
- ST6                    ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
-                        ******** ** * *** *************** **** ***  *****
+Calculate the average percent identity of an alignment. Returns the value alone.
 
-=item B<--uppercase, -U>
- 
- Make an uppercase alignment.
- 
- Usage: bioaln -U [input_alignment]
- 
- EXAMPLE:
- 
- Command: bioaln -U  input.aln
- 
- INPUT:
- 
+Usage: bioaln -a <alignment_file>
+
+EXAMPLE:
+
+Command: bioaln -a input.aln
+
+=head2 --codon-view, -c
+
+Print a CLUSTALW-like alignment, but separated by codons. Intended for use with DNA sequences. Block-final position numbers are printed at the end of every alignment block at the point of wrapping, and block-initial counts appear over first nucleotide in a block.
+
+If invoked as --codon-view=n where n is some number, will print n codons per line. Other normally stackable options, such as -m, can be used alongside it. If piping through bioaln, ensure codon-view is used in the last invocation.
+
+Usage: bioaln -c <alignment_file>
+
+EXAMPLE:
+
+Command: bioaln -c input_DNA.aln
+
+INPUT:
+
  CLUSTAL W (1.81) multiple sequence alignment
- 
- seq1            atgaataaaaagatatatagcatagaagaattagtagataaa--ataagt
- seq1            atgaataaaaagatatatagcatagaagaattagtagataaa--ataagt
- seq2            atgaataaaaagatatacagcatagaagaattaatagataaacgataagc
- seq5            atgaataaaaaaatatatagcatagaagaattaatagacaaac-ataagc
- seq3            atgaataataaaatatacagcatagaagaattaatagataaa--ataagc
- seq4            atgaataaaaaaacatatagcatagaagaattaatagataaa--ataagt
- seq5            atgaataaaaaaatatatagcatagaagaattaatagacaaac-ataagc
- seq6            atgaataaaaaaatatatagcatagaagaattaatagacaaa--ataagt
-                 ******** ** * *** *************** **** ***  *****
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
- Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
- Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
- Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
- Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
- Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
- Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
- Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
-                 ******** ** * *** *************** **** ***  *****
- 
-=item B<--listids, -L>
- 
- List all sequence ids
- 
- Usage: bioaln -L [alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -L input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        **:* ******:**********:************:****
- 
- OUTPUT:
- 
- Seq1
- Seq2
- Seq3
- Seq4
- Seq5
- Seq6
- 
-=item B<--shuffle-sites, -S>
- 
- Make a shuffled (not bootstraped) alignment
- 
- Usage: bioaln -S [alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -S input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        **:* ******:**********:************:****
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVNAYKMYN
- Seq2                   VIEELKYEKAAEAFIPNISEDASGKTRLKLMSVKSYKMHN
- Seq3                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVKSYKMYN
- Seq4                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVKSYKMYN
- Seq5                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVKSYKMYN
- Seq6                   VIEELKYEKAAEAFVPNISEDASGKIRLKLMSVKSYKMYN
-                        **************:********** *******::***:*
- 
-=item B<--resample, -R> [n]
- 
- Picks n random sequences from input alignment and produces a new alignment
- consisting of those sequences.
- 
- If n is not given, default is the number of sequences in alignment divided by 2,
- rounded down.
- 
- This functionality uses an implementation of Reservoir Sampling, based on the
- algorithm found here:
- http://blogs.msdn.com/b/spt/archive/2008/02/05/reservoir-sampling.aspx
- 
- Usage: bioaln -R[n][alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -R4 input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        **:* ******:**********:************:****
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        **** ******:***********************:****
- 
-=item B<--refseq, -r> 'seq_id'
- 
- Change the reference sequence to be seq_id.
- 
- Usage: bioaln -r 'seq_id' [alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -r 'Seq3' input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        **:* ******:**********:************:****
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        **:* ******:**********:************:****
- 
-=item B<--consensus, -C> 'percent'
- 
- Add a consensus sequence to the end of the alignment with a certain threshold
- percent and id Consensus_<percent>. By default percent is 50.
- 
- Usage: bioaln -C 'seq_id' [alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -C '90' input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
-                        **:* ******:**********:************:****
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1:                  MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
- Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
- Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
- Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
- Consensus_90           MN?K?YSIEEL?DKISMPVVAY?GEAKSFLREALE?AKNK
-                        ** * ****** ********** ************ ****
- 
-=item B<--codon-view, -c>
- 
- Prints a CLUSTALW-like alignment, but separated by codons. Intended for
- use with DNA sequences. Block-final position numbers are printed at the end of
- every alignment block at the point of wrapping, and block-initial counts appear
- over first nucleotide in a block.
- 
- If invoked as --codon-view=n where n is some number, will print n codons per
- line. Other normally stackable options, such as -m, can be used alongside it.
- If piping through bioaln, ensure codon-view is used in the last
- invocation.
- 
- Usage: bioaln -c [alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -c input_DNA.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
+
  Seq1    ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAAATAAGC
  Seq2    ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAAATAAGC
  Seq3    ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAAATAAGT
@@ -1404,238 +909,470 @@ __END__
  Seq5    ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGC
  Seq6    ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGT
          ******** ** * *** *************** **** ********
+
+OUTPUT:
+                                                                      4
+        1                                                             8
+ Seq1   ATG AAT AAA AAG ATA TAC AGC ATA GAA GAA TTA ATA GAT AAA ATA AGC
+ Seq2   ATG AAT AAT AAA ATA TAC AGC ATA GAA GAA TTA ATA GAT AAA ATA AGC
+ Seq3   ATG AAT AAA AAG ATA TAT AGC ATA GAA GAA TTA GTA GAT AAA ATA AGT
+ Seq4   ATG AAT AAA AAA ACA TAT AGC ATA GAA GAA TTA ATA GAT AAA ATA AGT
+ Seq5   ATG AAT AAA AAA ATA TAT AGC ATA GAA GAA TTA ATA GAC AAA ATA AGC
+ Seq6   ATG AAT AAA AAA ATA TAT AGC ATA GAA GAA TTA ATA GAC AAA ATA AGT
+
+=head2 --delete, -d
  
- OUTPUT:
-                                                                       4
-         1                                                             8
- Seq1    ATG AAT AAA AAG ATA TAC AGC ATA GAA GAA TTA ATA GAT AAA ATA AGC
- Seq2    ATG AAT AAT AAA ATA TAC AGC ATA GAA GAA TTA ATA GAT AAA ATA AGC
- Seq3    ATG AAT AAA AAG ATA TAT AGC ATA GAA GAA TTA GTA GAT AAA ATA AGT
- Seq4    ATG AAT AAA AAA ACA TAT AGC ATA GAA GAA TTA ATA GAT AAA ATA AGT
- Seq5    ATG AAT AAA AAA ATA TAT AGC ATA GAA GAA TTA ATA GAC AAA ATA AGC
- Seq6    ATG AAT AAA AAA ATA TAT AGC ATA GAA GAA TTA ATA GAC AAA ATA AGT
+Delete sequences based on their id. Option takes a comma-separated list of ids.
+
+Usage: bioaln -d 'seq_id_1, seq_id_2, ... , seq_id_n' <alignment_file>
+
+EXAMPLE:
+
+Command: bioaln -d 'Seq1,Seq2' input.aln
+
+INPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                       **:* ******:**********:************:****
+
+OUTPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                       ***********:****************************
+
+=head2 --nogaps, -g
+
+Remove gaps (and returns an de-gapped alignment).
+
+Usage: bioaln -g <alignment_file>
+
+EXAMPLE:
+
+bioaln -g input.aln
+
+INPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                ******** ** * *** *************** **** ***  *****
+
+OUTPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAAATAAGT
+Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAAATAAGC
+Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAAATAAGC
+Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAAATAAGT
+Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGC
+Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGT
+                ******** ** * *** *************** **** ********
+
+=head2 --input, -i
+
+Input file format. By default, this is 'clustalw'.
+
+Usage: bioaln -i 'format'
+
+=head2 --length, -l
+
+Print alignment length.
+
+Usage: bioaln -l <alignment_file>
+
+EXAMPLE:
+
+Command: bioaln -l input.aln
+
+INPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                ******** ** * *** *************** **** ***  *****
+
+OUTPUT:
+
+50
+
+=head2 --match, -m
+
+Go through all columns and change residues identical to the reference sequence to be the match character, '.'
+
+Usage: bioaln -m <alignment_file>
+
+=head2 --numseq, -n
+
+Get number of sequences in alignment
+
+Usage: bioaln -n <alignment_file>
+
+=head2 --output, -o
+
+Output file format. By default, this is 'clustalw'.
+
+Usage: bioaln -o 'format'
+
+=head2 --pick, -p
+
+Pick sequences based on their id. Option takes a comma-separated list of ids.
+
+Usage: bioaln -p 'seq_id_1, seq_id_2, ... , seq_id_n' <alignment_file>
+
+=head2 --refseq, -r
  
-=item B<--nogaps, -g>
+Change the reference sequence to be seq_id.
+
+Usage: bioaln -r 'seq_id' <alignment_file>
+
+=head2 --slice, -s
+
+Get a slice of the alignment.
+
+Using a '-' character in the first or second position defaults to the beginning or end, respectively. Therefore specifying -s'-,-' is the same as grabbing the whole alignment.
+
+Usage: bioaln -s 'min,max' <alignment_file>
+
+-s'20,80' or --slice'20,80' or -s='20,80' or --slice='20,80'   Slice from position 20 to 80, inclusive.
+-s'-,80'  Slice from beginning up to, and including position 80
+-s'20,-'  Slice from position 20 up to, and including, the end of the alignment
+
+NOTE: --slice'-,x' (where x is '-' or a position) does NOT work. Use --slice='-,x' instead.
+
+=head2 --varsites, -v
+
+Extracts variable sites.
+
+B<Used in conjunction with -g:> do not show sites with gaps in any sequence.
+
+Usage: bioaln -v <alignment_file>
+
+=head2 --window, -w
  
- Remove gaps (and returns an de-gapped alignment).
+Calculate pairwise average sequence difference by windows (overlapping windows with fixed step of 1). Default value for window_size is 30.
+
+Usage: bioaln -w 'window_size'[default is 30] <alignment_file>
+
+=head2 --conblocks, -B
  
- Usage: bioaln -g [alignment file]
+Extract perfectly conserved blocks (PCBs, gap excluded) from an alignment, each to a new clustalw file. Default minimum length of PCB is 6 sites.
+
+Usage: bioaln -B <alignment_file>
+
+EXAMPLE:
+
+Command: bioaln -B input.aln
+
+INPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                ******** ** * *** *************** **** ***  *****
+
+OUTPUT:  files containing perfectly conserved blocks
+
+nuc.aln.slice-1.aln : file contents below. Site positions indicated after the '/'
+
+Seq1/1-8               ATGAATAA
+Seq2/1-8               ATGAATAA
+Seq3/1-8               ATGAATAA
+Seq4/1-8               ATGAATAA
+Seq5/1-8               ATGAATAA
+Seq6/1-8               ATGAATAA
+                       ********
+nuc.aln.slice-19.aln:
+
+Seq1/19-33             AGCATAGAAGAATTA
+Seq2/19-33             AGCATAGAAGAATTA
+Seq3/19-33             AGCATAGAAGAATTA
+Seq4/19-33             AGCATAGAAGAATTA
+Seq5/19-33             AGCATAGAAGAATTA
+Seq6/19-33             AGCATAGAAGAATTA
+                       ***************
+
+nuc.aln.slice-40.aln
+
+Seq1/40-47             AAAATAAG
+Seq2/40-47             AAAATAAG
+Seq3/40-47             AAAATAAG
+Seq4/40-47             AAAATAAG
+Seq5/40-47             AAAATAAG
+Seq6/40-47             AAAATAAG
+                       ********
+
+=head2 --consensus, -C
+
+Add a consensus sequence to the end of the alignment with a certain threshold percent and id Consensus_<percent>. By default percent is 50.
+
+Usage: bioaln -C 'percent' <alignment_file>
+
+EXAMPLE:
+
+Command: bioaln -C '90' input.aln
+
+INPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                       **:* ******:**********:************:****
+
+OUTPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1:                  MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+Consensus_90           MN?K?YSIEEL?DKISMPVVAY?GEAKSFLREALE?AKNK
+                       ** * ****** ********** ************ ****
+
+=head2 --erasecol, -E
  
- EXAMPLE:
- 
- bioaln -g input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
- Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
- Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
- Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
- Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
- Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
-                 ******** ** * *** *************** **** ***  *****
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAAATAAGT
- Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAAATAAGC
- Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAAATAAGC
- Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAAATAAGT
- Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGC
- Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGT
-                 ******** ** * *** *************** **** ********
- 
-=item B<--conblocks, -B>
- 
- Extract perfectly conserved blocks (PCBs, gap excluded) from an alignment,
- each to a new clustalw file. Default minimum length of PCB is 6 sites.
- 
- Usage: bioaln -B [alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -B input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
- Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
- Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
- Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
- Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
- Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
-                 ******** ** * *** *************** **** ***  *****
- 
- OUTPUT:  files containing perfectly conserved blocks
- 
- nuc.aln.slice-1.aln : file contents below. Site positions indicated after the '/'
- 
- Seq1/1-8               ATGAATAA
- Seq2/1-8               ATGAATAA
- Seq3/1-8               ATGAATAA
- Seq4/1-8               ATGAATAA
- Seq5/1-8               ATGAATAA
- Seq6/1-8               ATGAATAA
-                        ********
- nuc.aln.slice-19.aln:
- 
- Seq1/19-33             AGCATAGAAGAATTA
- Seq2/19-33             AGCATAGAAGAATTA
- Seq3/19-33             AGCATAGAAGAATTA
- Seq4/19-33             AGCATAGAAGAATTA
- Seq5/19-33             AGCATAGAAGAATTA
- Seq6/19-33             AGCATAGAAGAATTA
-                        ***************
- 
- nuc.aln.slice-40.aln
- 
- Seq1/40-47             AAAATAAG
- Seq2/40-47             AAAATAAG
- Seq3/40-47             AAAATAAG
- Seq4/40-47             AAAATAAG
- Seq5/40-47             AAAATAAG
- Seq6/40-47             AAAATAAG
-                        ********
- 
-=item B<--window, -w> 'window_size'
- 
- Calculate pairwise average sequence difference by windows (overlapping windows
- with fixed step of 1). Default value for window_size is 30.
- 
- Usage: bioaln -w[size|default is 30]  [alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -w input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAAATAAGC
- Seq2            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAAATAAGC
- Seq3            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAAATAAGT
- Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAAATAAGT
- Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGC
- Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGT
-                 ******** ** * *** *************** **** ********
- 
- OUTPUT:
- 
- 1       30      0.0578
- 2       31      0.0578
- 3       32      0.0578
- 4       33      0.0578
- 5       34      0.0689
- 6       35      0.0689
- 7       36      0.0689
- 8       37      0.0689
- 9       38      0.0689
- 10      39      0.0756
- 11      40      0.0756
- 12      41      0.0756
- 13      42      0.0578
- 14      43      0.0578
- 15      44      0.0467
- 16      45      0.0467
- 17      46      0.0467
- 18      47      0.0467
- 19      48      0.0489
- 
-=item B<--erasecol, -E> 'seq_id'
- 
- Remove columns with gap in designated sequence.
- 
- Usage: bioaln -E 'seq_id'  [alignment file]
- 
- EXAMPLE:
- 
- Command: bioaln -E 'Seq5' input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
- Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
- Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
- Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
- Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
- Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
-                 ******** ** * *** *************** **** ***  *****
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA-ATAAGT
- Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACATAAGC
- Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA-ATAAGC
- Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA-ATAAGT
- Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAACATAAGC
- Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA-ATAAGT
-                 ******** ** * *** *************** **** *** *****
- 
- 
-=item B<--var, -v>
- 
- Extracts variable sites.
- 
- B<Used in conjunction with -g:> do not show sites with gaps in any sequence.
- 
- Usage: bioaln -v [alignment file]
- 
- EXAMPLE:
- 
- Command:   bioaln -v input.aln
- 
- INPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1              ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAAATAAGT
- Seq2              ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAAATAAGC
- Seq3              ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAAATAAGC
- Seq4              ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAAATAAGT
- Seq5              ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGC
- Seq6              ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAATAAGT
-                   ******** ** * *** *************** **** ********
- 
- OUTPUT:
- 
- CLUSTAL W (1.81) multiple sequence alignment
- 
- Seq1              AGTTGTT
- Seq2              AGTCATC
- Seq3              TATCATC
- Seq4              AACTATT
- Seq5              AATTACC
- Seq6              AATTACT
- 
-=back
- 
+Remove columns with gap in designated sequence.
+
+Usage: bioaln -E 'seq_id' <alignment_file>
+
+EXAMPLE:
+
+Command: bioaln -E 'Seq5' input.aln
+
+INPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                ******** ** * *** *************** **** ***  *****
+
+OUTPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA-ATAAGT
+Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACATAAGC
+Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA-ATAAGC
+Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA-ATAAGT
+Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAACATAAGC
+Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA-ATAAGT
+                ******** ** * *** *************** **** *** *****
+
+=head2 --listids, -L
+
+List all sequence ids
+
+Usage: bioaln -L <alignment_file>
+
+=head2 --resample, -R
+
+Picks n random sequences from input alignment and produces a new alignment consisting of those sequences.
+
+If n is not given, default is the number of sequences in alignment divided by 2, rounded down.
+
+This functionality uses an implementation of Reservoir Sampling, based on the algorithm found here: http://blogs.msdn.com/b/spt/archive/2008/02/05/reservoir-sampling.aspx
+
+Usage: bioaln -R 'n' <alignment_file>
+
+EXAMPLE:
+
+Command: bioaln -R4 input.aln
+
+INPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                       **:* ******:**********:************:****
+
+OUTPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                       **** ******:***********************:****
+
+=head2 --shuffle-sites, -S
+
+Make a shuffled (not bootstraped) alignment
+
+Usage: bioaln -S <alignment_file>
+
+EXAMPLE:
+
+Command: bioaln -S input.aln
+
+INPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1                   MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
+Seq2                   MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
+Seq3                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq4                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq5                   MNKKIYSIEELIDKISMPVVAYSGEAKSFLREALEYAKNK
+Seq6                   MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
+                       **:* ******:**********:************:****
+
+OUTPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVNAYKMYN
+Seq2                   VIEELKYEKAAEAFIPNISEDASGKTRLKLMSVKSYKMHN
+Seq3                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVKSYKMYN
+Seq4                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVKSYKMYN
+Seq5                   VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVKSYKMYN
+Seq6                   VIEELKYEKAAEAFVPNISEDASGKIRLKLMSVKSYKMYN
+                       **************:********** *******::***:*
+
+=head2 --uniq, -u
+
+Extract the alignment of unique sequences.
+
+Usage: bioaln -u <alignment_file>
+
+EXAMPLE:
+
+Command: bioaln -u input.aln
+
+INPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+seq1                   ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+seq11                  ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+seq2                   ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+seq3                   ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+seq4                   ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+seq5                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+seq7                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+seq6                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                       ******** ** * *** *************** **** ***  *****
+
+OUTPUT:
+
+seq1	ST1
+seq11	ST1
+seq2	ST2
+seq3	ST3
+seq4	ST4
+seq5	ST5
+seq7	ST5
+seq6	ST6
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+ST1                    ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+ST2                    ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+ST3                    ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+ST4                    ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+ST5                    ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+ST6                    ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                       ******** ** * *** *************** **** ***  *****
+
+=head2 --uppercase, -U
+
+Make an uppercase alignment.
+
+Usage: bioaln -U <alignment_file>
+
+EXAMPLE:
+
+Command: bioaln -U  input.aln
+
+INPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+seq1            atgaataaaaagatatatagcatagaagaattagtagataaa--ataagt
+seq1            atgaataaaaagatatatagcatagaagaattagtagataaa--ataagt
+seq2            atgaataaaaagatatacagcatagaagaattaatagataaacgataagc
+seq5            atgaataaaaaaatatatagcatagaagaattaatagacaaac-ataagc
+seq3            atgaataataaaatatacagcatagaagaattaatagataaa--ataagc
+seq4            atgaataaaaaaacatatagcatagaagaattaatagataaa--ataagt
+seq5            atgaataaaaaaatatatagcatagaagaattaatagacaaac-ataagc
+seq6            atgaataaaaaaatatatagcatagaagaattaatagacaaa--ataagt
+                ******** ** * *** *************** **** ***  *****
+
+OUTPUT:
+
+CLUSTAL W (1.81) multiple sequence alignment
+
+Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+Seq1            ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
+Seq2            ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
+Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+Seq3            ATGAATAATAAAATATACAGCATAGAAGAATTAATAGATAAA--ATAAGC
+Seq4            ATGAATAAAAAAACATATAGCATAGAAGAATTAATAGATAAA--ATAAGT
+Seq5            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAAC-ATAAGC
+Seq6            ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
+                ******** ** * *** *************** **** ***  *****
+
 =head1 REQUIRES
- 
- Perl 5.100, Modern::Perl, BioPerl
- 
+
+Perl 5.100, Modern::Perl, BioPerl
+
 =head1 SEE ALSO
- 
- perl(1)
- 
+
+perl(1)
+
 =head1 AUTHOR(S)
- 
- Weigang Qiu <weigang.qiu@genectr.hunter.cuny.edu>
- William McCaig
- Che Martin
- Yoezen Hernandez <yzhernand@gmail.com>
- Levy Vargas <levy.vargas@gmail.com>
- 
+
+Weigang Qiu: weigang  at genectr.hunter.cuny.edu
+William McCaig
+Che Martin
+Yoezen Hernandez: yzhernand at gmail.com
+Levy Vargas: levy.vargas at gmail.com
+
 =cut
- 
- ##################### End ##########################
+
+##################### End ##########################
