@@ -74,9 +74,11 @@ for my $option ( keys %opts ) {
 # Let seq-manipulations act as a converter when no other options are given.
 write_out();
 
+__END__
+
 ################# POD Documentation ##################
 
-__END__
+=pod
 
 =head1 NAME
 
@@ -251,7 +253,7 @@ Usage: bioseq -L <input_file>
 
 Re-circularize a bacterial genome by starting at a specified position, e.g. for sequence "ABCDE", bioseq -R'2' would generate 'BCDEA'.
 
-Usage: bioseq -R 1000 <input_file>
+Usage: bioseq -R 'number' <input_file>
 
 =head2 --removestop, -X
 
