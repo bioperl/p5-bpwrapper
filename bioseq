@@ -80,17 +80,43 @@ __END__
 
 =head1 NAME
 
-bioseq - FASTA file utility based on BioPerl.
+=over
+
+=item B<bioseq> - FASTA sequence utility based on BioPerl.
+
+=back
 
 =head1 SYNOPSIS
 
-B<bioseq> [--help --man --composition --delete --fetch --nogaps --input --length --numseq --output --pick --revcom --subseq --translate --anonymize --break --leadgaps --linearize --reloop --removestop] <input_file>
+ bioseq -l fasta_file             # [l]engths of sequences
+ bioseq -n fasta_file             # [n]umber of sequences
+ bioseq -r fasta_file             # [r]everse-complement sequences
+ bioseq -p'order:3' fasta_file    # [p]ick the 3rd sequences
+ bioseq -p're:B31' fasta_file     # [p]ick sequences with regex
+ bioseq -d'order:3' fasta_file    # [d]elete the 3rd sequences
+ bioseq -d're:B31' fasta_file     # [d]elete sequences with regex
+ bioseq -t1 dna_fasta_file        # [t]ranslate in 1st reading frame
+ bioseq -t3 dna_fasta_file        # [t]ranslate in 3 reading frames
+ bioseq -t6 dna_fasta_file        # [t]ranslate in 6 reading frames
+ bioseq -s'1,10' fasta_file       # [s]ubsequence from positions 1-10
+ bioseq -c fasta_file             # base or aa [c]omposition of sequences
+ bioseq -g fasta_file             # remove [g]aps
+ bioseq -f 'X83553' -o 'genbank'  # [f]etch a genbank file by accession
+ bioseq -A fasta_file             # [A]nonymize sequence IDs
+ bioseq -B fasta_file             # [B]reak into single-seq files
+ bioseq -L fasta_file             # [L]inearize FASTA: one sequence per line
+ bioseq -R'10' fasta_file         # [R]e-circularize at position 10
 
-B<bioseq> [-h -m -c -d=s -f=s -g -i=s -l -n -o=s -p=s -r -s=s -t=i -A:10 -B -G -L -R=i -X] <input_file>
+ # Chaining with pipes:
+ # pick a seq, remove gaps, & translate
+ bioseq -p'id:B31' dna_fasta_file | bioseq -g | bioseq -t1
+ 
+ # pick the 1st seq, rev-com, & get a subseq
+ bioseq -p'order:1' dna_fasta_file | bioseq -r | bioseq -s'10,20'  
 
 =head1 DESCRIPTION
 
-B<bioseq> is a UNIX-like command-line utility for common sequence manipulations. Most of the options are wrappers for the Bio::Seq class of BioPerl. By default, B<bioseq> will assume that both the input and the output are in FASTA format, so that multiple B<bioseq> runs can be chained with UNIX pipes.
+B<bioseq> is a command-line utility for common, routine sequence manipulations. Most methods are wrappers for the Bio::Seq class of BioPerl. By default, B<bioseq> assumes that both the input and the output files are in FASTA format, so that multiple B<bioseq> runs can be chained with UNIX pipes.
 
 =head1 OPTIONS
 
@@ -122,16 +148,13 @@ Usage: bioseq -c <input_file>
  --del 'id:foo,bar'	list by id
  --del 're:REGEX'       using a regular expression (only one regex is expected)
 
-Usage: bioseq --delete 'tag:value' <input_file>
+Usage: bioseq -d 'tag:value' <input_file>
 
 =head2 --fetch, -f
+
 Retrieves a sequence from GenBank using the provided accession number.
 
 Usage: bioseq -f <genbank_accession>
-
-EXAMPLE:
-    
-bioseq -f 'X83553' -o 'genbank' (if want in genbank format; default is FASTA)
 
 =head2 --nogaps, -g
 
@@ -153,7 +176,7 @@ Usage: bioseq -l <input_file>
 
 =head2 --numseq, -n
 
-Print number of sequences in the input file.
+Print number of sequences.
 
 Usage: bioseq -n <input_file>
 
@@ -228,7 +251,7 @@ Usage: bioseq -L <input_file>
 
 Re-circularize a bacterial genome by starting at a specified position, e.g. for sequence "ABCDE", bioseq -R'2' would generate 'BCDEA'.
 
-Usage: bioseq --reloop 1000 <input_file>
+Usage: bioseq -R 1000 <input_file>
 
 =head2 --removestop, -X
 
@@ -240,15 +263,22 @@ Usage: bioseq -X <input_file>
 
 Perl 5.010, BioPerl
 
-=head1 SEE ALSO
+=head1 FEEDBACK
 
-  perl(1)
+=head2 Support
 
-=head1 AUTHORS
+Please see project wiki page https://github.com/bioperl/bp-utils/wiki for documentation and use cases.
 
- Yozen Hernandez yzhernand at gmail dot com
- Levy Vargas levy dot vargas at gmail dot com
- Weigang Qiu at genectr.hunter.cuny.edu
+=head2 Report bugs & Contribute
+
+Please email weigang@genectr.hunter.cuny.edu.
+
+=head1 CONTRIBUTORS
+
+ Yozen Hernandez <yzhernand at gmail dot com>
+ Girish Ramrattan <gramratt at gmail dot com>
+ Levy Vargas <levy dot vargas at gmail dot com>
+ Weigang Qiu <weigang at genectr dot hunter dot cuny dot edu>
 
 =cut
 
