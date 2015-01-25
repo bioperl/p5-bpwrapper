@@ -864,32 +864,41 @@ __END__
 
 =head1 SYNOPSIS
 
- bioaln -a input.aln
- bioaln -c input_DNA.aln
- bioaln -d 'Seq1,Seq2' input.aln
- bioaln -g input.aln
- bioaln -i 'format'
- bioaln -l input.aln
- bioaln -m input.aln
- bioaln -n <alignment_file>
- bioaln -o 'format'
- bioaln -p 'seq_id_1, seq_id_2, ... , seq_id_n' <alignment_file>
- bioaln -r 'seq_id' <alignment_file>
- bioaln -s 'min,max' <alignment_file>
- bioaln -u input.aln
- bioaln -v <alignment_file>
- bioaln -w 'window_size'[default is 30] <alignment_file>
- bioaln -B input.aln
- bioaln -C '90' input.aln
- bioaln -E 'Seq5' input.aln
- bioaln -L <alignment_file>
- bioaln -R4 input.aln
- bioaln -S input.aln
- bioaln -U  input.aln
+ bioaln -l aln_file                  # [l]ength of an alignment
+ bioaln -n aln_file                  # [n]umber of aligned sequences
+ bioaln -i 'fasta' fasta_aln_file    # [i]nput is a FASTA alignment
+ bioaln -o 'fasta' aln_file          # [o]utput a FASTA alignment
+ bioaln -i'fasta' -o'phylip'         # change format: FASTA => PHYLIP
+ bioaln -m input.aln                 # use [m]atch symbols (show variable sites)
+ bioaln -g aln_file                  # remove [g]apped sites
+ bioaln -s '10,20'                   # alignment [s]lice from 10-20
+ bioaln -r 'seq_id' aln_file         # change [r]eference (1st) sequence
+ bioaln -a input.aln                 # [a]verage percent identity
+ bioaln -d 'Seq1,Seq2' aln_input     # [d]elete sequences
+ bioaln -p 'Seq1, Seq2' aln_input    # [p]ick sequences
+ bioaln -u aln_file                  # result in only [u]nique sequences
+ bioaln -v aln_file                  # show only variable sites
+ bioaln -w '30' aln_file             # average identifies for sliding [w]indows of 30
+ bioaln -c aln_file                  # [c]odon view (groups of 3 nts)
+ bioaln -B aln_file                  # extract conserved [B]locks
+ bioaln -C '90' aln_file             # add a 90% [C]onsensus sequence
+ bioaln -E 'Seq5' input.aln          # [E]rase sites gapped at Seq5
+ bioaln -L aln_file                  # [L]ist all sequence IDs 
+ bioaln -R4 aln_file                 # [R]e-sampled alignment of 4 sequences          
+ bioaln -S aln_file                  # [S]huffle nts at each site (remove phylogenetic signal)
+ bioaln -U aln_file                  # turn into [U]pper-case  
+
+ # Chaining with pipes:
+ # Read a FASTA alignment, slice it, and calcualte percent identity:
+ bioaln -i'fasta' fasta.aln | bioaln -s'10,20' | bioaln -a
+
+ # Chaining with bioseq:
+ # Turn a coding-sequence alignment into a protein alignemnt:
+ bioaln -o'fasta' cds.aln | bioseq -t1 | bioaln -i'fasta'
 
 =head1 DESCRIPTION
 
-B<bioaln> will read an alignment file and do slice, display match characters, etc. By default, B<bioaln> will assume both the input and the output are in clustalw format so that multiple B<bioaln> runs can be chained with UNIX pipes.
+B<bioaln> performs common, routine manipulations of sequence alignments. By default, B<bioaln> assumes that both the input and the output files are in CLUSTALW format so that multiple B<bioaln> runs can be chained with UNIX pipes. Upper-case options are less commonly used.
 
 =head1 OPTIONS and EXAMPLES
 
@@ -947,7 +956,7 @@ Usage: bioaln -g <alignment_file>
 
 =head2 --input, -i
 
-Input file format. By default, this is 'clustalw'.
+Input file format (see Bio::AlignIO for supported formats). By default, this is 'clustalw'.
 
 Usage: bioaln -i 'format'
 
@@ -992,7 +1001,7 @@ Usage: bioaln -n <alignment_file>
 
 =head2 --output, -o
 
-Output file format. By default, this is 'clustalw'.
+Output file format (see Bio::AlignIO for supported formats). By default, this is 'clustalw'.
 
 Usage: bioaln -o 'format'
 
@@ -1267,11 +1276,11 @@ Please email weigang@genectr.hunter.cuny.edu.
 
 =head1 CONTRIBUTORS
 
-Weigang Qiu <weigang at genectr dot hunter dot cuny.edu>
-William McCaig
-Che Martin
-Yoezen Hernandez <yzhernand at gmail dot com>
-Levy Vargas <levy dot vargas at gmail dot com>
+ William McCaig <wmccaig at gmail dot com
+ Che Martin <che dot l dot martin at gmail dot com>
+ Yoezen Hernandez <yzhernand at gmail dot com>
+ Levy Vargas <levy dot vargas at gmail dot com>
+ Weigang Qiu <weigang at genectr dot hunter dot cuny.edu>
 
 =cut
 
