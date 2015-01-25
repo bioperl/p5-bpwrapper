@@ -843,8 +843,8 @@ Perl 5.010, BioPerl
 
 =head1 AUTHORS
 
- Weigang Qiu at genectr.hunter.cuny.edu
- Yözen Hernández yzhernand at gmail dot com
- Levy Vargas levy dot vargas at gmail dot com
+ Weigang Qiu <weigng at genectr dot hunter dot cuny dot edu>
+ Yözen Hernández <yzhernand at gmail dot com>
+ Levy Vargas <levy dot vargas at gmail dot com>
 
 =cut

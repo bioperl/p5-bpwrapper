@@ -90,8 +90,12 @@ __END__
 
 =head1 SYNOPSIS
 
+ # FASTA descriptors:
  bioseq -l fasta_file             # [l]engths of sequences
  bioseq -n fasta_file             # [n]umber of sequences
+ bioseq -c fasta_file             # base or aa [c]omposition of sequences
+
+ # FASTA filters (FASTA in FASTA out) - one or more sequences:
  bioseq -r fasta_file             # [r]everse-complement sequences
  bioseq -p'order:3' fasta_file    # [p]ick the 3rd sequences
  bioseq -p're:B31' fasta_file     # [p]ick sequences with regex
@@ -100,21 +104,25 @@ __END__
  bioseq -t1 dna_fasta_file        # [t]ranslate in 1st reading frame
  bioseq -t3 dna_fasta_file        # [t]ranslate in 3 reading frames
  bioseq -t6 dna_fasta_file        # [t]ranslate in 6 reading frames
- bioseq -s'1,10' fasta_file       # [s]ubsequence from positions 1-10
- bioseq -c fasta_file             # base or aa [c]omposition of sequences
  bioseq -g fasta_file             # remove [g]aps
- bioseq -f 'X83553' -o 'genbank'  # [f]etch a genbank file by accession
  bioseq -A fasta_file             # [A]nonymize sequence IDs
- bioseq -B fasta_file             # [B]reak into single-seq files
- bioseq -L fasta_file             # [L]inearize FASTA: one sequence per line
+
+ # FASTA filters (FASTA in FASTA out) - single sequence:
+ bioseq -s'1,10' fasta_file       # [s]ubsequence from positions 1-10
  bioseq -R'10' fasta_file         # [R]e-circularize at position 10
 
+ # Retrieve sequence from database
+ bioseq -f 'X83553' -o 'genbank'  # [f]etch a genbank file by accession
+ bioseq -f 'X83553' -o 'fasta'    # [f]etch a genbank file in FASTA
+
+ # Less common usages (options in CAPs)
+ bioseq -L fasta_file             # [L]inearize FASTA: one sequence per line
+ bioseq -B fasta_file             # [B]reak into single-seq files
+ bioseq -X fasta_file             # remove stop[X] codon (e.g., for PAML)
+
  # Chaining with pipes:
- # pick a seq, remove gaps, & translate
- bioseq -p'id:B31' dna_fasta_file | bioseq -g | bioseq -t1
- 
- # pick the 1st seq, rev-com, & get a subseq
- bioseq -p'order:1' dna_fasta_file | bioseq -r | bioseq -s'10,20'  
+ bioseq -p'id:B31' dna_fasta | bioseq -g | bioseq -t1          # pick a seq, remove gaps, & translate 
+ bioseq -p'order:2' dna_fasta | bioseq -r | bioseq -s'10,20'   # pick the 2nd seq, rev-com it, & subseq
 
 =head1 DESCRIPTION
 
