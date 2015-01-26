@@ -28,17 +28,30 @@ my ( $in, $out, $seq, %opts, $filename, $in_format, $out_format );
 ## For new options, just add an entry into this table with the same key as in
 ## the GetOpts function in the main program. Make the key be a reference to
 ## the handler subroutine (defined below), and test that it works.  
-my %opt_dispatch = ( 'anonymize' => \&anonymize, 'composition' =>
-\&print_composition, 'delete' => \&filter_seqs, 'dotplot' =>
-\&draw_dotplot, 'extract' => \&reading_frame_ops, 'leadgaps' =>
-\&count_leading_gaps, 'length' => \&print_lengths, 'linearize' =>
-\&linearize, 'longest-orf' => \&reading_frame_ops, 'nogaps' =>
-\&remove_gaps, 'numseq' => \&print_seq_count, 'pick' => \&filter_seqs,
-'prefix' => \&anonymize, 'rename' => \&rename_id, 'reloop' =>
-\&reloop_at, 'removestop' => \&remove_stop, 'fetch' =>
-\&retrieve_seqs, 'revcom' => \&make_revcom, 'break' => \&shred_seq,
-'slidingwindow' => \&sliding_window, 'split' => \&split_seqs, 'subseq'
-=> \&print_subseq, 'translate' => \&reading_frame_ops, );
+my %opt_dispatch = ( 'anonymize' => \&anonymize, 
+		     'composition' => \&print_composition, 
+		     'delete' => \&filter_seqs, 
+#		     'dotplot' => \&draw_dotplot, 
+		     'extract' => \&reading_frame_ops, 
+		     'leadgaps' => \&count_leading_gaps, 
+		     'length' => \&print_lengths, 
+		     'linearize' => \&linearize, 
+#		     'longest-orf' => \&reading_frame_ops, 
+		     'nogaps' => \&remove_gaps, 
+		     'numseq' => \&print_seq_count, 
+		     'pick' => \&filter_seqs,
+		     'prefix' => \&anonymize, 
+#		     'rename' => \&rename_id, 
+		     'reloop' => \&reloop_at, 
+		     'removestop' => \&remove_stop, 
+		     'fetch' => \&retrieve_seqs, 
+		     'revcom' => \&make_revcom, 
+		     'break' => \&shred_seq,
+#		     'slidingwindow' => \&sliding_window, 
+		     'split' => \&split_seqs, 
+		     'subseq' => \&print_subseq, 
+		     'translate' => \&reading_frame_ops, 
+    );
 
 my %filter_dispatch = (
     'find_by_order'  => \&find_by_order,
@@ -499,6 +512,7 @@ sub remove_stop {
     }
 }
 
+# To do: add fetch by gi
 sub retrieve_seqs {
     my $gb  = Bio::DB::GenBank->new();
     my $seq = $gb->get_Seq_by_acc($opts{'fetch'}); # Retrieve sequence with Accession Number
@@ -529,6 +543,37 @@ sub print_composition {
         print "\n";
       }
   }
+
+
+sub shred_seq {
+    while ( $seq = $in->next_seq() ) {
+        my $newid = $seq->id();
+        $newid =~ s/[\s\|]/_/g;
+        print $newid, "\n";
+        my $newout = Bio::SeqIO->new(
+            -format => $out_format,
+            -file   => ">" . $newid . ".fas"
+        );
+        $newout->write_seq($seq);
+    }
+    exit;
+}
+
+sub print_gb_gene_feats {
+    $seq = $in->next_seq();
+    foreach my $feat ( $seq->get_SeqFeatures() ) {
+        if ( $feat->primary_tag eq 'gene' ) {
+            print join "\t",
+                ( $feat->gff_string, $feat->start, $feat->end,
+                $feat->strand );
+            print "\n";
+        }
+    }
+}
+
+1;
+
+=begin legacy codes, rarely used
 
 sub update_longest_reading_frame {
     my $seqobj  = shift;
@@ -706,32 +751,6 @@ sub reading_frame_ops {
     }
 }
 
-sub shred_seq {
-    while ( $seq = $in->next_seq() ) {
-        my $newid = $seq->id();
-        $newid =~ s/[\s\|]/_/g;
-        print $newid, "\n";
-        my $newout = Bio::SeqIO->new(
-            -format => $out_format,
-            -file   => ">" . $newid . ".fas"
-        );
-        $newout->write_seq($seq);
-    }
-    exit;
-}
-
-sub print_gb_gene_feats {
-    $seq = $in->next_seq();
-    foreach my $feat ( $seq->get_SeqFeatures() ) {
-        if ( $feat->primary_tag eq 'gene' ) {
-            print join "\t",
-                ( $feat->gff_string, $feat->start, $feat->end,
-                $feat->strand );
-            print "\n";
-        }
-    }
-}
-
 sub split_seqs {
     my $split_at   = $opts{"split"};
     my $out_prefix = $filename . "_split_";
@@ -831,20 +850,5 @@ sub rename_id {
     }
 }
 
-1;
-
-=head1 REQUIRES
-
-Perl 5.010, BioPerl
-
-=head1 SEE ALSO
-
-  perl(1)
-
-=head1 AUTHORS
-
- Weigang Qiu <weigng at genectr dot hunter dot cuny dot edu>
- Yözen Hernández <yzhernand at gmail dot com>
- Levy Vargas <levy dot vargas at gmail dot com>
-
 =cut
+
