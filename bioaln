@@ -864,29 +864,42 @@ __END__
 
 =head1 SYNOPSIS
 
+ # Alignment descriptors:
  bioaln -l aln_file                  # [l]ength of an alignment
  bioaln -n aln_file                  # [n]umber of aligned sequences
- bioaln -i 'fasta' fasta_aln_file    # [i]nput is a FASTA alignment
- bioaln -o 'fasta' aln_file          # [o]utput a FASTA alignment
- bioaln -i'fasta' -o'phylip'         # change format: FASTA => PHYLIP
- bioaln -m input.aln                 # use [m]atch symbols (show variable sites)
+ bioaln -L aln_file                  # [L]ist all sequence IDs 
+ bioaln -a input.aln                 # [a]verage percent identity
+ bioaln -w '30' aln_file             # average identifies for sliding [w]indows of 30
+
+ # Alignment viewers:
+ bioaln -m input.aln                 # [m]atch view (show variable sites)
+ bioaln -c aln_file                  # [c]odon view (groups of 3 nts)
+
+ # Alignment filters (produce a new alignment):
+ bioaln -i 'fasta' fasta_aln_file    # [i]nput is a FASTA alignment (CLUSTALW is dafault)
+ bioaln -o 'fasta' aln_file          # [o]utput a FASTA alignment (CLUSTALW is dafault)
  bioaln -g aln_file                  # remove [g]apped sites
  bioaln -s '10,20'                   # alignment [s]lice from 10-20
  bioaln -r 'seq_id' aln_file         # change [r]eference (1st) sequence
- bioaln -a input.aln                 # [a]verage percent identity
  bioaln -d 'Seq1,Seq2' aln_input     # [d]elete sequences
  bioaln -p 'Seq1, Seq2' aln_input    # [p]ick sequences
- bioaln -u aln_file                  # result in only [u]nique sequences
+ bioaln -u aln_file                  # [u]nique-fy sequences (remove redundant seqs)
  bioaln -v aln_file                  # show only variable sites
- bioaln -w '30' aln_file             # average identifies for sliding [w]indows of 30
- bioaln -c aln_file                  # [c]odon view (groups of 3 nts)
- bioaln -B aln_file                  # extract conserved [B]locks
  bioaln -C '90' aln_file             # add a 90% [C]onsensus sequence
  bioaln -E 'Seq5' input.aln          # [E]rase sites gapped at Seq5
- bioaln -L aln_file                  # [L]ist all sequence IDs 
- bioaln -R4 aln_file                 # [R]e-sampled alignment of 4 sequences          
- bioaln -S aln_file                  # [S]huffle nts at each site (remove phylogenetic signal)
- bioaln -U aln_file                  # turn into [U]pper-case  
+ bioaln -U aln_file                  # turn into [U]pper-case
+
+ # Evolutionary analysis:
+ bioaln -B aln_file                  # extract conserved [B]locks
+ bioaln -S aln_file                  # [S]huffle sites (for testing conserved blocks)
+ bioaln -R '10' aln_file             # [R]e-sampled an alignment of 10 sequences
+ bioaln -b aln_file                  # [b]ootstrap an alignment (for testing branch stability)
+ bioaln -M aln_file                  # per[m]ute at each site (for testing tree-ness)
+ bioaln -T aln_file                  # extract [T]hird site (assume coding sequences)
+
+ # change alignment format:
+ bioaln -i 'fasta' -o 'phylip'       # FASTA => PHYLIP
+ bioaln -i 'fasta' -P 'pmal'         # FASTA => PAML (note not '-o')
 
  # Chaining with pipes:
  # Read a FASTA alignment, slice it, and calcualte percent identity:
