@@ -19,8 +19,8 @@ GetOptions(
     "help|h",
     "man",
     "input|i=s" => \$flags{"input"},
-    "stats=s@",    # Comma-separated, or multiply specified, list
-    "sample-size|n=i"          => \$flags{"sample-size"},
+    "stats|s=s@",    # Comma-separated, or multiply specified, list
+    "numseq|n=i"          => \$flags{"numseq"},
     "ingroup|group1|seq1|p=s@",
     "outgroup|group2|seq2|q=s@",
     "exclude|group3|seq3|r=s@",
@@ -28,11 +28,11 @@ GetOptions(
     "mutrec|b",
     "simmk|k",
     "distance|d",
-    "dist-method=s" => \$flags{"dist-method"},
+    "dist-method|D=s" => \$flags{"dist-method"},
     "kaks=s",
-    "diversity|c",
-    "numsnps|s",
-    "heterozygosity|a"
+    "pi|p",
+    "varsites|v",
+    "heterozygosity|H"
 ) or pod2usage(2);
 
 pod2usage(1) if $opts{"help"};
@@ -63,11 +63,15 @@ __END__
 
 =head1 NAME
 
-biopop - Wrapper script for BioPerl's population genetics modules
+=over
+
+=item B<biopop> - Wrapper script for BioPerl's population genetics modules
+
+=back
 
 =head1 SYNOPSIS
 
-B<biopop> [options] [alignment file]
+B<biopop> [options] <alignment_file>
 
 =head1 DESCRIPTION
 
@@ -75,97 +79,52 @@ B<biopop> DESCRIPTION GOES HERE
 
 =head1 OPTIONS
 
-=over 4
-
-=item B<--help, -h>
+=head2 --help, -h
 
 Print a brief help message and exits.
 
-=item B<--man>
+=head2 --distance, -d
 
-Prints the manual page and exits.
+Calculates a distance matrix for all pairwise distances of all sequences in the input alignment and prints it out.
 
-=item B<--input, -i>
+Use B<--dist-method> to specify the method desired. The default in Bio::Align::DNAStatistics is "JukesCantor".
+
+=head2 --dist-method, -D
+
+Used with --distance to specify which distance method to use when getting the distance matrix.
+
+Program quits if the distance method is invalid
+
+=head2 --heterozygosity, -H
+
+Foreach segregating site(s), the observed heterozygosity is returned.   
+
+=head2 --input, -i
 
 Input file format. By default, this is 'clustalw'.
 
-=item B<--stats> <comma separated list of values>
+=head2 --mismatch, -m
 
-Specify the statistics you would like to gather from input data. e.g.,
-"theta,pi" will calculate the theta and pi values.
+Pairwise calculation of mismatches for all sequences in the alignment.
+
+=head2 --numseq, -n
+
+Input file format. By default, this is 'clustalw'.
+
+=head2 --pi, -p
+
+Nucleotide Diversity is a measure of genetic variation or differences. It is similar to expected heterozygosity. This method takes in an alignment and outputs an integer. 
+
+=head2 --stats, -s <comma separated list of values>
+
+Specify the statistics you would like to gather from input data. e.g., "theta,pi" will calculate the theta and pi values.
 
 Can also be specified by giving the option multiple times. e.g.,
  biopop --stats=pi --stats=theta
 
-=item B<--sample-size, -n>
-
-Input file format. By default, this is 'clustalw'.
-
-=item B<--ingroup, -p>
-
-Specify prefix for ingroup. Required for McDonald-Kreitman test.
-
-=item B<--outgroup, -q>
-
-Specify prefix for outgroup. Required for McDonald-Kreitman test.
-
-=item B<--group1, --group2>
-
-These are actually aliases for --ingroup and --outgroup, respectively, and can
-be used interchangably with those options. Use these when it may not make sense
-in your data to refer to two groups in terms of an 'ingroup' and an 'outgroup'.
-
-=item B<--mismatch, -m>
-
-Pairwise calculation of mismatches for all sequences in the alignment.
-
-=item B<--simmk, -k>
-
-Samples a specified number of times from the alignment after splitting the
-constituent sequences into two groups. The sampled sequences are then used to
-calculate the Ds and Dn, once for each group and once between groups. Sampling
-is done with replacement before each calculation.
-
-The number of times to sample can be specified with the --sample-size option. By
-default, it is 100.
-
-The split of sequences into two groups can be controlled by the --ingroup/group1
-and --outgroup/group2 options, by specifying a prefix for each group.
-
-=item B<--distance, -d>
-
-Calculates a distance matrix for all pairwise distances of all sequences in the
-input alignment and prints it out.
-
-Use B<--dist-method> to specify the method desired. The default in
-Bio::Align::DNAStatistics is "JukesCantor".
-
-=item B<--dist-method>
-
-Used with --distance to specify which distance method to use when getting the
-distance matrix.
-
-Program quits if the distance method is invalid
-
-
-=item B<--diversity, -c>                                                  
-
-Nucleotide Diversity is a measure of genetic variation or differences. It is similar to expected heterozygosity 
-This method takes in an alignment and outputs an integer. 
-
-=item B<--numsnp, -s>                                                                                                                                                                  
+=head2 --varsites, -v
 
 This method outputs the number of segregating or SNP sites within your alignment. 
-
-=item B<--heterozygosity, -a>                                           
-
-Foreach segregating site(s), the observed heterozygosity is returned.   
-
-=back
-
-=head1 EXAMPLES
-
-Section under construction...
 
 =head1 REQUIRES
 

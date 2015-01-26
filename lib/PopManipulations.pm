@@ -42,8 +42,8 @@ my %opt_dispatch = (
     'simmk'    => \&_sim_mk,
     'distance' => \&_print_distance,
     'kaks'     => \&_print_kaks_calc,
-    'diversity', => \&_print_diversity,
-    'numsnps', => \&_print_num_snps,
+    'pi', => \&_print_diversity,
+    'varsites', => \&_print_num_snps,
     'heterozygosity' => \&_print_heterozygosity,
     'mutrec' => \&_mutation_or_recombination
 );
