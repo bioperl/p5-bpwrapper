@@ -409,16 +409,6 @@ sub remove_gaps {    # remove gaps
     }
 }
 
-sub sliding_window {    #
-    my $win_size = $opts{"slidingwindow"} ? $opts{"slidingwindow"} : 1;
-    while ( $seq = $in->next_seq() ) {
-        my $string = $seq->seq();
-        for ( my $i = 1; $i <= $seq->length() - $win_size + 1; $i++ ) {
-            print $seq->subseq( $i, $i + $win_size - 1 ), "\n";
-        }
-    }
-}
-
 sub linearize {
     while ( $seq = $in->next_seq() ) {
         print $seq->id(),  "\t";
@@ -574,6 +564,17 @@ sub print_gb_gene_feats {
 1;
 
 =begin legacy codes, rarely used
+
+sub sliding_window {    #
+    my $win_size = $opts{"slidingwindow"} ? $opts{"slidingwindow"} : 1;
+    while ( $seq = $in->next_seq() ) {
+        my $string = $seq->seq();
+        for ( my $i = 1; $i <= $seq->length() - $win_size + 1; $i++ ) {
+            print $seq->subseq( $i, $i + $win_size - 1 ), "\n";
+        }
+    }
+}
+
 
 sub update_longest_reading_frame {
     my $seqobj  = shift;
