@@ -126,7 +126,9 @@ __END__
 
 =head1 DESCRIPTION
 
-B<bioseq> is a command-line utility for common, routine sequence manipulations. Most methods are wrappers for the Bio::Seq class of BioPerl. By default, B<bioseq> assumes that both the input and the output files are in FASTA format, so that multiple B<bioseq> runs can be chained with UNIX pipes.
+B<bioseq> is a command-line utility for common, routine sequence manipulations. Most methods are wrappers for BioPerl modules (e.g., Bio::Seq). By default, B<bioseq> assumes that both the input and the output files are in FASTA format, so that multiple B<bioseq> runs can be chained with UNIX pipes.
+
+Methods that are NOT wrappers should be factored into individual BioPerl modules, which handle exceptions better than stand-alone codes in bp-utils. As a design principle, bp-utils should ideally consist of ONLY wrapper calls.
 
 =head1 OPTIONS
 
@@ -144,7 +146,7 @@ Usage: bioseq -m
 
 =head2 --composition, -c
 
-Base or AA composition.
+Base or AA composition. Wrap Bio::Tools::SeqStats->count_monomers().
 
 Usage: bioseq -c <input_file>
 
@@ -162,7 +164,7 @@ Usage: bioseq -d 'tag:value' <input_file>
 
 =head2 --fetch, -f
 
-Retrieves a sequence from GenBank using the provided accession number.
+Retrieves a sequence from GenBank using the provided accession number. Wrap Bio::DB::GenBank->get_Seq_by_acc().
 
 Usage: bioseq -f <genbank_accession>
 
@@ -174,17 +176,17 @@ Usage: bioseq -g <input_file>
 
 =head2 --input, -i
 
-Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'.
+Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'. Wrap Bio::SeqIO.
 
 Usage: bioseq -i 'format' <input_file>
 
 =head2 --length, -l
 
-Print all sequence lengths.
+Print all sequence lengths. Wrap Bio::Seq->length().
 
 Usage: bioseq -l <input_file>
 
-=head2 --numseq, -n
+=head2 --numseq, -n. 
 
 Print number of sequences.
 
@@ -192,7 +194,7 @@ Usage: bioseq -n <input_file>
 
 =head2 --output, -o
 
-Output file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'.
+Output file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'. Wrap Bio::SeqIO.
 
 Usage: bioseq -o 'format' <input_file>
 
@@ -212,13 +214,13 @@ Usage: bioseq -p 'tag:value' <input_file>
 
 =head2 --revcom, -r
 
-Reverse complement
+Reverse complement. Wrap Bio::Seq->revcom().
 
 Usage: bioseq -r <input_file>
 
 =head2 --subseq, -s
 
-Select substring (of the 1st sequence), 
+Select substring (of the 1st sequence). Wrap Bio::Seq->subseq().
 
 Usage: bioseq -s 'beginning_index, ending_index' <input_file>
 
@@ -226,7 +228,7 @@ Example:  bioseq -s'20,80' <input_file> (or -s='20,80')
 
 =head2 --translate, -t
 
-Translate in 1, 3, or 6 frames. eg, -t1, -t3, or -t6.
+Translate in 1, 3, or 6 frames. eg, -t1, -t3, or -t6. Wrap Bio::Seq->translate()
 
 Usage: bioseq -t [1|3|6] <input_file>
 
