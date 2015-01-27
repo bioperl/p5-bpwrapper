@@ -8,7 +8,7 @@ use Bio::SimpleAlign;
 use Bio::LocatableSeq;
 use Getopt::Long qw(:config gnu_getopt);
 use Pod::Usage;
-use Bio::Align::DNAStatistics;
+#use Bio::Align::DNAStatistics;
 use Data::Dumper;
 use List::Util qw(shuffle);
 
@@ -42,10 +42,15 @@ GetOptions(
     "uppercase|U", # make upper case (for DNAStatistics)
     "shuffle-sites|S",
     "erasecol|E=s",
-    "varsites|v"
+    "varsites|v",
   #  "inform|Z",    Retired for now
   #  "noflatname|F",Retired for now
-  #  "dnadist|D=s", Needs fixing 
+    "bootstrap|b",
+    "concat|A",
+  # "dnadist|D=s", # Needs fixing
+    "permute-states|M",
+    "paml|P",
+    "third-sites|T"
 ) or pod2usage(2);
 
 pod2usage(1) if $opts{"help"};
@@ -81,8 +86,7 @@ if ($opts{"index"}) {
 }
 # Avoid unnecessarily opening an output file.
 #### Options which *do not require opening an output FH* go here ####
-remove_gapped_cols_in_one_seq() 
-    if  $opts{"erasecol"};
+remove_gapped_cols_in_one_seq() if  $opts{"erasecol"};
 
 if ( $opts{"length"} ) {
     say $aln->length();
@@ -113,45 +117,39 @@ if ( $opts{"window"} ) {    # average identity by windows, default to 30
     exit;
 }
 
+permute_states() if $opts{"permute-states"};
+
+third_sites() if $opts{"third-sites"};
+
 #### Options which *require an output FH* go *after* this ####
 my $out_format = $opts{"output"} || $default_format;
 my $out = Bio::AlignIO->new( -format => $out_format, -fh => \*STDOUT );
 
-get_consensus()
-    if ( $opts{"consensus"} );
+get_consensus() if $opts{"consensus"};
 
-$aln = $aln->set_new_reference( $opts{"refseq"} )
-    if ( $opts{"refseq"} );
+$aln = $aln->set_new_reference( $opts{"refseq"} ) if $opts{"refseq"};
 
 if ( $opts{"uniq"} ) {
     $aln->verbose(1);
     $aln = $aln->uniq_seq();
 }
 
-del_seqs()
-    if ( $opts{"delete"} );
+del_seqs() if $opts{"delete"};
 
-pick_seqs()
-    if ( $opts{"pick"} );
+pick_seqs() if $opts{"pick"};
 
-aln_slice()
-    if ( $opts{"slice"} );
+aln_slice() if $opts{"slice"};
 
 #extract_sites()
-remove_gaps()
-    if $opts{"nogaps"};
+remove_gaps() if $opts{"nogaps"};
 
-variable_sites()
-    if $opts{"varsites"};
+variable_sites() if $opts{"varsites"};
 
-$aln->match()
-    if ( $opts{"match"} );
+$aln->match() if $opts{"match"};
 
-$aln->uppercase()
-    if ( $opts{"uppercase"} );
+$aln->uppercase() if $opts{"uppercase"};
 
-sample_seqs()
-    if ( defined( $opts{"resample"} ) );    # defined since default value is 0
+sample_seqs() if defined( $opts{"resample"} );    # defined since default value is 0
 
 # if ( !( defined $opts{"var"} ) && ( defined $opts{"nogaps"} ) ) {
 #     my $new_aln = new Bio::SimpleAlign();
@@ -165,29 +163,19 @@ sample_seqs()
 #     $aln = $new_aln;
 # }
 
-if ( $opts{"codon-view"} ) {
-    draw_codon_view($aln);
-}
+draw_codon_view($aln) if $opts{"codon-view"};
 
-if ( $opts{"shuffle-sites"} ) {
-    shuffle_sites();
-}
+shuffle_sites() if $opts{"shuffle-sites"};
 
-if ( $opts{"conblocks"} ) {
-    conserved_blocks($aln);
-}
+conserved_blocks($aln) if $opts{"conblocks"};
 
-if ( $opts{"dnadist"} ) {
-    dnadist();
-}
+# dnadist() if $opts{"dnadist"};
 # Past this point, $new_aln is assumed to be initialized
 # by some option. Check if it is, and if not, set it to
 # be equal to $aln
 #$new_aln = $aln if ( !$new_aln );
 
-unless ( $opts{"noflatname"} ) {
-    $aln->set_displayname_flat();
-}
+$aln->set_displayname_flat() unless $opts{"noflatname"};
 
 $out->write_aln($aln);
 
@@ -461,19 +449,6 @@ sub remove_gaps {
     $aln= $aln->remove_gaps();
 }
 
-sub dnadist {
-    my $method = $opts{"dnadist"} || "Uncorrected";
-    my $stats = Bio::Align::DNAStatistics->new();
-    my $dist = $stats->distance(-align => $aln, 
-				-method => $method);
-    print $dist->print_matrix;
-    warn "Available methods:\n";
-    foreach  ($stats->available_distance_methods() ) {
-	warn "$_\n";
-    }
-}
-
-
 sub get_consensus {
     my $percent_threshold = $opts{"consensus"};
     my $consense          = Bio::LocatableSeq->new(
@@ -582,66 +557,91 @@ sub cal_A {
     return $A;
 }
 
-=begin DEL
+sub permute_states {
+    my $new_aln = Bio::SimpleAlign->new();
+    my $len=$aln->length();
+    my $nseq = $aln->num_sequences();
+    my @seq_ids;
 
-sub extract_sites {
-    my $new_aln = new Bio::SimpleAlign();
-    my $length  = $aln->length();
-    my $ntax    = $aln->num_sequences();
-    my $flags   = flag_sites($length);
-    my $gaps_only
-        = ( defined( $opts{"nogaps"} ) && !defined( $opts{"var"} ) );
-    my $msg = ($gaps_only) ? "Gap" : "Variable";
+    die "Alignment contains only one sequence: $file\n" if $nseq < 2;
 
-    warn "$msg sites:\n";
-
-    # Produce consistent output: If option nogaps is given, we print
-    # the list of gap sites, but the alignment has them *removed*.
-    my $keep_bit = ($gaps_only)
-        ? "0"     # If removing gaps and not extracting variable sites
-        : "1";    # If extracting variable sites.
-
-    # Print the gap or variable site (wherever the flag is '1')
-    for ( my $i = 0; $i < $length; $i++ ) {
-        print STDERR $i + 1, "\t" if substr( $flags, $i, 1 );
+    my @sites;
+    my $ref_bases = &_get_a_site_v2();
+    foreach my $seq_id (sort keys %$ref_bases) { push @seq_ids, $seq_id }
+    for (my $i=1; $i<=$len; $i++) {
+    my @bases;
+    foreach my $seq_id (keys %$ref_bases) { push @bases, $ref_bases->{$seq_id}->{$i} }
+    @bases = shuffle(@bases);
+    for (my $j=0; $j<$nseq; $j++) { $ref_bases->{$seq_ids[$j]}->{$i} = $bases[$j] }
     }
 
-    print STDERR "\n";
-    for ( my $i = 1; $i <= $ntax; $i++ ) {    # extract variable sites
-        my $seq     = $aln->get_seq_by_pos($i);
-        my $id      = $seq->display_id;
-        my $seq_str = $seq->seq();
+    foreach my $id ( @seq_ids ) {
+    my $seq_str;
+    for (my $i=1; $i<=$len; $i++) {
+        $seq_str .= $ref_bases->{$id}->{$i};
+    }
 
-# Use $flag_str as a mask to avoid looping and calling Bio::Seq->substr() each time
-        $seq_str
-            =~ s/(.)/substr($flags, pos $seq_str, 1) eq $keep_bit ? $1 : ''/eg;
+    my $loc_seq = Bio::LocatableSeq->new(
+        -seq   => $seq_str,
+        -id    => $id,
+        -start => 1,
+        );  
 
-       # Read: For each character in $seq_str, if there is a $keep_bit in that
-       # same position in the mask, then leave the character alone. Otherwise,
-       # replace with '' (removing the char and truncating $seq_str).
-
-        my $loc_seq = Bio::LocatableSeq->new(
-            -seq   => $seq_str,
-            -id    => $id,
-            -start => 1
-        );
-
-        #### This is a workaround to some strange behavior:####
-    # Let LocatableSeq::end calculate the appropriate end value. Then manually
-    # set it so that other functions, like match(), do not break.
         my $end = $loc_seq->end;
         $loc_seq->end($end);
 
-        #print Dumper ($loc_seq);
-        $new_aln->add_seq($loc_seq);
+    $new_aln->add_seq($loc_seq);
     }
-
     $aln = $new_aln;
 }
 
-=end DEL
+sub _get_a_site_v2 {
+    my %seq_ids;
+    my $len = $aln->length();
+    foreach my $seq ( $aln->each_seq ) {
+    my $id = $seq->id();
+    for (my $i = 1; $i <= $len; $i++) {
+        $seq_ids{$id}{$i} = $seq->subseq($i, $i);
+    }
+    }
+    return (\%seq_ids);
+}
 
-=cut
+sub third_sites {
+    my $new_aln = Bio::SimpleAlign->new();
+    my $len=$aln->length();
+    my $nseq = $aln->num_sequences();
+    my @seq_ids;
+
+    die "Alignment contains only one sequence: $file\n" if $nseq < 2;
+
+    my $ref_bases = &_get_a_site_v2();
+    foreach my $seq_id (sort keys %$ref_bases) { push @seq_ids, $seq_id }
+
+    my @sites;
+    for (my $i=3; $i<=$len; $i+=3) {
+    push @sites, $i;
+    }
+
+    foreach my $id ( sort @seq_ids ) {
+    my $seq_str;
+    foreach my $aln_site ( @sites ) {
+        $seq_str .= $ref_bases->{$id}->{$aln_site};
+    }
+
+    my $loc_seq = Bio::LocatableSeq->new(
+        -seq   => $seq_str,
+        -id    => $id,
+        -start => 1,
+        );  
+
+        my $end = $loc_seq->end;
+        $loc_seq->end($end);
+
+    $new_aln->add_seq($loc_seq);
+    }
+    $aln = $new_aln;
+}
 
 sub flag_sites {
     my $length = shift;
@@ -925,6 +925,10 @@ Calculate the average percent identity of an alignment. Returns the value alone.
 
 Usage: bioaln -a <alignment_file>
 
+=head2 --bootstrap, -b
+
+Usage: bioaln -b <alignment_file>
+
 =head2 --codon-view, -c
 
 Print a CLUSTALW-like alignment, but separated by codons. Intended for use with DNA sequences. Block-final position numbers are printed at the end of every alignment block at the point of wrapping, and block-initial counts appear over first nucleotide in a block.
@@ -1097,6 +1101,10 @@ Calculate pairwise average sequence difference by windows (overlapping windows w
 
 Usage: bioaln -w 'window_size'[default is 30] <alignment_file>
 
+=head2 --concat, -A
+
+Usage: bioaln -A to-be-concatenated/*.aln
+
 =head2 --conblocks, -B
  
 Extract perfectly conserved blocks (PCBs, gap excluded) from an alignment, each to a new clustalw file. Default minimum length of PCB is 6 sites.
@@ -1209,6 +1217,14 @@ List all sequence ids
 
 Usage: bioaln -L <alignment_file>
 
+=head2 --permute-states, -M
+
+Usage: bioaln -M <alignment_file>
+
+=head2 --paml, -P
+
+Usage: bioaln -P <alignment_file>
+
 =head2 --resample, -R
 
 Picks n random sequences from input alignment and produces a new alignment consisting of those sequences.
@@ -1266,6 +1282,10 @@ OUTPUT:
  Seq5                  VIEELKYEKAAEAFIPNISEDASGKIRLKLMSVKSYKMYN
  Seq6                  VIEELKYEKAAEAFVPNISEDASGKIRLKLMSVKSYKMYN
                        **************:********** *******::***:*
+
+=head2 --third-sites, -T
+
+Usage: bioaln -T <alignment_file>
 
 =head2 --uppercase, -U
 
