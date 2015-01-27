@@ -35,6 +35,9 @@ GetOptions(
     "linearize|L",
     "removestop|X", # for PAML/codeml    
     "leadgaps|G",
+    "count-codons|C",
+    "feat2fas|F",
+    "hydroB|H"
  #   "longest-orf|C", Retired for now
  #   "extract|e", Retired for now
  #   "dotplot|D=s", Retired for now
@@ -101,15 +104,15 @@ __END__
  bioseq -p're:B31' fasta_file     # [p]ick sequences with regex
  bioseq -d'order:3' fasta_file    # [d]elete the 3rd sequences
  bioseq -d're:B31' fasta_file     # [d]elete sequences with regex
- bioseq -t1 dna_fasta_file        # [t]ranslate in 1st reading frame
- bioseq -t3 dna_fasta_file        # [t]ranslate in 3 reading frames
- bioseq -t6 dna_fasta_file        # [t]ranslate in 6 reading frames
+ bioseq -t1 dna_fasta             # [t]ranslate in 1st reading frame
+ bioseq -t3 dna_fasta             # [t]ranslate in 3 reading frames
+ bioseq -t6 dna_fasta             # [t]ranslate in 6 reading frames
  bioseq -g fasta_file             # remove [g]aps
  bioseq -A fasta_file             # [A]nonymize sequence IDs
 
  # FASTA filters (FASTA in FASTA out) - single sequence:
  bioseq -s'1,10' fasta_file       # [s]ubsequence from positions 1-10
- bioseq -R'10' fasta_file         # [R]e-circularize at position 10
+ bioseq -R'10' bac_genome_fasta   # [R]e-circularize a genome t position 10
 
  # Retrieve sequence from database
  bioseq -f 'X83553' -o 'genbank'  # [f]etch a genbank file by accession
@@ -118,7 +121,10 @@ __END__
  # Less common usages (options in CAPs)
  bioseq -L fasta_file             # [L]inearize FASTA: one sequence per line
  bioseq -B fasta_file             # [B]reak into single-seq files
- bioseq -X fasta_file             # remove stop[X] codon (e.g., for PAML)
+ bioseq -X cds_fasta              # remove stop[X] codon in coding seqs (for PAML)
+ bioseq -C cds_fasta              # [C]odon counts (for coding sequences)
+ bioseq -H pep_fasta              # [H]ydrophobicity score (for protein seq)
+ bioseq -i'genbank' -F file.gb    # extract genbank [F]eatures to FASTA
 
  # Chaining with pipes:
  bioseq -p'id:B31' dna_fasta | bioseq -g | bioseq -t1          # pick a seq, remove gaps, & translate 
@@ -126,9 +132,9 @@ __END__
 
 =head1 DESCRIPTION
 
-B<bioseq> is a command-line utility for common, routine sequence manipulations. Most methods are wrappers for BioPerl modules (e.g., Bio::Seq). By default, B<bioseq> assumes that both the input and the output files are in FASTA format, so that multiple B<bioseq> runs can be chained with UNIX pipes.
+B<bioseq> is a command-line utility for common, routine sequence manipulations. Most methods are wrappers for BioPerl modules (Bio::Seq, Bio::SeqIO, Bio::SeqUtils, and Bio::Tools::SeqStats). By default, B<bioseq> assumes that both the input and the output files are in FASTA format, to facilitate the chainning (by UNIX pipes) of multiple B<bioseq> runs.
 
-Methods that are NOT wrappers should be factored into individual BioPerl modules, which handle exceptions better than stand-alone codes in bp-utils. As a design principle, bp-utils should ideally consist of ONLY wrapper calls.
+Methods that are currently NOT wrappers should ideally be factored into individual BioPerl modules, which are better tested and handle exceptions better than stand-alone codes in bp-utils. As a design principle, bp-utils should consist of ONLY wrapper calls.
 
 =head1 OPTIONS
 
@@ -146,7 +152,7 @@ Usage: bioseq -m
 
 =head2 --composition, -c
 
-Base or AA composition. Wrap Bio::Tools::SeqStats->count_monomers().
+Base or AA composition. A wrapper for Bio::Tools::SeqStats->count_monomers().
 
 Usage: bioseq -c <input_file>
 
@@ -164,7 +170,7 @@ Usage: bioseq -d 'tag:value' <input_file>
 
 =head2 --fetch, -f
 
-Retrieves a sequence from GenBank using the provided accession number. Wrap Bio::DB::GenBank->get_Seq_by_acc().
+Retrieves a sequence from GenBank using the provided accession number. A wrapper for Bio::DB::GenBank->get_Seq_by_acc().
 
 Usage: bioseq -f <genbank_accession>
 
@@ -228,16 +234,14 @@ Example:  bioseq -s'20,80' <input_file> (or -s='20,80')
 
 =head2 --translate, -t
 
-Translate in 1, 3, or 6 frames. eg, -t1, -t3, or -t6. Wrap Bio::Seq->translate()
+Translate in 1, 3, or 6 frames. eg, -t1, -t3, or -t6. Wrap Bio::Seq->translate(), Bio::SeqUtils->translate_3frames(), and Bio::SeqUtils->translate_6frames().
 
 Usage: bioseq -t [1|3|6] <input_file>
 
 =head2 --anonymize, -A
 
-Replace sequence IDs with serial IDs 'n' characters long, including a leading 'S' (e.g., -A'5' gives S0001).
-Produces a sed script file with a '.sed' suffix that may be used with sed's '-f' argument.
-If the filename is '-', the sed file is named STDOUT.sed instead.
-The sed filename is specified on STDERR.
+Replace sequence IDs with serial IDs 'n' characters long, including a leading 'S' (e.g., -A'5' gives S0001). Produces a sed script file with a '.sed' suffix that may be used with sed's '-f' argument.
+If the filename is '-', the sed file is named STDOUT.sed instead. The sed filename is specified on STDERR.
 
 Usage: bioseq -A 'number' <input_file>
 
@@ -247,9 +251,27 @@ Break into individual sequences, one sequence per file
 
 Usage: bioseq -B <input_file>
 
+=head2 --count-codons, -C
+
+Count codons for coding sequences (e.g., a genome file consisting of CDS sequences). A wrapper of Bio::Tools::SeqStats->count_codons().
+
+Usage: bioseq -C <input_file>
+
+=head2 --feat2fasta, -F
+
+Extract gene sequences in FASTA from a GenBank file of bacterial genome. Won't work for a eukaryote genbank file.
+
+Usage: bioseq -i'genbank' -F <genbank_file>
+
 =head2 --leadgaps, -G
 
 Count and return the number of leading gaps in each sequence.
+
+Usage: bioseq -G <input_file>
+
+=head2 --hydroB, -H
+
+Return the mean Kyte-Doolittle hydropathicity for protein sequences. A wrapper of Bio::Tools::SeqStats->hydrophobicity().
 
 Usage: bioseq -G <input_file>
 
@@ -290,7 +312,7 @@ Please email weigang@genectr.hunter.cuny.edu.
  Yozen Hernandez <yzhernand at gmail dot com>
  Girish Ramrattan <gramratt at gmail dot com>
  Levy Vargas <levy dot vargas at gmail dot com>
- Weigang Qiu <weigang at genectr dot hunter dot cuny dot edu>
+ Weigang Qiu <weigang at genectr dot hunter dot cuny dot edu> (Maintainer)
 
 =cut
 

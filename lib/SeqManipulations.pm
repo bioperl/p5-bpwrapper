@@ -17,6 +17,7 @@ use Bio::SeqIO;
 use File::Basename;
 use Bio::Tools::CodonTable;
 use Bio::DB::GenBank;
+use Bio::Tools::SeqStats;
 
 if ( $ENV{'DEBUG'} ) {
     use Data::Dumper;
@@ -50,7 +51,10 @@ my %opt_dispatch = ( 'anonymize' => \&anonymize,
 #		     'slidingwindow' => \&sliding_window, 
 		     'split' => \&split_seqs, 
 		     'subseq' => \&print_subseq, 
-		     'translate' => \&reading_frame_ops, 
+		     'translate' => \&reading_frame_ops,
+             'count-codons' => \&count_codons,
+             'feat2fas' => \&print_gb_gene_feats,
+             'hydroB' => \&hydroB
     );
 
 my %filter_dispatch = (
@@ -482,7 +486,7 @@ sub make_revcom {    # reverse-complement a sequence
 }
 
 sub remove_stop {
-    my $myCodonTable = Bio::Tools::CodonTable->new( -id => 11 );
+    my $myCodonTable = Bio::Tools::CodonTable->new();
     while ( $seq = $in->next_seq() ) {
         my $newstr = "";
         for ( my $i = 1; $i <= $seq->length() / 3; $i++ ) {
@@ -511,29 +515,24 @@ sub retrieve_seqs {
 
 sub print_composition {
     while ( $seq = $in->next_seq() ) {
-        print $seq->id(), "\n";
-        my $string = $seq->seq();
-        my $ct     = length($string);
-        my @chars  = split //, $string;
-        my %seen;
-
-        foreach (@chars) {
-	  next unless /[a-zA-Z]/;
-            # If character hasn't been seen, get its count and print that.
-	  if ( !$seen{$_}++ ) {   # This ensures the char gets into the hash
-	    my $count = ( $string =~ s/$_/$_/g );
-	    printf "\t'$_' => '%6d\t%.2f%s'\n", $count,
-	      $count * 100 / $ct,
-		' %';
-	  }
-        }
-	
-        print Dumper( \%seen )
-	  if ( $ENV{'DEBUG'} );
+        my $hash_ref = Bio::Tools::SeqStats->count_monomers($seq);
+        my $count;
+        foreach (keys %$hash_ref) { $count += $hash_ref->{$_} }
+        print $seq->id();
+        foreach (sort keys %$hash_ref) { print "\t", $_, ":", $hash_ref->{$_}, "("; printf "%.2f", $hash_ref->{$_}/$count*100; print "%)" }
         print "\n";
-      }
-  }
+    }
+}
 
+sub count_codons {
+    my $new_seq;
+    my $myCodonTable = Bio::Tools::CodonTable->new();
+    while ( $seq = $in->next_seq() ) { $new_seq .= $seq->seq() }
+    my $hash_ref = Bio::Tools::SeqStats->count_codons(Bio::Seq->new(-seq=>$new_seq, -id=>'concat'));   
+    my $count;
+    foreach (keys %$hash_ref) { $count += $hash_ref->{$_} }
+    foreach (sort keys %$hash_ref) { print $_, ":\t", $myCodonTable->translate($_), "\t", $hash_ref->{$_}, "\t"; printf "%.2f", $hash_ref->{$_}/$count*100; print "%\n" } 
+}
 
 sub shred_seq {
     while ( $seq = $in->next_seq() ) {
@@ -549,307 +548,47 @@ sub shred_seq {
     exit;
 }
 
-sub print_gb_gene_feats {
-    $seq = $in->next_seq();
+sub print_gb_gene_feats { # works only for prokaryote genome
+    $seq = $in->next_seq(); my $gene_count = 0;
     foreach my $feat ( $seq->get_SeqFeatures() ) {
         if ( $feat->primary_tag eq 'gene' ) {
-            print join "\t",
-                ( $feat->gff_string, $feat->start, $feat->end,
-                $feat->strand );
-            print "\n";
+            my $gene_tag = "gene_" . $gene_count++;
+            foreach my $tag ( $feat->get_all_tags() ) { ($gene_tag) = $feat->get_tag_values($tag) if $tag eq 'locus_tag' }
+            my $gene = Bio::Seq->new(-id => $gene_tag, -seq=>$seq->subseq($feat->start, $feat->end()));
+            if ($feat->strand() > 0) { $out->write_seq($gene) } else { $out->write_seq($gene->revcom())}
+#            print join "\t",
+#                ( $feat->gff_string, $feat->start, $feat->end,
+#                $feat->strand );
+#            print "\n";
         }
     }
 }
 
-1;
-
-=begin legacy codes, rarely used
-
-sub sliding_window {    #
-    my $win_size = $opts{"slidingwindow"} ? $opts{"slidingwindow"} : 1;
+sub hydroB {
     while ( $seq = $in->next_seq() ) {
-        my $string = $seq->seq();
-        for ( my $i = 1; $i <= $seq->length() - $win_size + 1; $i++ ) {
-            print $seq->subseq( $i, $i + $win_size - 1 ), "\n";
-        }
+        my $pep_str = $seq->seq();
+        $pep_str =~ s/\*//g;
+        $seq->seq($pep_str);
+        my $gravy = Bio::Tools::SeqStats->hydropathicity($seq);
+        printf "%s\t%.4f\n", $seq->id(), $gravy;
     }
 }
 
-
-sub update_longest_reading_frame {
-    my $seqobj  = shift;
-    my $longest = shift;
-
-    foreach my $fm ( 1, 2, 3 ) {
-
-        #      print STDERR "checking frame $fm ...\n";
-        my $new_seqobj = Bio::Seq->new(
-            -id  => $seqobj->id() . "|$fm",
-            -seq => $seqobj->subseq( $fm, $seqobj->length() )
-        );    # chop seq to frame first
-        my $pep_string = $new_seqobj->translate( undef, undef, 0 )->seq();
-        my $three_prime = $new_seqobj->length();
-
-        my $start = 1;
-        my @aas = split '', $pep_string;
-        for ( my $i = 0; $i <= $#aas; $i++ ) {
-            if ( $aas[$i] eq '*' || $i == $#aas )
-            {    # hit a stop codon or end of sequence
-                if ( $i - $start + 2 > $longest->{aa_length} ) {
-                    $longest->{aa_start}  = $start;
-                    $longest->{aa_end}    = $i + 1;
-                    $longest->{aa_length} = $i - $start + 2;
-                    $longest->{nt_start}  = 3 * ( $start - 1 ) + 1;
-                    my $end = 3 * $i + 3;
-                    $end
-                        = ( $end > $three_prime )
-                        ? $three_prime
-                        : $end;    # guranteed not to go beyond 3'
-                    $longest->{nt_end} = $end;
-                    $longest->{frame}  = $fm;
-                    $longest->{nt_seq}
-                        = $new_seqobj->subseq( 3 * ( $start - 1 ) + 1, $end );
-
-#         print ">longer_orf_$start", "_$fm\n", $new_seqobj->subseq(3*($start-1)+1, $end), "\n";
-                }
-                $start = $i + 2;
-            }
-            else {                 # not a stop codon
-                next;
-            }
-        }
-    }
-
-    foreach my $fm ( 1, 2, 3 ) {    # reverse complement
-
-        #      print STDERR "checking frame -$fm ...\n";
-        my $new_seqobj = Bio::Seq->new(
-            -id  => $seqobj->id() . "|$fm",
-            -seq => $seqobj->revcom()->subseq( $fm, $seqobj->length() )
-        );                          # chop seq to frame first
-        my $pep_string = $new_seqobj->translate( undef, undef, 0 )->seq();
-        my $three_prime = $new_seqobj->length();
-
-        my $start = 1;
-        my @aas = split '', $pep_string;
-        for ( my $i = 0; $i <= $#aas; $i++ ) {
-            if ( $aas[$i] eq '*' || $i == $#aas )
-            {                       # hit a stop codon or end of sequence
-                if ( $i - $start + 2 > $longest->{aa_length} ) {
-                    $longest->{aa_start}  = $start;
-                    $longest->{aa_end}    = $i + 1;
-                    $longest->{aa_length} = $i - $start + 2;
-                    $longest->{nt_start}  = 3 * ( $start - 1 ) + 1;
-
-                    my $end = 3 * $i + 3;
-                    $end
-                        = ( $end > $three_prime )
-                        ? $three_prime
-                        : $end;     # guranteed not to go beyond 3'
-                    $longest->{nt_end} = $end;
-                    $longest->{frame}  = $fm;
-                    $longest->{nt_seq}
-                        = $new_seqobj->subseq( 3 * ( $start - 1 ) + 1, $end );
-
-#         print ">longer_orf_$start", "_$fm\n", $new_seqobj->subseq(3*($start-1)+1, $end), "\n";
-                }
-                $start = $i + 2;
-            }
-            else {                  # not a stop codon
-                next;
-            }
-        }
-    }
-    warn "no start codon:", $seqobj->id(), "\n"
-        unless substr( $longest->{nt_seq}, 0, 3 ) =~ /atg/i;
-    return $longest;
-}
-
+use Bio::SeqUtils;
 sub reading_frame_ops {
     my $frame = $opts{"translate"};
     while ( $seq = $in->next_seq() ) {
-        my $inframe;
-
-        my $ct = 0;
-        my $trans0 = $seq->translate( -frame => 0 );
-        if ( $opts{"extract"} && $trans0->seq =~ /^M[^\*]+\**$/ ) {
-            $inframe = $seq->seq();
-            $ct++;
+        if ($frame == 1) {
+                $out->write_seq($seq->translate());  
+            } elsif ($frame == 3) {
+                my @prots = Bio::SeqUtils->translate_3frames($seq);
+                foreach (@prots) { $out->write_seq($_) }
+            } elsif ($frame == 6) {
+                my @prots = Bio::SeqUtils->translate_6frames($seq);
+                foreach (@prots) { $out->write_seq($_) }
+            } else { warn "Accepted frame arguments: 1, 3, and 6\n"}
         }
-
-        my $trans1 = $seq->translate( -frame => 1 );
-        if ( $opts{"extract"} && $trans1->seq =~ /^M[^\*]+\**$/ ) {
-            $inframe = $seq->subseq( 2, $seq->length() );
-            $ct++;
-        }
-
-        my $trans2 = $seq->translate( -frame => 2 );
-        if ( $opts{"extract"} && $trans2->seq =~ /^M[^\*]+\**$/ ) {
-            $inframe = $seq->subseq( 3, $seq->length() );
-            $ct++;
-        }
-        my $rev = $seq->revcom();
-        my $rev0 = $rev->translate( -frame => 0 );
-        if ( $opts{"extract"} && $rev0->seq =~ /^M[^\*]+\**$/ ) {
-            $inframe = $rev->seq();
-            $ct++;
-        }
-        my $rev1 = $rev->translate( -frame => 1 );
-        if ( $opts{"extract"} && $rev1->seq =~ /^M[^\*]+\**$/ ) {
-            $inframe = $rev->subseq( 2, $rev->length() );
-            $ct++;
-        }
-        my $rev2 = $rev->translate( -frame => 2 );
-        if ( $opts{"extract"} && $rev2->seq =~ /^M[^\*]+\**$/ ) {
-            $inframe = $rev->subseq( 3, $rev->length() );
-            $ct++;
-        }
-        my $id = $seq->display_id();
-
-        if ( $opts{"longest-orf"} )
-        {    # find and return the longest ORF within a single seq
-            my $longest_reading_frame = {
-                'aa_start'  => 1,
-                'aa_end'    => 1,
-                'aa_length' => 1,
-                'nt_start'  => 1,
-                'nt_end'    => 1,
-                'nt_seq'    => undef,
-                'frame'     => undef,
-            };
-
-            my $longest_orf_found = update_longest_reading_frame( $seq,
-                $longest_reading_frame );
-            print ">$id|f", $longest_orf_found->{frame}, "|longest-orf\n",
-                $longest_orf_found->{nt_seq}, "\n";
-        }
-
-        if ( $opts{"extract"} ) {
-            if ( $ct > 1 ) {
-                warn "$id has more than one reading frame: $ct. Skipped\n";
-            }
-            elsif ( $ct == 1 ) {
-                print ">$id|inframe\n", $inframe, "\n";
-            }
-            else {
-                warn "$id has no open reading frame: $ct. Skipped\n";
-            }
-        }
-        elsif ( $opts{"translate"} ) {
-            print ">", $id, "\n", $trans0->seq, "\n" if $frame == 1;
-            print ">$id|+1\n", $trans0->seq, "\n", ">$id|+2\n",
-                $trans1->seq(),
-                "\n", ">$id|+3\n", $trans2->seq(), "\n", ">$id|-1\n",
-                $rev0->seq,
-                "\n", ">$id|-2\n", $rev1->seq(), "\n", ">$id\|-3\n",
-                $rev2->seq(), "\n\n"
-                if $frame == 6;
-            print ">$id|+1\n", $trans0->seq, "\n", ">$id|+2\n",
-                $trans1->seq(), "\n", ">$id|+3\n", $trans2->seq(), "\n\n"
-                if $frame == 3;
-        }
-        else { next; }
-    }
 }
 
-sub split_seqs {
-    my $split_at   = $opts{"split"};
-    my $out_prefix = $filename . "_split_";
-    my $fcount     = 1;
-    my $scount     = 0;
-    my $out_file   = $out_prefix . $fcount . ".$out_format";
-    my $newout     = Bio::SeqIO->new(
-        -format => $out_format,
-        -file   => ">" . $out_file,
-    );
-    while ( $seq = $in->next_seq() ) {
-        $newout->write_seq($seq);
-        $scount++;
 
-        if ( ( $scount % $split_at ) == 0 ) {
-            $fcount++;
-            $out_file = $out_prefix . $fcount . ".$out_format";
-            $newout = Bio::SeqIO->new(
-                -format => $out_format,
-                -file   => ">" . $out_file,
-            );
-        }
-    }
-
-    if ( (-s $out_file) == 0 ) {
-        unlink $out_file;
-    }
-}
-
-sub draw_dotplot {
-
-    my ($id1, $id2, $window) = split(/,/ , $opts{'dotplot'}); #options are entered using comma (,) as delimitor 
-    my $winsize = $window ? $window : 10; #default windowsize is 10
-    my (@seq1, @seq2);
-
-    #Get the ID and corresponding sequence from fasta input
-    while (my $seq = $in->next_seq()) {
-	if($seq->id() eq $id1){
-	    @seq1 = split(//, $seq->seq());
-	}
-	if($seq->id() eq $id2){
-	    @seq2 = split(//, $seq->seq());
-	}
-    }
-
-    #counters $a counts the rows while $b counts the columns
-    my $a = 0;
-    my $b = 0;
-
-    print "\t"; #padding for top sequence
-    print "$_\t" foreach @seq1; #print the horizontal axis
-    print "\n"; #begin the plot space
-  
-    for(my $o = 0; $o<=$#seq2; $o++){ 
-	print $seq2[$o], "\t";    #print the vertical axis
-
-	if ($b <= ($#seq2 - $winsize)){   
-	    my $c_win = join("", @seq2[$b..$winsize+$b-1]);
-	    for(my $i=0; $i<= $#seq1; $i++){
-		if ($a <= ($#seq1 - $winsize)){
-		    my $r_win = join("", @seq1[$a..$winsize+$a-1]);
-          
-		    ($r_win eq $c_win) ? (print "*\t") : (print "\t");  #if the column window (c_win) equals the row window (r_win) then print a * other wise place a tab
-		    $a++; #go through each row windows
-		}
-	    }
-	    $b++; #go to next column window (c_win)
-	    $a=0; #reset row counter to begin checks again
-	}
-	print "\n";
-    }
-}
-
-sub rename_id {
-    my $ref = $opts{'rename'};
-    open (REF, $ref) or die "Cannot open $ref!\n";
-    open (FASTA, $filename) or die "Cannot open $filename!\n";
-    my %change;
-    while (my $line = <REF>)
-    {
-	chomp ($line);
-	my ($from, $to) = split(/[\s|\t]+/, $line);
-	$change{$from} = $to;
-    }
-    while (my $line = <FASTA>)
-    {
-	chomp ($line);
-	if ($line =~ m/^>(\S+)$/)
-	{
-	    my $check = $change{$1};
-	    if (defined ($check))
-	    {
-		$line =~ s/$1/$check/g;
-	    }
-	}
-	print $line, "\n";
-    }
-}
-
-=cut
-
+1;
