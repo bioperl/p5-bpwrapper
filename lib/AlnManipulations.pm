@@ -16,7 +16,7 @@ use Bio::SimpleAlign;
 use Bio::LocatableSeq;
 use Data::Dumper;
 use List::Util qw(shuffle);
-use Bio::Align::Utilities;
+use Bio::Align::Utilities qw(:all);
 
 if ($ENV{'DEBUG'}) {
     use Data::Dumper;
@@ -105,13 +105,8 @@ sub handle_opt {
 }
 
 sub bootstrap {
-	my $boot_count = $opts{"bootstrap"};
-	my $replicates = Bio::Align::Utilities->bootstrap_replicates($aln,$boot_count);
-	my $ct = 1;
-	foreach my $boot_aln (@$replicates) {
-		my $boot_out = Bio::AlignIO->new(-file=>'rep_' . $ct++. ".aln", -format=>'clustalw');
-		$boot_out->write_aln($boot_aln);
-	}
+	my $replicates = bootstrap_replicates($aln,1);
+	$aln = shift @$replicates;
 }
 
 sub print_length {

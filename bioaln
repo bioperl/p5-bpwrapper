@@ -18,7 +18,7 @@ GetOptions(
     "help|h",
     "man",
     "avpid|a",
-    "bootstrap|b=n",
+    "bootstrap|b",
     "codon-view|c:20",    # Optional value, default 20
     "delete|d=s",
     "nogaps|g", 
@@ -146,7 +146,10 @@ Usage: bioaln -a <alignment_file>
 
 =head2 --bootstrap, -b
 
-Usage: bioaln -b <alignment_file>
+Produced a bootstrapped alignment. Wrap Bio::Align::Utilities->bootstrap(). Note that only a single alignment is produced. To produce multiple bootstraped alignment, use BASH loop (see below)
+
+Usage: bioaln -b <alignment_file> (single bootstrapped alignment)
+Usage: for i in {1..10}; do bioaln -b foo.aln > foo.boot-$i.aln; done (10 bootstrapped alignments)
 
 =head2 --codon-view, -c
 
