@@ -36,6 +36,7 @@ GetOptions(
     "concat|A",
     "conblocks|B:6",    
     "consensus|C:50",
+    "dna2pep|D",
     "erasecol|E=s",
     "aln-index|I=s",
     "listids|L",
@@ -105,6 +106,7 @@ __END__
  bioaln -u aln_file                  # [u]nique-fy sequences (remove redundant seqs)
  bioaln -v aln_file                  # show only variable sites
  bioaln -C '90' aln_file             # add a 90% [C]onsensus sequence
+ bioaln -D cds.aln                   # D(na) alignment => protein alignment
  bioaln -E 'Seq5' input.aln          # [E]rase sites gapped at Seq5
  bioaln -U aln_file                  # turn into [U]pper-case
 
@@ -404,6 +406,12 @@ OUTPUT:
  Seq6                  MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
  Consensus_90          MN?K?YSIEEL?DKISMPVVAY?GEAKSFLREALE?AKNK
                        ** * ****** ********** ************ ****
+
+=head2 --dna2pep, -D
+
+Turn a CDS alignment to a corresponding protein alignment. Wrap Bio::Align::Utilities->dna_to_aa_aln().
+
+Usage: bioaln -D <cds_alignment>
 
 =head2 --erasecol, -E
  
