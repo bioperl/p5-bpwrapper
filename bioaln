@@ -38,16 +38,16 @@ GetOptions(
     "consensus|C:50",
     "dna2pep|D",
     "erasecol|E=s",
+    "noflatname|F",
     "aln-index|I=s",
     "listids|L",
     "permute-states|M",
-    "paml|P",    
+    "pep2dna|P=s",    
     "resample|R:i",    # Optional value, default is floor of num_sequences/2
     "shuffle-sites|S",
     "third-sites|T",
     "uppercase|U", # make upper case (for DNAStatistics)
   #  "dnadist|D=s", # Needs fixing
-  #  "noflatname|F", # Retired for now
   #  "inform|Z",    Retired for now
 ) or pod2usage(2);
 
@@ -61,7 +61,7 @@ pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
 initialize(\%opts);
 
 for my $option (keys %opts) {
-    next if (($option eq 'input') || ($option eq 'output')); # Don't process these options: they are for AlignIO
+    next if (($option eq 'input') || ($option eq 'output') || ($option eq 'noflatname')); # Don't process these options: they are for AlignIO
 
     if (can_handle($option)) { handle_opt($option) } # If there is a function to handle the current option, execute it
     else { warn "Missing handler for: $option\n" }
@@ -89,7 +89,7 @@ __END__
  bioaln -L aln_file                  # [L]ist all sequence IDs 
  bioaln -a input.aln                 # [a]verage percent identity
  bioaln -w '30' aln_file             # average identifies for sliding [w]indows of 30
- bioaln -I '' aln_file               # ?????
+ bioaln -I 'B31,100' aln_file        # get aln column [I]ndex of seq 'B31' residue 100
 
  # Alignment viewers:
  bioaln -m input.aln                 # [m]atch view (show variable sites)
@@ -108,6 +108,7 @@ __END__
  bioaln -C '90' aln_file             # add a 90% [C]onsensus sequence
  bioaln -D cds.aln                   # D(na) alignment => protein alignment
  bioaln -E 'Seq5' input.aln          # [E]rase sites gapped at Seq5
+ bioaln -P 'cds.fas' pep.aln         # Back-align CDS seqs according to [P]rotein alignment
  bioaln -U aln_file                  # turn into [U]pper-case
 
  # Evolutionary analysis:
@@ -120,14 +121,14 @@ __END__
 
  # change alignment format:
  bioaln -i 'fasta' -o 'phylip'       # FASTA => PHYLIP
- bioaln -i 'fasta' -P 'pmal'         # FASTA => PAML (note not '-o')
+ bioaln -i 'fasta' -o 'pmal'         # FASTA => PAML
 
  # Chaining with pipes:
  # Read a FASTA alignment, slice it, and calcualte percent identity:
  bioaln -i'fasta' fasta.aln | bioaln -s'10,20' | bioaln -a
 
  # Chaining with bioseq:
- # Turn a coding-sequence alignment into a protein alignemnt:
+ # Turn a coding-sequence alignment into a protein alignemnt (if not using -D):
  bioaln -o'fasta' cds.aln | bioseq -t1 | bioaln -i'fasta'
 
 =head1 DESCRIPTION
@@ -441,9 +442,15 @@ OUTPUT:
  Seq6           ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA-ATAAGT
                 ******** ** * *** *************** **** *** *****
 
+=head2 --noflatname, -F
+ 
+By default, sequence names do not contain 'begin-end'. This option turns ON 'begin-end' naming. Wrap Bio::SimpleAlign->set_displayname_flat().
+
+Usage: bioaln -F <alignment_file>
+
 =head2 --aln-index, -I
 
-????
+Identify aligned position of a residue. Wrap Bio::SimpleAlign->column_from_residue_number().
 
 Usage: bioaln -I 'seq_id','position' <alignment_file>
 
@@ -457,9 +464,11 @@ Usage: bioaln -L <alignment_file>
 
 Usage: bioaln -M <alignment_file>
 
-=head2 --paml, -P
+=head2 --pep2dna, -P
 
-Usage: bioaln -P <alignment_file>
+Align CDS sequences according to their corresponding protein alignment. Wrap Bio::Align::Utilities->aa_to_dna_aln().
+
+Usage: bioaln -P 'unaligned_cds.fas' <protein_alignment>
 
 =head2 --resample, -R
 

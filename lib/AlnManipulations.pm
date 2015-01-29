@@ -48,10 +48,10 @@ my %opt_dispatch = (
     "consensus" => \&get_consensus,
     "erasecol" => \&remove_gapped_cols_in_one_seq,
     "dna2pep" => \&dna_to_protein,
-	"aln-index" => \&colnum_from_residue_pos,
-	"listids" => \&list_ids,
+    "aln-index" => \&colnum_from_residue_pos,
+    "listids" => \&list_ids,
     "permute-states" => \&permute_states,
-    "paml" => \&paml,
+    "pep2dna" => \&protein_to_dna,
     "resample" => \&sample_seqs,
     "shuffle-sites" => \&shuffle_sites,
 	"third-sites" => \&third_sites,
@@ -66,23 +66,22 @@ sub initialize {
     my $val = shift;
     %opts = %{$val};
 
-	# This is the format that aln-manipulations expects by default
-	my $default_format = "clustalw";
+    # This is the format that aln-manipulations expects by default
+    my $default_format = "clustalw";
 
-	$file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line,
-
-	# assume we're getting input from standard input
-
-	$in_format = $opts{"input"} || $default_format;
-
-	$in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
-
-	$aln = $in->next_aln();
-	$aln->set_displayname_flat() unless $opts{"noflatname"};
-
+    $file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line,
+    
+    # assume we're getting input from standard input
+    
+    $in_format = $opts{"input"} || $default_format;
+    
+    $in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
+    
+    $aln = $in->next_aln();
+    
     #### Options which *require an output FH* go *after* this ####
-	$out_format = $opts{"output"} || $default_format;
-	$out = Bio::AlignIO->new(-format => $out_format, -fh => \*STDOUT);
+    $out_format = $opts{"output"} || $default_format;
+    $out = Bio::AlignIO->new(-format => $out_format, -fh => \*STDOUT) unless $out_format eq 'paml';
 }
 
 sub can_handle {
@@ -98,7 +97,34 @@ sub handle_opt {
 }
 
 sub write_out {
+    $aln->set_displayname_flat() unless $opts{"noflatname"};
+    if ($out_format eq 'paml') {
+	&write_out_paml($aln);
+    } else {
 	$out->write_aln($aln);
+    }
+}
+
+sub write_out_paml {
+    my @seq;
+    my $ct=0;
+
+    foreach my $seq ($aln->each_seq()){
+	my $id = $seq->display_id();
+	if ($seq->seq() =~ /^-+$/) {
+	    print STDERR "all gaps: $file\t$id\n";
+	    next;
+	}
+	$ct++;
+	push @seq, $seq;
+    }
+
+    die "No computable sequences: less than 2 seq.\n" unless $ct >= 2;
+    print $ct, "\t", $aln->length(), "\n";
+    foreach my $seq (@seq){
+	print $seq->display_id(), "\n";
+	print $seq->seq(), "\n";
+    }
 }
 
 ###################### subroutine ######################
@@ -341,7 +367,7 @@ sub get_consensus {
 }
 
 sub dna_to_protein {
-    $aln = $aln->
+    $aln = dna_to_aa_aln($aln);
 }
 
 sub remove_gapped_cols_in_one_seq {
@@ -405,6 +431,14 @@ sub permute_states {
         $new_aln->add_seq($loc_seq)
     }
     $aln = $new_aln
+}
+
+sub protein_to_dna {
+    use Bio::SeqIO;
+    my $cds_in = Bio::SeqIO->new(-file=>$opts{pep2dna}, -format=>'fasta');
+    my %CDSs;
+    while ( my $seq = $cds_in->next_seq() ) { $CDSs{$seq->display_id()} = $seq }
+    $aln = aa_to_dna_aln($aln, \%CDSs);
 }
 
 sub sample_seqs {
