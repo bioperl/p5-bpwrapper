@@ -49,7 +49,7 @@ my %opt_dispatch = (
 );
 
 # The following options cannot be used along with distance or kaks opts
-my @popgen_list = qw( stats mismatch simmk );
+my @popgen_list = qw(stats mismatch simmk);
 
 ################################################################################
 # Subroutines
@@ -58,7 +58,7 @@ my @popgen_list = qw( stats mismatch simmk );
 ## TODO DNAStatistics subs
 
 sub initialize {
-    ( $opts, $flags ) = @_;
+    ($opts, $flags) = @_;
 #    print Dumper($flags);
 
     $aln_file = shift @ARGV
@@ -67,14 +67,14 @@ sub initialize {
 
     my $in_format = $flags->{"input"} // 'clustalw';
 
-    if ( $aln_file eq "STDIN" ) {    # We're getting input from STDIN
-        $in = Bio::AlignIO->new( -format => $in_format, -fh => \*STDIN );
+    if ($aln_file eq "STDIN") {    # We're getting input from STDIN
+        $in = Bio::AlignIO->new(-format => $in_format, -fh => \*STDIN);
     }
     else {                           # Filename, or '-', was given
         $in = Bio::AlignIO->new(
             -format => $in_format,
             -file   => "<$aln_file"
-        );
+       );
     }
 
     $aln = $in->next_aln; 
@@ -84,10 +84,10 @@ sub initialize {
 #    @outgroups    = split /\s+,\s+/, join ',', @{ $opts->{"outgroup"} }    // undef if $opts->{"outgroup"};
 #    @exgroups    = split /\s+,\s+/, join ',', @{ $opts->{"exclude"} }    // undef if $opts->{"exclude"};
     $dist_method = $flags->{"dist-method"} // undef;
-    if ( $opts->{"distance"} || $opts->{"kaks"} ) {
+    if ($opts->{"distance"} || $opts->{"kaks"}) {
         die
             "Cannot use distance or kaks options together with any of the following: @popgen_list\n"
-            if ( %$opts ~~ @popgen_list );
+            if (%$opts ~~ @popgen_list);
         $dna_stats = Bio::Align::DNAStatistics->new();
     }
     else {
@@ -95,7 +95,7 @@ sub initialize {
             -alignment           => $aln,
             -include_monomorphic => 1,
             -site_model          => 'all'
-        );
+       );
 
         $stat_obj = PopGenStatistics->new();
 	$pop_stats = Bio::PopGen::Statistics->new();
@@ -109,7 +109,7 @@ sub initialize {
 
 sub can_handle {
     my $option = shift;
-    return defined( $opt_dispatch{$option} );
+    return defined($opt_dispatch{$option});
 }
 
 sub handle_opt {
@@ -120,17 +120,17 @@ sub handle_opt {
 }
 
 sub _parse_ingroup {
-    return split( /,/, join( ',', @{ $opts->{"ingroup"} } ) );
+    return split(/,/, join(',', @{ $opts->{"ingroup"} }));
 }
 
 sub _parse_outgroup {
-    return split( /,/, join( ',', @{ $opts->{"outgroup"} } ) );
+    return split(/,/, join(',', @{ $opts->{"outgroup"} }));
 }
 
 ## Internal ##
 
 sub _parse_stats {
-    return split( /,/, join( ',', @{ $opts->{"stats"} } ) );
+    return split(/,/, join(',', @{ $opts->{"stats"} }));
 
     #     warn "Will print the following statistics: \n";
     #     warn "$_\n" foreach (@stats);
@@ -145,7 +145,7 @@ sub _print_stats {
 
         given ($stat) {
             when (/^(pi)|(theta)$/) {
-                printf "$stat:\t%.6f\n", $stat_obj->$stat( $pop, $len );
+                printf "$stat:\t%.6f\n", $stat_obj->$stat($pop, $len);
             }
             when ("tajima_d") {
                 printf "tajima_D:\t%.6f\n", $stat_obj->tajima_D($pop);
@@ -159,15 +159,15 @@ sub _print_mismatch_distr {
     my $num_seq = $aln->num_sequences();
 
     my @seqs;
-    foreach my $seq ( $aln->each_seq ) {
+    foreach my $seq ($aln->each_seq) {
         push @seqs, $seq;
     }
-    for ( my $i = 0; $i < $num_seq - 1; $i++ ) {
-        for ( my $j = $i + 1; $j < $num_seq; $j++ ) {
+    for (my $i = 0; $i < $num_seq - 1; $i++) {
+        for (my $j = $i + 1; $j < $num_seq; $j++) {
             my $new = Bio::SimpleAlign->new();
-            $new->add_seq( $seqs[$i] );
-            $new->add_seq( $seqs[$j] );
-            printf "%.4f\n", ( 100 - $new->percentage_identity ) / 100;
+            $new->add_seq($seqs[$i]);
+            $new->add_seq($seqs[$j]);
+            printf "%.4f\n", (100 - $new->percentage_identity) / 100;
         }
     }
 }
@@ -180,7 +180,7 @@ sub _best_sample_size {
     # If it was not, use the size of the group
     return
           ($sample_size)
-        ? ( $sample_size > @group )
+        ? ($sample_size > @group)
             ? @group
             : $sample_size
         : @group;
@@ -207,12 +207,12 @@ sub _mutation_or_recombination {
     @ingroups = _parse_ingroup(); #print Dumper(\@ingroups); exit;
     @outgroups = _parse_outgroup();
     die "Error: ingroup and outgroup options required when using Mut-Rec test.\n"
-        unless ( @ingroups && @outgroups );
+        unless (@ingroups && @outgroups);
 
     my $in_group  = Bio::PopGen::Population->new();
     my $out_group = Bio::PopGen::Population->new();
-    my ( @out, @in, @ex );
-    for my $ind ( $pop->get_Individuals ) {
+    my (@out, @in, @ex);
+    for my $ind ($pop->get_Individuals) {
         push @in,  $ind if &__in_group($ind->unique_id(), \@ingroups);
         push @out, $ind if &__in_group($ind->unique_id(), \@outgroups);
         push @ex,  $ind if (scalar @exgroups) && &__in_group($ind->unique_id(), \@exgroups);
@@ -221,17 +221,17 @@ sub _mutation_or_recombination {
     $in_group->add_Individual(@in); #print Dumper($in_group); exit;
     $out_group->add_Individual(@out);
 
-    for my $name ( $in_group->get_marker_names ) {
+    for my $name ($in_group->get_marker_names) {
         my $in_marker = $in_group->get_Marker($name);
 	my @in_alleles = $in_marker->get_Alleles(); #print Dumper(\@in_alleles);
 	next if @in_alleles <= 1 || &__is_gap(\@in_alleles); # consider only polymorphic sites among ingroups
-	foreach my $ind ( $in_group->get_Individuals ) {
+	foreach my $ind ($in_group->get_Individuals) {
 	    foreach my $geno ($ind->get_Genotypes(-marker => $name)) {
 		say join "\t", ("ingroup", $name, $geno->individual_id, $geno->get_Alleles);
 	    }
 	}
 
-	foreach my $ind ( $out_group->get_Individuals ) {
+	foreach my $ind ($out_group->get_Individuals) {
 	    foreach my $geno ($ind->get_Genotypes(-marker => $name)) {
 		say join "\t", ("outgroup", $name, $geno->individual_id, $geno->get_Alleles);
 	    }
@@ -253,82 +253,82 @@ sub _mutation_or_recombination {
 
 sub _mk_counts {
     die "Error: ingroup and outgroup options required when using MK test.\n"
-        unless ( $ingroup && $outgroup );
+        unless ($ingroup && $outgroup);
 
     my $in_group  = Bio::PopGen::Population->new();
     my $out_group = Bio::PopGen::Population->new();
-    my ( @out, @in );
-    for my $ind ( $pop->get_Individuals ) {
-        push @in,  $ind if ( $ind->unique_id =~ /^$ingroup/ );
-        push @out, $ind if ( $ind->unique_id =~ /^$outgroup/ );
+    my (@out, @in);
+    for my $ind ($pop->get_Individuals) {
+        push @in,  $ind if ($ind->unique_id =~ /^$ingroup/);
+        push @out, $ind if ($ind->unique_id =~ /^$outgroup/);
     }
 
     my @in_shuffled  = shuffle @in;
     my @out_shuffled = shuffle @out;
     my $size         = _best_sample_size(@in_shuffled);    # ingroup size
-    my @in_sample = sample( -set => \@in_shuffled, -sample_size => $size );
+    my @in_sample = sample(-set => \@in_shuffled, -sample_size => $size);
     $size = _best_sample_size(@out_shuffled);              # outgroup size
 
-    my @out_sample = sample( -set => \@out_shuffled, -sample_size => $size );
+    my @out_sample = sample(-set => \@out_shuffled, -sample_size => $size);
 
     $in_group->add_Individual(@in_sample);
     $out_group->add_Individual(@out_sample);
 
-    my $mk1 = $stat_obj->mcdonald_kreitman( $in_group, $out_group );
+    my $mk1 = $stat_obj->mcdonald_kreitman($in_group, $out_group);
 
     #    my $mk2 = $stat_obj->mcdonald_kreitman($out_group, $in_group);
     say join "\t",
-        ( $mk1->{poly_N}, $mk1->{fixed_N}, $mk1->{poly_S}, $mk1->{fixed_S} );
+        ($mk1->{poly_N}, $mk1->{fixed_N}, $mk1->{poly_S}, $mk1->{fixed_S});
 }
 
 sub _get_Dn_Ds {
-    my ( $pop1_arr, $Dn_arr, $Ds_arr, $pop2_arr ) = @_;
+    my ($pop1_arr, $Dn_arr, $Ds_arr, $pop2_arr) = @_;
 
-    my $seq1 = $pop1_arr->[ int rand( scalar @$pop1_arr ) ];
+    my $seq1 = $pop1_arr->[ int rand(scalar @$pop1_arr) ];
 
     # If a second population was given, use that for the second sequence.
     my $seq2
         = ($pop2_arr)
-        ? $pop2_arr->[ int rand( scalar @$pop2_arr ) ]
-        : $pop1_arr->[ int rand( scalar @$pop1_arr ) ];
+        ? $pop2_arr->[ int rand(scalar @$pop2_arr) ]
+        : $pop1_arr->[ int rand(scalar @$pop1_arr) ];
 
-    my $results = $dna_stats->calc_KaKs_pair( $aln, $seq1->display_id,
-        $seq2->display_id );
+    my $results = $dna_stats->calc_KaKs_pair($aln, $seq1->display_id,
+        $seq2->display_id);
     push @$Dn_arr, $results->[0]{D_n};
     push @$Ds_arr, $results->[0]{D_s};
 }
 
 sub _sim_mk {
     die "Must specify groups prefix when using simmk"
-        unless ( $ingroup && $outgroup );
+        unless ($ingroup && $outgroup);
 
     $sample_size = 100
         unless ($sample_size);
 
     # Split alignment into two groups based on prefix
-    my ( @popA, @popB );
-    foreach my $seq ( $aln->each_seq ) {
-        if   ( $seq->display_id =~ /^$ingroup/ ) { push @popA, $seq }
+    my (@popA, @popB);
+    foreach my $seq ($aln->each_seq) {
+        if   ($seq->display_id =~ /^$ingroup/) { push @popA, $seq }
         else                                     { push @popB, $seq }
     }
 
-    my ( @pa_A, @ps_A, @pa_B, @ps_B, @ka_AB, @ks_AB );
+    my (@pa_A, @ps_A, @pa_B, @ps_B, @ka_AB, @ks_AB);
 
-    for ( my $i = 1; $i <= $sample_size; $i++ ) {
-        _get_Dn_Ds( \@popA, \@pa_A, \@ps_A );
+    for (my $i = 1; $i <= $sample_size; $i++) {
+        _get_Dn_Ds(\@popA, \@pa_A, \@ps_A);
 
-        _get_Dn_Ds( \@popB, \@pa_B, \@ps_B );
+        _get_Dn_Ds(\@popB, \@pa_B, \@ps_B);
 
-        _get_Dn_Ds( \@popA, \@ka_AB, \@ks_AB, \@popB );
+        _get_Dn_Ds(\@popA, \@ka_AB, \@ks_AB, \@popB);
     }
 
-    my @nonsyn_means = ( mean(@pa_A), mean(@pa_B), mean(@ka_AB) );
-    my @syn_means    = ( mean(@ps_A), mean(@ps_B), mean(@ks_AB) );
+    my @nonsyn_means = (mean(@pa_A), mean(@pa_B), mean(@ka_AB));
+    my @syn_means    = (mean(@ps_A), mean(@ps_B), mean(@ks_AB));
 
-    my ( @nonsyn_vars, @syn_vars );
-    for ( 0 .. 2 ) {
-        push @nonsyn_vars, variance( $nonsyn_means[$_]->query_vector );
-        push @syn_vars,    variance( $syn_means[$_]->query_vector );
+    my (@nonsyn_vars, @syn_vars);
+    for (0 .. 2) {
+        push @nonsyn_vars, variance($nonsyn_means[$_]->query_vector);
+        push @syn_vars,    variance($syn_means[$_]->query_vector);
     }
 
     # Remember, - is left-associative, so this means: = (a - b) - c
@@ -337,13 +337,13 @@ sub _sim_mk {
 
     printf "%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\n",
         $nonsyn_means[0] + $nonsyn_means[1],
-        sqrt( $nonsyn_vars[0] + $nonsyn_vars[1] ),
+        sqrt($nonsyn_vars[0] + $nonsyn_vars[1]),
         $syn_means[0] + $syn_means[1],
-        sqrt( $syn_vars[0] + $syn_vars[1] ),
-        ( $ka_AB > 0 ) ? $ka_AB : 0,
-        sqrt( sum(@nonsyn_vars) ),
-        ( $ks_AB > 0 ) ? $ks_AB : 0,
-        sqrt( sum(@syn_vars) );
+        sqrt($syn_vars[0] + $syn_vars[1]),
+        ($ka_AB > 0) ? $ka_AB : 0,
+        sqrt(sum(@nonsyn_vars)),
+        ($ks_AB > 0) ? $ks_AB : 0,
+        sqrt(sum(@syn_vars));
 }
 
 sub _print_distance {
@@ -351,7 +351,7 @@ sub _print_distance {
     local $SIG{__WARN__} = sub { $warn_bad_dist_method .= shift };
 
     my $dist_matrix
-        = $dna_stats->distance( -align => $aln, -method => $dist_method );
+        = $dna_stats->distance(-align => $aln, -method => $dist_method);
 
     die "$warn_bad_dist_method\nQuitting on bad distance method...\n"
         if ($warn_bad_dist_method);
@@ -364,25 +364,25 @@ sub _print_kaks_calc {
         "all-pairs" => "calc_all_KaKs_pairs",
         "pair"      => "calc_KaKs_pair",
         "average"   => "calc_average_KaKs"
-    );
-    my $calc_type = lc( $opts->{"kaks"} );
+   );
+    my $calc_type = lc($opts->{"kaks"});
 
     die "Not a valid argument for kaks: $calc_type. Should be one of: ",
-        join( ' ', keys %valid_calcs ), "\n"
-        if !( $calc_type ~~ %valid_calcs );
+        join(' ', keys %valid_calcs), "\n"
+        if !($calc_type ~~ %valid_calcs);
 
     die "Must specify sequence ids if using \"pair\" argument\n"
-        if ( ( $calc_type eq "pair" ) && !( $ingroup && $outgroup ) );
+        if (($calc_type eq "pair") && !($ingroup && $outgroup));
 
     my $call     = $valid_calcs{$calc_type};
     my @arg_list = ($aln);
 
-    push @arg_list, ( $ingroup, $outgroup )
-        if ( $calc_type eq "pair" );
+    push @arg_list, ($ingroup, $outgroup)
+        if ($calc_type eq "pair");
 
-    if ( $calc_type eq "average" ) {
+    if ($calc_type eq "average") {
 	my $result3 = $dna_stats->calc_average_KaKs($aln, 100);
-	for (sort keys %$result3 ){
+	for (sort keys %$result3){
 	    next if /Seq/;
 #	    printf("%-9s %.4f \n",$_ , $result3->{$_});
 	    printf("%.6f\t", $result3->{$_});
@@ -401,7 +401,7 @@ sub _print_heterozygosity {
 
     print "Heterozygosity=>\n";
 
-    for my $name ( $pop->get_marker_names() ) {
+    for my $name ($pop->get_marker_names()) {
 	my $marker = $pop->get_Marker($name);
 	my @alleles = $marker->get_Alleles();
 	my %allele_freqs = $marker->get_Allele_Frequencies();
@@ -444,9 +444,9 @@ sub heterozygosity {
     for my $an (@$results) {
         say "comparing " . $an->{'Seq1'} . " and " . $an->{'Seq2'}
             unless $calc_type eq "average";
-        for ( sort keys %$an ) {
+        for (sort keys %$an) {
             next if /Seq/;
-            printf( "%-9s %.4f \n", $_, $an->{$_} );
+            printf("%-9s %.4f \n", $_, $an->{$_});
         }
         say "\n";
     }

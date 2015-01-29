@@ -9,35 +9,35 @@ use 5.010;
 use Getopt::Long qw(:config gnu_getopt);
 use Pod::Usage;
 
-################################################################################
+#########################################################################
 # Option parsing
-################################################################################
+#########################################################################
 my %opts;
 GetOptions(
     \%opts,
-    "man|m",
     "help|h",
+    "man|m",
+    "composition|c",
+    "delete|d=s",
+    "fetch|f=s", # Retrieve sequence by accession number
+    "nogaps|g",
     "input|i=s",
-    "output|o=s",
     "length|l",
     "numseq|n",
-    "revcom|r",
+    "output|o=s",
     "pick|p=s",
-    "delete|d=s",
-    "translate|t=i", #Needs error checking
-    "nogaps|g",
-    "composition|c",
-    "fetch|f=s", # Retrieve sequence by accession number
+    "revcom|r",
     "subseq|s=s",
-    "anonymize|A:10",    # default 10 char (for phylip) (prefix + num_digits)  
+    "translate|t=i", #Needs error checking
+    "anonymize|A:10",    # default 10 char (for phylip) (prefix + num_digits)    
     "break|B", 
-    "reloop|R=i", # recircularize a genome at "loop_at"
-    "linearize|L",
-    "removestop|X", # for PAML/codeml    
-    "leadgaps|G",
     "count-codons|C",
     "feat2fas|F",
-    "hydroB|H"
+    "leadgaps|G",
+    "hydroB|H",
+    "linearize|L",
+    "reloop|R=i", # recircularize a genome at "loop_at"
+    "removestop|X", # for PAML/codeml    
  #   "longest-orf|C", Retired for now
  #   "extract|e", Retired for now
  #   "dotplot|D=s", Retired for now
@@ -45,33 +45,25 @@ GetOptions(
  #   "slidingwindow|S=i", Retired for now
  #   "prefix=s",   Retired for now
  #   "split|S=i", Retired for now
-
- 
 ) or pod2usage(2);
 
 pod2usage(1) if $opts{"help"};
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $opts{"man"};
+pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
 
-################################################################################
+#########################################################################
 # Main
-################################################################################
+#########################################################################
 
-# This sets all internal variables, and loads SeqIO objects
-initialize( \%opts);
+# This sets all internal variables, and loads Bio::Seq objects
+initialize(\%opts);
 
-for my $option ( keys %opts ) {
-
+for my $option (keys %opts) {
     # Don't process these options: they are for SeqIO
-    next if ( ( $option eq 'input' ) || ( $option eq 'output' ) );
+    next if ($option eq 'input' || $option eq 'output');
 
     # If there is a function to handle the current option, execute it
-    if ( can_handle($option) ) {
-        handle_opt($option);
-        exit;
-    }
-    else {
-        warn "Missing handler for: $option\n";
-    }
+    if (can_handle($option)) { handle_opt($option); exit }
+    else { warn "Missing handler for: $option\n" }
 }
 
 # Let seq-manipulations act as a converter when no other options are given.

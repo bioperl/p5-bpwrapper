@@ -36,19 +36,19 @@ GetOptions(
 ) or pod2usage(2);
 
 pod2usage(1) if $opts{"help"};
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $opts{"man"};
+pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
 
 ################################################################################
 # Main
 ################################################################################
 
 # This sets all internal variables, and loads AlignIO objects
-initialize( \%opts, \%flags );
+initialize(\%opts, \%flags);
 
-for my $option ( keys %opts ) {
+for my $option (keys %opts) {
 
     # If there is a function to handle the current option, execute it
-    if ( can_handle($option) ) {
+    if (can_handle($option)) {
         handle_opt($option);
         exit;
     }
