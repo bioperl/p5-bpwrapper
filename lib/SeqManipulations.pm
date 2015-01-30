@@ -37,6 +37,7 @@ my %opt_dispatch = (
     'revcom' => \&make_revcom,
     'subseq' => \&print_subseq,
     'translate' => \&reading_frame_ops,
+    'restrict' => \&restrict_digest,
     'anonymize' => \&anonymize,
     'break' => \&shred_seq,
     'count-codons' => \&count_codons,
@@ -56,26 +57,24 @@ my %opt_dispatch = (
   );
 
 my %filter_dispatch = (
-    'find_by_order'  => \&find_by_order,
-    'pick_by_order'  => \&pick_by_order,
-    'del_by_order'   => \&del_by_order,
-    'find_by_id'     => \&find_by_id,
-    'pick_by_id'     => \&pick_by_id,
-    'del_by_id'      => \&del_by_id,
-    'find_by_re'     => \&find_by_re,
-    'pick_by_re'     => \&pick_by_re,
-    'del_by_re'      => \&del_by_re,
-    'find_by_ambig'  => \&find_by_ambig,
-    'pick_by_ambig'  => \&pick_by_ambig,
-    'del_by_ambig'   => \&del_by_ambig,
-    'find_by_length' => \&find_by_length,
-    'pick_by_length' => \&pick_by_length,
-    'del_by_length'  => \&del_by_length
+    'find_by_order'  => \&_find_by_order,
+    'pick_by_order'  => \&_pick_by_order,
+    'del_by_order'   => \&_del_by_order,
+    'find_by_id'     => \&_find_by_id,
+    'pick_by_id'     => \&_pick_by_id,
+    'del_by_id'      => \&_del_by_id,
+    'find_by_re'     => \&_find_by_re,
+    'pick_by_re'     => \&_pick_by_re,
+    'del_by_re'      => \&_del_by_re,
+    'find_by_ambig'  => \&_find_by_ambig,
+    'pick_by_ambig'  => \&_pick_by_ambig,
+    'del_by_ambig'   => \&_del_by_ambig,
+    'find_by_length' => \&_find_by_length,
+    'pick_by_length' => \&_pick_by_length,
+    'del_by_length'  => \&_del_by_length,
 );
 
-###########################################################################
-## Subroutines
-###########################################################################
+##################### initializer & option handlers ###################
 
 ## TODO Function documentation!
 ## TODO Formal testing!
@@ -95,17 +94,17 @@ sub initialize {
     $out_format = $opts{"output"} // 'fasta';
 
 # A change in SeqIO, commit 0e04486ca4cc2e61fd72, means -fh or -file is required
-    $out = Bio::SeqIO->new(-format => $out_format, -fh => \*STDOUT);
+    $out = Bio::SeqIO->new(-format => $out_format, -fh => \*STDOUT)
 }
 
 sub can_handle {
     my $option = shift;
-    return defined($opt_dispatch{$option});
+    return defined($opt_dispatch{$option})
 }
 
 sub handle_opt {
     my $option = shift;
-    $opt_dispatch{$option}->($option);  # This passes option name to all functions
+    $opt_dispatch{$option}->($option)  # This passes option name to all functions
 }
 
 sub write_out {
@@ -113,111 +112,7 @@ sub write_out {
 }
 
 
-############### begin pick/delete filters ################
-
-sub find_by_order {
-    my ($action, $ct, $currseq, $order_list) = @_;
-    $filter_dispatch{ $action . "_by_order" }->($ct, $currseq, $order_list);
-}
-
-sub pick_by_order {
-    my ($ct, $currseq, $order_list) = @_;
-    $out->write_seq($currseq) if ($order_list->{$ct})
-}
-
-sub del_by_order {
-    my ($ct, $currseq, $order_list) = @_;
-    if ($order_list->{$ct}) { warn "Deleted sequence: ", $currseq->id(), "\n" }
-    else { $out->write_seq($currseq) }
-}
-
-sub find_by_id {
-    my ($action, $match, $currseq, $id_list) = @_;
-    my $seq_id = $currseq->id();
-    $filter_dispatch{ $action . "_by_id" }->($match, $currseq, $id_list, $seq_id)
-}
-
-sub pick_by_id {
-    my ($match, $currseq, $id_list, $seq_id) = @_;
-
-    if ($id_list->{$seq_id}) {
-        $id_list->{$seq_id}++;
-        die "Multiple matches (" . $id_list->{$seq_id} - 1 . ") for $match found\n" if $id_list->{$seq_id} > 2;
-        $out->write_seq($currseq);
-    }
-}
-
-sub del_by_id {
-    my ($match, $currseq, $id_list, $seq_id) = @_;
-
-    if ($id_list->{$seq_id}) {
-        $id_list->{$seq_id}++;
-        warn "Deleted sequence: ", $currseq->id(), "\n"
-    }
-    else { $out->write_seq($currseq) }
-}
-
-sub find_by_re {
-    my ($action, $currseq, $value) = @_;
-    my $regex  = qr/$value/;
-    my $seq_id = $currseq->id();
-    $filter_dispatch{ $action . "_by_re" }->($currseq, $regex, $seq_id)
-}
-
-sub pick_by_re {
-    my ($currseq, $regex, $seq_id) = @_;
-    $out->write_seq($currseq) if ($seq_id =~ /$regex/)
-}
-
-sub del_by_re {
-    my ($currseq, $regex, $seq_id) = @_;
-
-    if ($seq_id =~ /$regex/) { warn "Deleted sequence: $seq_id\n" }
-    else { $out->write_seq($currseq) }
-}
-
-# TODO This needs better documentation
-sub find_by_ambig {
-    my ($action, $currseq, $cutoff) = @_;
-    my $string        = $currseq->seq();
-    my $ct            = ($string =~ s/n/n/gi);
-    my $percent_ambig = $ct / $currseq->length();
-    $filter_dispatch{ "$action" . "_by_ambig" }->($currseq, $cutoff, $ct, $percent_ambig)
-}
-
-# TODO Probably better to change behavior when 'picking'?
-sub pick_by_ambig {
-    my ($currseq, $cutoff, $ct, $percent_ambig) = @_;
-    $out->write_seq($currseq) if $percent_ambig > $cutoff
-}
-
-sub del_by_ambig {
-    my ($currseq, $cutoff, $ct, $percent_ambig) = @_;
-
-    if ($percent_ambig > $cutoff) { warn "Deleted sequence: ", $currseq->id(), " number of N: ", $ct, "\n" }
-    else { $out->write_seq($currseq) }
-}
-
-sub find_by_length {
-    my ($action, $currseq, $value) = @_;
-    $filter_dispatch{ $action . "_by_length" }->($currseq, $value);
-}
-
-sub pick_by_length {
-    my ($currseq, $value) = @_;
-    $out->write_seq($currseq) if $currseq->length() <= $value;
-}
-
-sub del_by_length {
-    my ($currseq, $value) = @_;
-
-    if ($currseq->length() <= $value) { warn "Deleted sequence: ", $currseq->id(), " length: ", $currseq->length(), "\n" }
-    else { $out->write_seq($currseq) }
-}
-
-############# END pick/delete filters ################
-
-################### begin sub ########################
+################### subroutine ########################
 
 sub print_composition {
     while ($seq = $in->next_seq()) {
@@ -245,7 +140,7 @@ sub filter_seqs {  # This sub calls all the del/pic subs above. Any option to fi
 
     if ($tag eq 'order') {
         my $ct = 0;
-        my %order_list = parse_orders(\@selected);   # Parse selected orders and create a hash
+        my %order_list = _parse_orders(\@selected);   # Parse selected orders and create a hash
         while (my $currseq = $in->next_seq) { $ct++; $filter_dispatch{$callsub}->($action, $ct, $currseq, \%order_list) }
         foreach my $order (keys %order_list) { print STDERR "No matches found for order number $order\n" if $order > $ct }
     }
@@ -259,28 +154,11 @@ sub filter_seqs {  # This sub calls all the del/pic subs above. Any option to fi
     }
 }
 
-sub parse_orders {
-    my @selected = @{ shift() };
-
-    my @orders;
-    # Parse if $value contains ranges: allows mixing ranges and lists
-    foreach my $val (@selected) {
-        if ($val =~ /^(\d+)-(\d+)$/) {    # A numerical range
-            my ($first, $last) = ($1, $2);
-            die "Invalid seq range: $first, $last\n" unless $last > $first;
-            push @orders, ($first .. $last)
-        }
-        else { push @orders, $val }          # Single value
-    }
-
-    return map { $_ => 1 } @orders;
-}
-
 # To do: add fetch by gi
 sub retrieve_seqs {
     my $gb  = Bio::DB::GenBank->new();
     my $seq = $gb->get_Seq_by_acc($opts{'fetch'}); # Retrieve sequence with Accession Number
-    $out->write_seq($seq);
+    $out->write_seq($seq)
 }
 
 sub remove_gaps {    # remove gaps
@@ -299,13 +177,13 @@ sub print_lengths {
 sub print_seq_count {
     my $count;
     while ($seq = $in->next_seq()) { $count++ }
-    print $count, "\n";
+    print $count, "\n"
 }
 
 sub make_revcom {    # reverse-complement a sequence
     while ($seq = $in->next_seq()) {
         my $new = Bio::Seq->new(-id  => $seq->id() . ":revcom", -seq => $seq->revcom()->seq());
-        $out->write_seq($new);
+        $out->write_seq($new)
     }
 }
 
@@ -315,7 +193,7 @@ sub print_subseq {
         my ($start, $end) = split /\s*,\s*/, $opts{"subseq"};
         die "end out of bound: $id\n" if $end > $seq->length();
         my $new = Bio::Seq->new(-id  => $seq->id() . ":$start-$end", -seq => $seq->subseq($start, $end));
-        $out->write_seq($new);
+        $out->write_seq($new)
     }
 }
 
@@ -334,6 +212,21 @@ sub reading_frame_ops {
     }
 }
 
+sub restrict_digest {
+    my $enz = $opts{"restrict"};
+    use Bio::Restriction::Analysis;
+    $seq = $in->next_seq();
+    my $seq_str = $seq->seq();
+    die "$seq_str: Not a DNA sequence\n" unless $seq_str =~ /^[ATCG]+$/i;
+    my $ra = Bio::Restriction::Analysis->new(-seq=>$seq);
+    foreach my $frag ($ra->fragment_maps($enz)) {
+        my $seq_obj = Bio::Seq->new(
+            -id=>$seq->id().'|'.$frag->{start}.'-'.$frag->{end}.'|'.($frag->{end}-$frag->{start}+1),
+            -seq=>$frag->{seq});
+        $out->write_seq($seq_obj)
+    }
+}
+
 sub anonymize {
     my $char_len = $opts{"anonymize"} // die "Tried to use option 'preifx' without using option 'anonymize'. Exiting...\n";
     my $prefix = (defined($opts{"prefix"})) ? $opts{"prefix"} : "S";
@@ -349,35 +242,14 @@ sub anonymize {
         $serial_name{$serial} = $seq->id();
         $seq->id($serial);
         $out->write_seq($seq);
-        $ct++;
+        $ct++
     }
 
-    make_sed_file($filename, %serial_name);
+    _make_sed_file($filename, %serial_name);
     warn "Anonymization map:\n";
     while (my ($k, $v) = each %serial_name) { warn "$k => $v\n" }
 
     warn "WARNING: Anonymized ID length exceeded requested length: try a different length or prefix.\n" if $length_warn
-}
-
-sub make_sed_file {
-    my $filename = shift @_;
-    my (%serial_names) = @_;
-
-    $filename = "STDOUT" if $filename eq '-';
-
-    my $sedfile = basename($filename) . ".sed";
-    open(SEDOUT, ">", $sedfile) or die $!;
-
-    print SEDOUT "# usage: sed -f $filename.sed <anonymized file>\n";
-
-    foreach my $serial (keys %serial_names) {
-        my $real_name = $serial_names{$serial};
-        my $sed_cmd   = "s/$serial/" . $real_name . "/g;\n";
-        print SEDOUT $sed_cmd;
-    }
-    close SEDOUT;
-
-    print STDERR "\nCreated $filename.sed\tusage: sed -f $filename.sed <anonymized file>\n\n";
 }
 
 sub shred_seq {
@@ -386,9 +258,9 @@ sub shred_seq {
         $newid =~ s/[\s\|]/_/g;
         print $newid, "\n";
         my $newout = Bio::SeqIO->new(-format => $out_format, -file => ">" . $newid . ".fas");
-        $newout->write_seq($seq);
+        $newout->write_seq($seq)
     }
-    exit;
+    exit
 }
 
 sub count_codons {
@@ -425,9 +297,9 @@ sub count_leading_gaps {
         my @mono     = split //, $seq->seq();
         for (my $i = 0; $i < $seq->length(); $i++) {
             $see_aa = 1 if $mono[$i] ne '-';
-            $lead_gap++ if !$see_aa && $mono[$i] eq '-';
+            $lead_gap++ if !$see_aa && $mono[$i] eq '-'
         }
-        print $seq->id(), "\t", $lead_gap, "\n";
+        print $seq->id(), "\t", $lead_gap, "\n"
     }
 }
 
@@ -437,7 +309,7 @@ sub hydroB {
         $pep_str =~ s/\*//g;
         $seq->seq($pep_str);
         my $gravy = Bio::Tools::SeqStats->hydropathicity($seq);
-        printf "%s\t%.4f\n", $seq->id(), $gravy;
+        printf "%s\t%.4f\n", $seq->id(), $gravy
     }
 }
 
@@ -462,9 +334,151 @@ sub remove_stop {
             $newstr .= $codon
         }
         my $new = Bio::Seq->new(-id  => $seq->id(), -seq => $newstr);
-        $out->write_seq($new);
+        $out->write_seq($new)
     }
 }
-####################### end sub ###########################
+
+
+####################### internal subroutine ###########################
+
+sub _parse_orders {
+    my @selected = @{ shift() };
+
+    my @orders;
+    # Parse if $value contains ranges: allows mixing ranges and lists
+    foreach my $val (@selected) {
+        if ($val =~ /^(\d+)-(\d+)$/) {    # A numerical range
+            my ($first, $last) = ($1, $2);
+            die "Invalid seq range: $first, $last\n" unless $last > $first;
+            push @orders, ($first .. $last)
+        }
+        else { push @orders, $val }          # Single value
+    }
+
+    return map { $_ => 1 } @orders
+}
+
+sub _make_sed_file {
+    my $filename = shift @_;
+    my (%serial_names) = @_;
+
+    $filename = "STDOUT" if $filename eq '-';
+
+    my $sedfile = basename($filename) . ".sed";
+    open(SEDOUT, ">", $sedfile) or die $!;
+
+    print SEDOUT "# usage: sed -f $filename.sed <anonymized file>\n";
+
+    foreach my $serial (keys %serial_names) {
+        my $real_name = $serial_names{$serial};
+        my $sed_cmd   = "s/$serial/" . $real_name . "/g;\n";
+        print SEDOUT $sed_cmd
+    }
+    close SEDOUT;
+
+    print STDERR "\nCreated $filename.sed\tusage: sed -f $filename.sed <anonymized file>\n\n"
+}
+
+################### pick/delete filters #####################
+
+sub _find_by_order {
+    my ($action, $ct, $currseq, $order_list) = @_;
+    $filter_dispatch{ $action . "_by_order" }->($ct, $currseq, $order_list)
+}
+
+sub _pick_by_order {
+    my ($ct, $currseq, $order_list) = @_;
+    $out->write_seq($currseq) if ($order_list->{$ct})
+}
+
+sub _del_by_order {
+    my ($ct, $currseq, $order_list) = @_;
+    if ($order_list->{$ct}) { warn "Deleted sequence: ", $currseq->id(), "\n" }
+    else { $out->write_seq($currseq) }
+}
+
+sub _find_by_id {
+    my ($action, $match, $currseq, $id_list) = @_;
+    my $seq_id = $currseq->id();
+    $filter_dispatch{ $action . "_by_id" }->($match, $currseq, $id_list, $seq_id)
+}
+
+sub _pick_by_id {
+    my ($match, $currseq, $id_list, $seq_id) = @_;
+
+    if ($id_list->{$seq_id}) {
+        $id_list->{$seq_id}++;
+        die "Multiple matches (" . $id_list->{$seq_id} - 1 . ") for $match found\n" if $id_list->{$seq_id} > 2;
+        $out->write_seq($currseq)
+    }
+}
+
+sub _del_by_id {
+    my ($match, $currseq, $id_list, $seq_id) = @_;
+
+    if ($id_list->{$seq_id}) {
+        $id_list->{$seq_id}++;
+        warn "Deleted sequence: ", $currseq->id(), "\n"
+    }
+    else { $out->write_seq($currseq) }
+}
+
+sub _find_by_re {
+    my ($action, $currseq, $value) = @_;
+    my $regex  = qr/$value/;
+    my $seq_id = $currseq->id();
+    $filter_dispatch{ $action . "_by_re" }->($currseq, $regex, $seq_id)
+}
+
+sub _pick_by_re {
+    my ($currseq, $regex, $seq_id) = @_;
+    $out->write_seq($currseq) if ($seq_id =~ /$regex/)
+}
+
+sub _del_by_re {
+    my ($currseq, $regex, $seq_id) = @_;
+
+    if ($seq_id =~ /$regex/) { warn "Deleted sequence: $seq_id\n" }
+    else { $out->write_seq($currseq) }
+}
+
+# TODO This needs better documentation
+sub _find_by_ambig {
+    my ($action, $currseq, $cutoff) = @_;
+    my $string        = $currseq->seq();
+    my $ct            = ($string =~ s/n/n/gi);
+    my $percent_ambig = $ct / $currseq->length();
+    $filter_dispatch{ "$action" . "_by_ambig" }->($currseq, $cutoff, $ct, $percent_ambig)
+}
+
+# TODO Probably better to change behavior when 'picking'?
+sub _pick_by_ambig {
+    my ($currseq, $cutoff, $ct, $percent_ambig) = @_;
+    $out->write_seq($currseq) if $percent_ambig > $cutoff
+}
+
+sub _del_by_ambig {
+    my ($currseq, $cutoff, $ct, $percent_ambig) = @_;
+
+    if ($percent_ambig > $cutoff) { warn "Deleted sequence: ", $currseq->id(), " number of N: ", $ct, "\n" }
+    else { $out->write_seq($currseq) }
+}
+
+sub _find_by_length {
+    my ($action, $currseq, $value) = @_;
+    $filter_dispatch{ $action . "_by_length" }->($currseq, $value)
+}
+
+sub _pick_by_length {
+    my ($currseq, $value) = @_;
+    $out->write_seq($currseq) if $currseq->length() <= $value
+}
+
+sub _del_by_length {
+    my ($currseq, $value) = @_;
+
+    if ($currseq->length() <= $value) { warn "Deleted sequence: ", $currseq->id(), " length: ", $currseq->length(), "\n" }
+    else { $out->write_seq($currseq) }
+}
 
 1;

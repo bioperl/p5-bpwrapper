@@ -3,7 +3,7 @@
 use strict;    # Still on 5.10, so need this for strict
 use warnings;
 use FindBin;                      # Find the location of seq-manipulations
-use lib "$FindBin::Bin/lib";          # to use it as a lib path
+use lib "$FindBin::Bin/lib";      # to use it as a lib path
 require "SeqManipulations.pm";    # to get this library!
 use 5.010;
 use Getopt::Long qw(:config gnu_getopt);
@@ -29,6 +29,7 @@ GetOptions(
     "revcom|r",
     "subseq|s=s",
     "translate|t=i", #Needs error checking
+    "restrict|x=s",
     "anonymize|A:10",    # default 10 char (for phylip) (prefix + num_digits)    
     "break|B", 
     "count-codons|C",
@@ -117,6 +118,7 @@ __END__
  bioseq -C cds_fasta              # [C]odon counts (for coding sequences)
  bioseq -H pep_fasta              # [H]ydrophobicity score (for protein seq)
  bioseq -i'genbank' -F file.gb    # extract genbank [F]eatures to FASTA
+ bioseq -x 'EcoRI' dna_fasta      # Fragments from restriction digest
 
  # Chaining with pipes:
  bioseq -p'id:B31' dna_fasta | bioseq -g | bioseq -t1          # pick a seq, remove gaps, & translate 
@@ -230,10 +232,15 @@ Translate in 1, 3, or 6 frames. eg, -t1, -t3, or -t6. Wrap Bio::Seq->translate()
 
 Usage: bioseq -t [1|3|6] <input_file>
 
+=head2 --restrict, -x
+
+Predicted fragments from digestion by a specified restriction enzyme. An input file with a single sequence is expected. A wrapper of Bio::Restriction::Analysis->cut().
+
+Usage: bioseq -x 'RE' <dna_fasta_file>
+
 =head2 --anonymize, -A
 
-Replace sequence IDs with serial IDs 'n' characters long, including a leading 'S' (e.g., -A'5' gives S0001). Produces a sed script file with a '.sed' suffix that may be used with sed's '-f' argument.
-If the filename is '-', the sed file is named STDOUT.sed instead. The sed filename is specified on STDERR.
+Replace sequence IDs with serial IDs 'n' characters long, including a leading 'S' (e.g., -A'5' gives S0001). Produces a sed script file with a '.sed' suffix that may be used with sed's '-f' argument. If the filename is '-', the sed file is named STDOUT.sed instead. The sed filename is specified on STDERR.
 
 Usage: bioseq -A 'number' <input_file>
 
