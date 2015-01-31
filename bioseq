@@ -114,7 +114,6 @@ __END__
  # Less common usages (options in CAPs)
  bioseq -L fasta_file             # [L]inearize FASTA: one sequence per line
  bioseq -B fasta_file             # [B]reak into single-seq files
- bioseq -X cds_fasta              # remove stop[X] codon in coding seqs (for PAML)
  bioseq -C cds_fasta              # [C]odon counts (for coding sequences)
  bioseq -H pep_fasta              # [H]ydrophobicity score (for protein seq)
  bioseq -i'genbank' -F file.gb    # extract genbank [F]eatures to FASTA
@@ -153,12 +152,12 @@ Usage: bioseq -c <input_file>
 =head2 --delete, -d
 
  Delete a sequence or a comma-separated list of sequences, eg,
- --del 'id:foo'		by id
- --del 'order:2'	by order
- --del 'length:n'	by min length, where 'n' is length
- --del 'ambig:x'	by min % ambiguous base/aa, where 'x' is the %
- --del 'id:foo,bar'	list by id
- --del 're:REGEX'       using a regular expression (only one regex is expected)
+ -d 'id:foo'	    by id
+ -d 'order:2'	    by order
+ -d 'length:n'	    by min length, where 'n' is length
+ -d 'ambig:x'	    by min % ambiguous base/aa, where 'x' is the %
+ -d 'id:foo,bar'    list by id
+ -d 're:REGEX'      using a regular expression (only one regex is expected)
 
 Usage: bioseq -d 'tag:value' <input_file>
 

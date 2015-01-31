@@ -57,21 +57,21 @@ my %opt_dispatch = (
   );
 
 my %filter_dispatch = (
-    'find_by_order'  => \&_find_by_order,
-    'pick_by_order'  => \&_pick_by_order,
-    'del_by_order'   => \&_del_by_order,
-    'find_by_id'     => \&_find_by_id,
-    'pick_by_id'     => \&_pick_by_id,
-    'del_by_id'      => \&_del_by_id,
-    'find_by_re'     => \&_find_by_re,
-    'pick_by_re'     => \&_pick_by_re,
-    'del_by_re'      => \&_del_by_re,
-    'find_by_ambig'  => \&_find_by_ambig,
-    'pick_by_ambig'  => \&_pick_by_ambig,
-    'del_by_ambig'   => \&_del_by_ambig,
-    'find_by_length' => \&_find_by_length,
-    'pick_by_length' => \&_pick_by_length,
-    'del_by_length'  => \&_del_by_length,
+    'find_by_order'  => \&find_by_order,
+    'pick_by_order'  => \&pick_by_order,
+    'delete_by_order'   => \&del_by_order,
+    'find_by_id'     => \&find_by_id,
+    'pick_by_id'     => \&pick_by_id,
+    'delete_by_id'      => \&del_by_id,
+    'find_by_re'     => \&find_by_re,
+    'pick_by_re'     => \&pick_by_re,
+    'delete_by_re'      => \&del_by_re,
+    'find_by_ambig'  => \&find_by_ambig,
+    'pick_by_ambig'  => \&pick_by_ambig,
+    'delete_by_ambig'   => \&del_by_ambig,
+    'find_by_length' => \&find_by_length,
+    'pick_by_length' => \&pick_by_length,
+    'del_by_length'  => \&del_by_length,
 );
 
 ##################### initializer & option handlers ###################
@@ -125,22 +125,23 @@ sub print_composition {
     }
 }
 
-sub filter_seqs {  # This sub calls all the del/pic subs above. Any option to filter input sequences by some criterion goes through here, and the appropriate filter subroutine is called.
+# This sub calls all the del/pick subs above. Any option to filter input sequences by some criterion goes through here, and the appropriate filter subroutine is called.
+sub filter_seqs {
     my $action = shift;
-    my $match  = $opts{$action};
+    my $match  = $opts{$action}; 
 
     # matching to stop at 1st ':' so that ids using ':' as field delimiters are handled properly
     $match =~ /^([^:]+):(\S+)$/ || die "Bad search format. Expecting a pattern of the form: tag:value.\n";
 
-    my ($tag, $value) = ($1, $2);
+    my ($tag, $value) = ($1, $2); 
     my @selected = split(/,/, $value);
-    my $callsub = "find_by_" . "$tag";
+    my $callsub = "find_by_" . "$tag"; 
 
     die "Bad tag or function not implemented. Tag was: $tag\n" if (!defined($filter_dispatch{$callsub}));
 
     if ($tag eq 'order') {
         my $ct = 0;
-        my %order_list = _parse_orders(\@selected);   # Parse selected orders and create a hash
+        my %order_list = parse_orders(\@selected);   # Parse selected orders and create a hash
         while (my $currseq = $in->next_seq) { $ct++; $filter_dispatch{$callsub}->($action, $ct, $currseq, \%order_list) }
         foreach my $order (keys %order_list) { print STDERR "No matches found for order number $order\n" if $order > $ct }
     }
@@ -341,7 +342,7 @@ sub remove_stop {
 
 ####################### internal subroutine ###########################
 
-sub _parse_orders {
+sub parse_orders {
     my @selected = @{ shift() };
 
     my @orders;
@@ -381,29 +382,29 @@ sub _make_sed_file {
 
 ################### pick/delete filters #####################
 
-sub _find_by_order {
-    my ($action, $ct, $currseq, $order_list) = @_;
+sub find_by_order {
+    my ($action, $ct, $currseq, $order_list) = @_; # say join "\t", @_;
     $filter_dispatch{ $action . "_by_order" }->($ct, $currseq, $order_list)
 }
 
-sub _pick_by_order {
+sub pick_by_order {
     my ($ct, $currseq, $order_list) = @_;
     $out->write_seq($currseq) if ($order_list->{$ct})
 }
 
-sub _del_by_order {
-    my ($ct, $currseq, $order_list) = @_;
+sub del_by_order {
+    my ($ct, $currseq, $order_list) = @_; # say join "\t", @_;
     if ($order_list->{$ct}) { warn "Deleted sequence: ", $currseq->id(), "\n" }
     else { $out->write_seq($currseq) }
 }
 
-sub _find_by_id {
+sub find_by_id {
     my ($action, $match, $currseq, $id_list) = @_;
     my $seq_id = $currseq->id();
-    $filter_dispatch{ $action . "_by_id" }->($match, $currseq, $id_list, $seq_id)
+    $filter_dispatch{ $action . "_by_id" }->($match, $currseq, $id_list, $seq_id);
 }
 
-sub _pick_by_id {
+sub pick_by_id {
     my ($match, $currseq, $id_list, $seq_id) = @_;
 
     if ($id_list->{$seq_id}) {
@@ -413,7 +414,7 @@ sub _pick_by_id {
     }
 }
 
-sub _del_by_id {
+sub del_by_id {
     my ($match, $currseq, $id_list, $seq_id) = @_;
 
     if ($id_list->{$seq_id}) {
@@ -423,19 +424,19 @@ sub _del_by_id {
     else { $out->write_seq($currseq) }
 }
 
-sub _find_by_re {
+sub find_by_re {
     my ($action, $currseq, $value) = @_;
     my $regex  = qr/$value/;
     my $seq_id = $currseq->id();
     $filter_dispatch{ $action . "_by_re" }->($currseq, $regex, $seq_id)
 }
 
-sub _pick_by_re {
+sub pick_by_re {
     my ($currseq, $regex, $seq_id) = @_;
     $out->write_seq($currseq) if ($seq_id =~ /$regex/)
 }
 
-sub _del_by_re {
+sub del_by_re {
     my ($currseq, $regex, $seq_id) = @_;
 
     if ($seq_id =~ /$regex/) { warn "Deleted sequence: $seq_id\n" }
@@ -443,7 +444,7 @@ sub _del_by_re {
 }
 
 # TODO This needs better documentation
-sub _find_by_ambig {
+sub find_by_ambig {
     my ($action, $currseq, $cutoff) = @_;
     my $string        = $currseq->seq();
     my $ct            = ($string =~ s/n/n/gi);
@@ -452,29 +453,29 @@ sub _find_by_ambig {
 }
 
 # TODO Probably better to change behavior when 'picking'?
-sub _pick_by_ambig {
+sub pick_by_ambig {
     my ($currseq, $cutoff, $ct, $percent_ambig) = @_;
     $out->write_seq($currseq) if $percent_ambig > $cutoff
 }
 
-sub _del_by_ambig {
+sub del_by_ambig {
     my ($currseq, $cutoff, $ct, $percent_ambig) = @_;
 
     if ($percent_ambig > $cutoff) { warn "Deleted sequence: ", $currseq->id(), " number of N: ", $ct, "\n" }
     else { $out->write_seq($currseq) }
 }
 
-sub _find_by_length {
+sub find_by_length {
     my ($action, $currseq, $value) = @_;
     $filter_dispatch{ $action . "_by_length" }->($currseq, $value)
 }
 
-sub _pick_by_length {
+sub pick_by_length {
     my ($currseq, $value) = @_;
     $out->write_seq($currseq) if $currseq->length() <= $value
 }
 
-sub _del_by_length {
+sub del_by_length {
     my ($currseq, $value) = @_;
 
     if ($currseq->length() <= $value) { warn "Deleted sequence: ", $currseq->id(), " length: ", $currseq->length(), "\n" }
