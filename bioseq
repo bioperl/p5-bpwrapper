@@ -16,7 +16,7 @@ my %opts;
 GetOptions(
     \%opts,
     "help|h",
-    "man|m",
+    "man",
     "composition|c",
     "delete|d=s",
     "fetch|f=s", # Retrieve sequence by accession number
@@ -70,11 +70,9 @@ for my $option (keys %opts) {
 # Let seq-manipulations act as a converter when no other options are given.
 write_out();
 
-__END__
-
 ################# POD Documentation ##################
 
-=pod
+__END__
 
 =head1 NAME
 
@@ -137,11 +135,11 @@ Print a brief help message and exit.
 
 Usage: bioseq -h
 
-=head2 --man, -m
+=head2 --man (but not "-m")
 
 Print the manual page and exit.
 
-Usage: bioseq -m
+Usage: bioseq -man
 
 =head2 --composition, -c
 

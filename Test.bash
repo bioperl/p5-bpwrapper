@@ -1,85 +1,56 @@
 #!/bin/bash
 
-function test {
-    "$@"
-    local status=$?
-    if [ $status -ne 0 ]; then
-        echo "error with $1" >&2
-    else echo "passed: $1"
-    fi
-    return $status
-}
+testStart=`date`;
+echo "testing start: $testStart.";
+echo "----------";
 
-echo -ne "option: -c, DNA\n"
-test ./bioseq -c test-files/test-bioseq.nuc 
-echo -ne "\n-c, protein\n"
-test ./bioseq -c test-files/test-bioseq.pep
+#----------------------------
+# Check where bp-utils are
+#----------------------------
+testDir=$HOME/bp-utils; # change this if bp-utils are installed somewhere else
+if ! cd $testDir; then echo "Stop: check if $testDir exist" >&2; exit 1; fi;
 
-echo -ne "\n-d\n"
-test ./bioseq -d 'order:2' test-files/test-bioseq.nuc
+#-----------------------------
+# Test existence of BioPerl
+#-----------------------------
+echo -ne "Testing if BioPerl is installed: ...";
+if perldoc -l Bio::Perl; then
+    echo " ... Great, bioperl found!"
+else 
+    echo "Stop: please install bioperl modules before using this utility" >&2
+    exit 1;
+fi
 
-echo -ne "\n-f\n"
-test ./bioseq -f 'X83553' -o 'genbank'
+#-----------------------------
+# Test options, one by one
+#-----------------------------
+if ./bioseq -c test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -c: it works!"; else echo "bioseq -c: failed"; fi
+if ./bioseq -c test-files/test-bioseq.pep > /dev/null 2> /dev/null; then echo "bioseq -c: it works!"; else echo "bioseq -c: failed"; fi
+if ./bioseq -d 'order:2' test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -d: it works!"; else echo "bioseq -d: failed"; fi
+if ./bioseq -f 'X83553' -o 'genbank' > /dev/null 2> /dev/null; then echo "bioseq -f: it works!"; else echo "bioseq -f: failed"; fi
+if ./bioseq -g test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -g: it works!"; else echo "bioseq -g: failed"; fi
+if ./bioseq -l test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -l: it works!"; else echo "bioseq -l: failed"; fi
+if ./bioseq -l test-files/test-bioseq.pep > /dev/null 2> /dev/null; then echo "bioseq -l: it works!"; else echo "bioseq -l: failed"; fi
+if ./bioseq -n test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -n: it works!"; else echo "bioseq -n: failed"; fi
+if ./bioseq -i 'genbank' -o'fasta' test-files/test-bioseq.gb > /dev/null 2> /dev/null; then echo "bioseq -i: it works!"; else echo "bioseq -i: failed"; fi
+if ./bioseq -p 'order:2' test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -p: it works!"; else echo "bioseq -p: failed"; fi
+if ./bioseq -p 'order:2,4' test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -p: it works!"; else echo "bioseq -p: failed"; fi
+if ./bioseq -p 'order:2-4' test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -p: it works!"; else echo "bioseq -p: failed"; fi
+if ./bioseq -r test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -r: it works!"; else echo "bioseq -r: failed"; fi
+if ./bioseq -s '10,20' test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -s: it works!"; else echo "bioseq -s: failed"; fi
+if ./bioseq -t1 test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -t: it works!"; else echo "bioseq -t: failed"; fi
+if ./bioseq -x 'EcoRI' test-files/test-bioseq-re.fas > /dev/null 2> /dev/null; then echo "bioseq -x: it works!"; else echo "bioseq -x: failed"; fi  # to fix output
+if ./bioseq -A test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -A: it works!"; else echo "bioseq -A: failed"; fi
+if ./bioseq -B test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -B: it works!"; else echo "bioseq -B: failed"; fi
+if ./bioseq -C test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -C: it works!"; else echo "bioseq -C: failed"; fi
+if ./bioseq -i 'genbank' -F test-files/test-bioseq.gb > /dev/null 2> /dev/null; then echo "bioseq -F: it works!"; else echo "bioseq -F: failed"; fi
+if ./bioseq -G test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -G: it works!"; else echo "bioseq -G: failed"; fi  # no synopsis (okay)
+if ./bioseq -H test-files/test-bioseq.pep > /dev/null 2> /dev/null; then echo "bioseq -H: it works!"; else echo "bioseq -H: failed"; fi
+if ./bioseq -L test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -L: it works!"; else echo "bioseq -L: failed"; fi
+if ./bioseq -R3 test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -R: it works!"; else echo "bioseq -R: failed"; fi
+if ./bioseq -X test-files/test-bioseq.nuc > /dev/null 2> /dev/null; then echo "bioseq -X: it works!"; else echo "bioseq -X: failed"; fi   # removed from synopsis
 
-echo -ne "\n-g, protein\n"
-test ./bioseq -g test-files/test-bioseq.nuc
-
-echo -ne "\n-i, protein\n"
-test ./bioseq -i 'genbank' -F test-files/test-bioseq.gb 
-
-echo -ne "\n-l, DNA\n"
-test ./bioseq -l test-files/test-bioseq.nuc
-echo -ne "\n-l, protein\n"
-test ./bioseq -l test-files/test-bioseq.pep
-
-echo -ne "\n-n\n"
-test ./bioseq -n test-files/test-bioseq.nuc
-
-echo -ne "\n-o\n"
-test ./bioseq -i 'genbank' -o'fasta' test-files/test-bioseq.gb 
-
-echo -ne "\n-p\n"
-test ./bioseq -p 'order:2' test-files/test-bioseq.nuc
-test ./bioseq -p 'order:2,4' test-files/test-bioseq.nuc
-test ./bioseq -p 'order:2-4' test-files/test-bioseq.nuc
-
-echo -ne "\n-r\n"
-test ./bioseq -r test-files/test-bioseq.nuc
-
-echo -ne "\n-s\n"
-test ./bioseq -s '10,20' test-files/test-bioseq.nuc
-
-echo -ne "\n-t\n"
-test ./bioseq -t1 test-files/test-bioseq.nuc
-
-echo -ne "\n-x\n"
-test ./bioseq -x 'EcoRI' test-files/test-bioseq-re.fas  # to fix output
-
-echo -ne "\n-A\n"
-test ./bioseq -A test-files/test-bioseq.nuc
-
-echo -ne "\n-B\n"
-test ./bioseq -B test-files/test-bioseq.nuc
-
-echo -ne "\n-C\n"
-test ./bioseq -C test-files/test-bioseq.nuc
-
-echo -ne "\n-F\n"
-test ./bioseq -i 'genbank' -F test-files/test-bioseq.gb
-
-echo -ne "\n-G\n"
-test ./bioseq -G test-files/test-bioseq.nuc  # no synopsis (okay)
-
-echo -ne "\n-H\n"
-test ./bioseq -H test-files/test-bioseq.pep
-
-echo -ne "\n-L\n"
-test ./bioseq -L test-files/test-bioseq.nuc
-
-echo -ne "\n-R\n"
-test ./bioseq -R3 test-files/test-bioseq.nuc
-
-echo -ne "\n-X\n"
-test ./bioseq -X test-files/test-bioseq.nuc   # removed from synopsis
-
+testEnd=`date`;
+echo "-------------";
+echo "testing ends: $testEnd.";
 exit;
