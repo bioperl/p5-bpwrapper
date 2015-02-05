@@ -23,7 +23,7 @@ if ($ENV{'DEBUG'}) {
 }
 
 # Package global variables
-my ($in, $out, $aln, %opts, $file, $in_format, $out_format);
+my ($in, $out, $aln, %opts, $file, $in_format, $out_format, @alns);
 
 ## For new options, just add an entry into this table with the same key as in
 ## the GetOpts function in the main program. Make the key be a reference to
@@ -69,16 +69,21 @@ sub initialize {
     # This is the format that aln-manipulations expects by default
     my $default_format = "clustalw";
 
-    $file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line,
-    
     # assume we're getting input from standard input
     
     $in_format = $opts{"input"} || $default_format;
-    
-    $in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
-    
-    $aln = $in->next_aln();
-    
+
+    if ($opts{"concat"}) { 
+	while ( $file = shift @ARGV ) {
+	    $in = Bio::AlignIO->new(-file => $file, -format => $in_format);
+	    while ( $aln=$in->next_aln() ) { push @alns, $aln }
+	}
+    } else {
+	$file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line,
+	$in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
+	$aln = $in->next_aln();
+    }
+
     #### Options which *require an output FH* go *after* this ####
     $out_format = $opts{"output"} || $default_format;
     $out = Bio::AlignIO->new(-format => $out_format, -fh => \*STDOUT) unless $out_format eq 'paml';
@@ -292,6 +297,11 @@ sub avg_id_by_win {
     }
     exit
 }
+
+sub concat {
+    $aln = cat(@alns);
+}
+
 
 sub conserved_blocks {
     my $len=$aln->length();

@@ -128,7 +128,7 @@ __END__
  bioaln -i'fasta' fasta.aln | bioaln -s'10,20' | bioaln -a
 
  # Chaining with bioseq:
- # Turn a coding-sequence alignment into a protein alignemnt (if not using -D):
+ # Turn a coding-sequence alignment into a protein alignemnt (an alternative to -D):
  bioaln -o'fasta' cds.aln | bioseq -t1 | bioaln -i'fasta'
 
 =head1 DESCRIPTION
@@ -143,7 +143,7 @@ Print a brief help message and exit.
 
 =head2 --avpid, -a
 
-Calculate the average percent identity of an alignment. Returns the value alone.
+Calculate the average percent identity of an alignment. Returns the value alone. Wrap Bio::SimpleAlign->average_percentage_identity().
 
 Usage: bioaln -a <alignment_file>
 
@@ -192,25 +192,25 @@ Usage: bioaln -d 'seq_id_1, seq_id_2, ... , seq_id_n' <alignment_file>
 
 =head2 --nogaps, -g
 
-Remove gaps (and returns an de-gapped alignment).
+Remove gaps (and returns an de-gapped alignment). Wrap Bio::SimpleAlign->remove_gaps();
 
 Usage: bioaln -g <alignment_file>
 
 =head2 --input, -i
 
-Input file format (see Bio::AlignIO for supported formats). By default, this is 'clustalw'.
+Input file format (see Bio::AlignIO for supported formats). By default, this is 'clustalw'. Wrap Bio::AlignIO->new().
 
 Usage: bioaln -i 'format'
 
-=head2 --length, -l
+=head2 --length, -l. 
 
-Print alignment length.
+Print alignment length. Wrap Bio::SimpleAlign->length().
 
 Usage: bioaln -l <alignment_file>
 
-=head2 --match, -m
+=head2 --match, -m. 
 
-Go through all columns and change residues identical to the reference sequence to be the match character, '.'
+Go through all columns and change residues identical to the reference sequence to be the match character, '.' Wrap Bio::SimpleAlign->match().
 
 Usage: bioaln -m <alignment_file>
 
@@ -237,13 +237,13 @@ OUTPUT:
 
 =head2 --numseq, -n
 
-Get number of sequences in alignment
+Get number of sequences in alignment.
 
 Usage: bioaln -n <alignment_file>
 
 =head2 --output, -o
 
-Output file format (see Bio::AlignIO for supported formats). By default, this is 'clustalw'.
+Output file format (see Bio::AlignIO for supported formats). By default, this is 'clustalw'. Wrap Bio::AlignIO->new().
 
 Usage: bioaln -o 'format'
 
@@ -255,13 +255,13 @@ Usage: bioaln -p 'seq_id_1, seq_id_2, ... , seq_id_n' <alignment_file>
 
 =head2 --refseq, -r
  
-Change the reference sequence to be seq_id.
+Change the reference sequence to be seq_id. Wrap Bio::SimpleAlign->set_new_reference().
 
 Usage: bioaln -r 'seq_id' <alignment_file>
 
 =head2 --slice, -s
 
-Get a slice of the alignment.
+Get a slice of the alignment. Wrap Bio::SimpleAlign->slice() with improvements.
 
 Using a '-' character in the first or second position defaults to the beginning or end, respectively. Therefore specifying -s'-,-' is the same as grabbing the whole alignment.
 
@@ -273,9 +273,9 @@ Usage: bioaln -s 'min,max' <alignment_file>
 
 NOTE: --slice'-,x' (where x is '-' or a position) does NOT work. Use --slice='-,x' instead.
 
-=head2 --uniq, -u
+=head2 --uniq, -u. 
 
-Extract the alignment of unique sequences.
+Extract the alignment of unique sequences. Wrap Bio::SimpleAlign->uniq_seq().
 
 Usage: bioaln -u <alignment_file>
 
@@ -314,9 +314,7 @@ OUTPUT:
 
 =head2 --varsites, -v
 
-Extracts variable sites.
-
-B<Used in conjunction with -g:> do not show sites with gaps in any sequence.
+Extracts variable sites. B<Used in conjunction with -g:> do not show sites with gaps in any sequence.
 
 Usage: bioaln -v <alignment_file>
 
@@ -328,7 +326,13 @@ Usage: bioaln -w 'window_size'[default is 30] <alignment_file>
 
 =head2 --concat, -A
 
-Usage: bioaln -A to-be-concatenated/*.aln
+Concatenate multiple alignments sharing the same set of unique IDs. This is normally used for concatenating individual gene alignments of the same set of samples to a single one for making a "supertree". Wrap Bio::Align::Utilities->cat().
+
+Usage: bioaln -A gene1.aln gene2.aln gene3.aln gene4.aln, 
+
+Or: using wildcard to specify files:
+
+Usage: bioaln -A gene*.aln
 
 =head2 --conblocks, -B
  
@@ -381,7 +385,7 @@ OUTPUT:  files containing perfectly conserved blocks
 
 =head2 --consensus, -C
 
-Add a consensus sequence to the end of the alignment with a certain threshold percent and id Consensus_<percent>. By default percent is 50.
+Add a consensus sequence to the end of the alignment with a certain threshold percent and id Consensus_<percent>. By default percent is 50. Wrap Bio::SimpleAlign->consensus_string().
 
 Usage: bioaln -C 'percent' <alignment_file>
 
@@ -456,11 +460,13 @@ Usage: bioaln -I 'seq_id,position' <alignment_file>
 
 =head2 --listids, -L
 
-List all sequence ids
+List all sequence ids.
 
 Usage: bioaln -L <alignment_file>
 
 =head2 --permute-states, -M
+
+Generate an alignment with randomly permuted residues at each site. This operation removes phylogenetic signal among aligned sequences, if there is any in the original alignment. This is the basis of the Permutation Trail Prob (PTP) test of tree-ness of an alignment.
 
 Usage: bioaln -M <alignment_file>
 
@@ -502,7 +508,7 @@ OUTPUT:
 
 =head2 --shuffle-sites, -S
 
-Make a shuffled (not bootstraped) alignment
+Make a shuffled (not bootstraped) alignment. This operation randomizes alignment columns. It is used for testing the signficance of long-runs of conserved sites in an alignment (e.g., conserved intergenic spacers [IGSs]).
 
 Usage: bioaln -S <alignment_file>
 
@@ -529,6 +535,7 @@ OUTPUT:
                        **************:********** *******::***:*
 
 =head2 --third-sites, -T
+
 Generate an alignment of every-third (mostly synonymous) bases (assuming a CDS alignment).
 
 Usage: bioaln -T <alignment_file>
@@ -555,7 +562,7 @@ Please email weigang@genectr.hunter.cuny.edu.
 
 =head1 CONTRIBUTORS
 
- William McCaig <wmccaig at gmail dot com
+ William McCaig <wmccaig at gmail dot com>
  Che Martin <che dot l dot martin at gmail dot com>
  Yoezen Hernandez <yzhernand at gmail dot com>
  Levy Vargas <levy dot vargas at gmail dot com>

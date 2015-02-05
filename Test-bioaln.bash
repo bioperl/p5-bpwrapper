@@ -40,6 +40,7 @@ if ./bioaln -s '80,100' test-files/test-bioaln.aln > /dev/null 2> /dev/null; the
 if ./bioaln -u test-files/test-bioaln.aln > /dev/null 2> /dev/null; then echo "bioaln -u: it works!"; else echo "bioaln -u: failed"; fi
 if ./bioaln -v test-files/test-bioaln.cds > /dev/null 2> /dev/null; then echo "bioaln -v: it works!"; else echo "bioaln -v: failed"; fi  # to fix output
 if ./bioaln -w '60' test-files/test-bioaln.aln > /dev/null 2> /dev/null; then echo "bioaln -w: it works!"; else echo "bioaln -w: failed"; fi  # to fix output
+if ./bioaln -A test-files/test-bioaln-cat*.aln > /dev/null 2> /dev/null; then echo "bioaln -A: it works!"; else echo "bioaln -A: failed"; fi
 if ./bioaln -B test-files/test-bioaln.cds > /dev/null 2> /dev/null; then echo "bioaln -B: it works!"; else echo "bioaln -B: failed"; fi
 if rm test-files/test-bioaln.cds.slice-*.aln; then echo "block files removed"; else echo "block files not found"; fi
 if ./bioaln -C '90' test-files/test-bioaln.cds > /dev/null 2> /dev/null; then echo "bioaln -C: it works!"; else echo "bioaln -C: failed"; fi
