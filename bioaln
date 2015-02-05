@@ -452,7 +452,7 @@ Usage: bioaln -F <alignment_file>
 
 Identify aligned position of a residue. Wrap Bio::SimpleAlign->column_from_residue_number().
 
-Usage: bioaln -I 'seq_id','position' <alignment_file>
+Usage: bioaln -I 'seq_id,position' <alignment_file>
 
 =head2 --listids, -L
 
@@ -529,6 +529,7 @@ OUTPUT:
                        **************:********** *******::***:*
 
 =head2 --third-sites, -T
+Generate an alignment of every-third (mostly synonymous) bases (assuming a CDS alignment).
 
 Usage: bioaln -T <alignment_file>
 

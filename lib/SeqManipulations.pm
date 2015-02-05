@@ -218,7 +218,7 @@ sub restrict_digest {
     use Bio::Restriction::Analysis;
     $seq = $in->next_seq();
     my $seq_str = $seq->seq();
-    die "$seq_str: Not a DNA sequence\n" unless $seq_str =~ /^[ATCG]+$/i;
+    die "Not a DNA sequence\n" unless $seq_str =~ /^[ATCG]+$/i;
     my $ra = Bio::Restriction::Analysis->new(-seq=>$seq);
     foreach my $frag ($ra->fragment_maps($enz)) {
         my $seq_obj = Bio::Seq->new(
