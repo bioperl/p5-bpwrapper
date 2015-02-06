@@ -47,6 +47,7 @@ GetOptions(
     "shuffle-sites|S",
     "third-sites|T",
     "uppercase|U", # make upper case (for DNAStatistics)
+    "version|V",
   #  "dnadist|D=s", # Needs fixing
   #  "inform|Z",    Retired for now
 ) or pod2usage(2);

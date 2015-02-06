@@ -1,5 +1,5 @@
 # Descritpion
-bp-utils are command-line utilities that are wrappers of popular BioPerl classes (e.g., Bio::SeqIO, Bio::Seq; Bio::SimpleAlign). The motivation is to relieve BioPerl users from writing full-blown scripts for routine manipulations of sequences, alignments, trees, and others. For common operations of sequences and alignments, bp-utils make it easy to create workflows with a single BASH script containing a combination of bp-utils calls (and no Perl or BioPerl coding is necessary).
+bp-utils are command-line utilities that are wrappers of popular BioPerl classes (Bio::SeqIO, Bio::Seq, Bio::AlignIO, Bio::SimpleAlign, etc). The motivation is to relieve BioPerl users from writing full-blown scripts for routine manipulations of sequences, alignments, trees, and others. For common operations of sequences and alignments, bp-utils make it easy to create workflows with a single BASH script containing a combination of bp-utils calls (and no Perl or BioPerl coding is necessary).
 
 Internally, bp-utils follow a "Wrap, don't Write" design principle. That is, we have full faith in the robustness of the BioPerl development framework. As such, bp-utils methods should ALL be wrappers to BioPerl methdos so that exceptions can be handled properly by BioPerl. 
 
