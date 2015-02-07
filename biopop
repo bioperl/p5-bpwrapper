@@ -9,52 +9,43 @@ use 5.010;
 use Getopt::Long qw(:config gnu_getopt);
 use Pod::Usage;
 
-################################################################################
-# Option parsing
-################################################################################
+################# Option parsing #################
 my %opts;
 my %flags;
 GetOptions(
     \%opts,
     "help|h",
     "man",
-    "input|i=s" => \$flags{"input"},
-    "stats|s=s@",    # Comma-separated, or multiply specified, list
-    "numseq|n=i"          => \$flags{"numseq"},
-    "ingroup|group1|seq1|p=s@",
-    "outgroup|group2|seq2|q=s@",
-    "exclude|group3|seq3|r=s@",
-    "mismatch|m",
-    "mutrec|b",
-    "simmk|k",
     "distance|d",
     "dist-method|D=s" => \$flags{"dist-method"},
-    "kaks=s",
+    "heterozygosity|H",
+    "input|i=s" => \$flags{"input"},
+    "mismatch|m",
+    "numseq|n=i"          => \$flags{"numseq"},
     "pi|p",
+    "stats|s=s@",    # Comma-separated, or multiply specified, list
     "varsites|v",
-    "heterozygosity|H"
+#    "mutrec|b",
+#    "exclude|group3|seq3|r=s@",
+#    "ingroup|group1|seq1|p=s@",
+#    "simmk|k",
+#    "outgroup|group2|seq2|q=s@",
+#    "kaks=s",
 ) or pod2usage(2);
 
 pod2usage(1) if $opts{"help"};
 pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
 
-################################################################################
-# Main
-################################################################################
+
+######################## Main #####################
 
 # This sets all internal variables, and loads AlignIO objects
 initialize(\%opts, \%flags);
 
 for my $option (keys %opts) {
-
     # If there is a function to handle the current option, execute it
-    if (can_handle($option)) {
-        handle_opt($option);
-        exit;
-    }
-    else {
-        warn "Missing handler for: $option\n";
-    }
+    if (can_handle($option)) { handle_opt($option); exit }
+    else { warn "Missing handler for: $option\n" }
 }
 
 ################# POD Documentation ##################

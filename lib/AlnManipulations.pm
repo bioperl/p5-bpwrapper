@@ -25,9 +25,7 @@ if ($ENV{'DEBUG'}) {
 # Package global variables
 my ($in, $out, $aln, %opts, $file, $in_format, $out_format, @alns);
 
-## For new options, just add an entry into this table with the same key as in
-## the GetOpts function in the main program. Make the key be a reference to
-## the handler subroutine (defined below), and test that it works.  
+## For new options, just add an entry into this table with the same key as in the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.  
 my %opt_dispatch = (
     "avpid" => \&print_avp_id,
     "bootstrap" => \&bootstrap,

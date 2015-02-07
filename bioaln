@@ -54,9 +54,9 @@ GetOptions(
 pod2usage(1) if $opts{"help"};
 pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
 
-################################################################################
-# Main
-################################################################################
+
+######################## Main #####################
+
 # This sets all internal variables, and loads AlignIO objects
 initialize(\%opts);
 
