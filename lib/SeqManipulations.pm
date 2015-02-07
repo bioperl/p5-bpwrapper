@@ -23,6 +23,7 @@ if ($ENV{'DEBUG'}) { use Data::Dumper }
 
 # Package global variables
 my ($in, $out, $seq, %opts, $filename, $in_format, $out_format);
+my $RELEASE = '1.0';
 
 ## For new options, just add an entry into this table with the same key as in
 ## the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.  
@@ -46,6 +47,7 @@ my %opt_dispatch = (
     'hydroB' => \&hydroB,
     'linearize' => \&linearize,
     'reloop' => \&reloop_at,
+    'version' => \&print_version,
     'removestop' => \&remove_stop,
 #   'dotplot' => \&draw_dotplot,
 #    'extract' => \&reading_frame_ops,
@@ -323,6 +325,10 @@ sub reloop_at {
     my $break = $opts{"reloop"};
     my $new_seq = Bio::Seq->new(-id => $seq->id().":relooped_at_".$break, -seq => $seq->subseq($break, $seq->length()) . $seq->subseq(1, $break-1));
     $out->write_seq($new_seq)
+}
+
+sub print_version {
+    say "bp-utils release version: ", $RELEASE;
 }
 
 sub remove_stop {

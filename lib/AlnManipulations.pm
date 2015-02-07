@@ -24,6 +24,7 @@ if ($ENV{'DEBUG'}) {
 
 # Package global variables
 my ($in, $out, $aln, %opts, $file, $in_format, $out_format, @alns);
+my $RELEASE = '1.0';
 
 ## For new options, just add an entry into this table with the same key as in the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.  
 my %opt_dispatch = (
@@ -52,8 +53,9 @@ my %opt_dispatch = (
     "pep2dna" => \&protein_to_dna,
     "resample" => \&sample_seqs,
     "shuffle-sites" => \&shuffle_sites,
-	"third-sites" => \&third_sites,
-	"uppercase" => \&upper_case,
+    "third-sites" => \&third_sites,
+    "uppercase" => \&upper_case,
+    "version" => \&print_version,
    );
 
 ##################### initializer & option handlers ###################
@@ -70,6 +72,8 @@ sub initialize {
     # assume we're getting input from standard input
     
     $in_format = $opts{"input"} || $default_format;
+
+    if ($opts{"version"}) { &print_version(); exit }
 
     if ($opts{"concat"}) { 
 	while ( $file = shift @ARGV ) {
@@ -538,6 +542,11 @@ sub third_sites {
 sub upper_case {
     $aln->uppercase();
 }
+
+sub print_version {
+    say "bp-utils release version: ", $RELEASE;
+}
+
 
 ########################## internal subroutine #######################
 
