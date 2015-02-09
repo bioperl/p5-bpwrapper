@@ -283,7 +283,8 @@ sub print_gb_gene_feats { # works only for prokaryote genome
         if ($feat->primary_tag eq 'gene') {
             my $gene_tag = "gene_" . $gene_count++;
             foreach my $tag ($feat->get_all_tags()) { ($gene_tag) = $feat->get_tag_values($tag) if $tag eq 'locus_tag' }
-            my $gene = Bio::Seq->new(-id => $gene_tag, -seq=>$seq->subseq($feat->start, $feat->end()));
+            my $gene = Bio::Seq->new(-id => (join "|", ($gene_tag, $feat->start, $feat->end, $feat->strand)), 
+				     -seq=>$seq->subseq($feat->start, $feat->end));
             if ($feat->strand() > 0) { $out->write_seq($gene) } else { $out->write_seq($gene->revcom())}
 #            print join "\t",
 #                ($feat->gff_string, $feat->start, $feat->end,

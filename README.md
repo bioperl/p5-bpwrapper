@@ -3,7 +3,7 @@ bp-utils are command-line utilities that are wrappers of popular BioPerl classes
 
 Internally, bp-utils follow a "Wrap, don't Write" design principle. That is, we have full faith in the robustness of the BioPerl development framework. As such, bp-utils methods should ALL be wrappers to BioPerl methdos so that exceptions can be handled properly by BioPerl. 
 
-In reality, though, some methods are new and unique to bp-uitls. In the future, all non-wrapper methods in bp-utils should ideally be re-factored as BioPerl class methods. This way, the bp-utils layer could be as thin as possibe and new methods could be added with minimal coding.
+In reality, though, some methods are new and unique to bp-utils. In the future, all non-wrapper methods in bp-utils should ideally be re-factored into BioPerl class methods. This way, the bp-utils layer could be as thin as possibe and new methods could be added with minimal coding.
 
 # Dependencies
 * Perl 5.10.0 or higher
@@ -11,7 +11,7 @@ In reality, though, some methods are new and unique to bp-uitls. In the future, 
 
 # Install & Test (assuming a UNIX/Linux-like environment)
 * Go to repository: https://github.com/bioperl/bp-utils
-* Download current release: bp-utils-current-release.tar.gz
+* Download current release: https://github.com/bioperl/bp-utils/blob/master/bp-utils-current-release.tar.gz
 * Unzip and untar: tar -zxf bp-utils-current-release.tar.gz
 * Add "bp-utils" directory to your $PATH: export PATH=$PATH:/path/to/bputils (add this line to .bashrc or .bash_profile to make it permanent)
 * Run test scripts: "./Test-bioseq" and "./Test-bioaln"
