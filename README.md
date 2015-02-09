@@ -27,7 +27,7 @@ In reality, though, some methods are new and unique to bp-uitls. In the future, 
 * Girish Ramrattan 
 * Corresonding author: Weigang Qiu, City University of New York, Hunter College  (weigang@genectr.hunter.cuny.edu)
 
-# To Contribute (e.g., add a method)
+# Checklist for adding a method (for developers):
 * We encourage BioPerl developers to add command-line interface to their BioPerl methods by using bp-utils.
 * To do so, please contact Weigang Qiu, City University of New York, Hunter College  (weigang@genectr.hunter.cuny.edu)
 * For each new mehtod, first pick a long option (--option) and (optionally) a one-letter short (-x) option

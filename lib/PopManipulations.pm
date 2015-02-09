@@ -36,14 +36,15 @@ my ($opts,     $flags,       $aln_file, $aln,         $in,
     $sim_type, @ingroups,     @outgroups, $dist_method, $dna_stats,
     $pop_stats, @var_sites, @exgroups, $ingroup, $outgroup
 );
+my $RELEASE = '1.0';
 
 my %opt_dispatch = (
-    'distance' => \&_print_distance,
-    'heterozygosity' => \&_print_heterozygosity,
-    'mismatch' => \&_print_mismatch_distr,
-    'pi' => \&_print_diversity,
-    'stats'    => \&_print_stats,
-    'varsites' => \&_print_num_snps,
+    'distance' => \&print_distance,
+    'heterozygosity' => \&print_heterozygosity,
+    'mismatch' => \&print_mismatch_distr,
+    'pi' => \&print_diversity,
+    'stats'    => \&print_stats,
+    'varsites' => \&print_num_snps,
 #    'mutrec' => \&_mutation_or_recombination,
 #    'simmk'    => \&_sim_mk,
 #    'kaks'     => \&_print_kaks_calc,
@@ -86,18 +87,18 @@ sub initialize {
 
 sub can_handle {
     my $option = shift;
-    return defined($opt_dispatch{$option});
+    return defined($opt_dispatch{$option})
 }
 
 sub handle_opt {
     my $option = shift;
     # This passes option name to all functions
-    $opt_dispatch{$option}->($option);
+    $opt_dispatch{$option}->($option)
 }
 
 ######################## subroutine #############################
 
-sub _print_distance {
+sub print_distance {
     my $warn_bad_dist_method;
     local $SIG{__WARN__} = sub { $warn_bad_dist_method .= shift };
     my $dist_matrix = $dna_stats->distance(-align => $aln, -method => $dist_method);
@@ -105,7 +106,7 @@ sub _print_distance {
     say $dist_matrix->print_matrix
 }
 
-sub _print_heterozygosity {
+sub print_heterozygosity {
     print "Heterozygosity=>\n";
     for my $name ($pop->get_marker_names()) {
         my $marker = $pop->get_Marker($name);
@@ -116,7 +117,7 @@ sub _print_heterozygosity {
     }
 }
 
-sub _print_mismatch_distr {
+sub print_mismatch_distr {
     my $num_seq = $aln->num_sequences();
 
     my @seqs;
@@ -131,11 +132,11 @@ sub _print_mismatch_distr {
     }
 }
 
-sub _print_diversity {
+sub print_diversity {
     printf "%s\t%.4f\n", "Nucleotide diversity =>", $pop_stats->pi($pop)
 }
 
-sub _print_stats {
+sub print_stats {
     @stats = _parse_stats();
     my $len = $aln->length();
 
@@ -149,17 +150,20 @@ sub _print_stats {
     }
 }
 
-sub _print_num_snps {
+sub print_num_snps {
     print "Number of segregating sites =>", "\t", $pop_stats->segregating_sites_count($pop), "\n"
+}
+
+sub print_version {
+    say "bp-utils release version: ", $RELEASE;
+    exit
 }
 
 
 ####################### internal subroutine ###########################
 
 sub _parse_stats {
-    return split(/,/, join(',', @{ $opts->{"stats"} }));
-    #     warn "Will print the following statistics: \n";
-    #     warn "$_\n" foreach (@stats);
+    return split(/,/, join(',', @{ $opts->{"stats"} }))
 }
 
 sub _best_sample_size {
@@ -178,8 +182,8 @@ sub _mk_counts {
     my $out_group = Bio::PopGen::Population->new();
     my (@out, @in);
     for my $ind ($pop->get_Individuals) {
-        push @in,  $ind if ($ind->unique_id =~ /^$ingroup/);
-        push @out, $ind if ($ind->unique_id =~ /^$outgroup/)
+        push @in,  $ind if $ind->unique_id =~ /^$ingroup/;
+        push @out, $ind if $ind->unique_id =~ /^$outgroup/
     }
 
     my @in_shuffled  = shuffle @in;
@@ -204,17 +208,15 @@ sub _mk_counts {
 =begin
     local $@;
     my $results = eval { $dna_stats->$call(@arg_list) };
-    if ($@) {
-        die "Encountered $@\n";
-    }
+    die "Encountered $@\n" if $@;
     for my $an (@$results) {
         say "comparing " . $an->{'Seq1'} . " and " . $an->{'Seq2'}
             unless $calc_type eq "average";
         for (sort keys %$an) {
             next if /Seq/;
-            printf("%-9s %.4f \n", $_, $an->{$_});
+            printf("%-9s %.4f \n", $_, $an->{$_})
         }
-        say "\n";
+        say "\n"
     }
 =cut
 

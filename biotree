@@ -10,35 +10,37 @@ use Getopt::Long qw(:config gnu_getopt);
 use Pod::Usage;
 use POSIX qw(strftime);
 
+my $RELEASE = '1.0';
+
 ####################### Option parsing ######################
 pod2usage(1) if scalar(@ARGV) < 1;
 my %opts;
 GetOptions(\%opts,
 	   "help|h",
 	   "man",
-	   "distance|d=s@",
+	   "distance|d=s",
 	   "input|i:s",
 	   "length|l",
 	   "numOTU|n",
 	   "output|o:s",
 	   "reroot|r=s",
-	   "subset|s=s@",
+	   "subset|s=s",
 	   "otu|u",
-	   "lca|A=s@",
+	   "lca|A=s",
 	   "labelnodes|B",
 	   "distanceall|D",
 	   "ltt|G=s",
 	   "lengthall|L",
 	   "random|M:i",
-	   "depth|P=s@",
+	   "depth|P=s",
 	   "rmbl|R",
-	   "allchildOTU|U:s@",
+	   "allchildOTU|U=s",
+	   "version|V",
 	   "walk|W=s",
 	   #    "bootclean|b:f",
 	   #    "collapse|c=s@",
 	   #    "getroot|g",
 	   #    "prune|p=s@",
-	   #	"version|v",
 	   #    "compnames|x",
 #	   "collabel|C:s",
 #	   "tree2tableid|I:s",
@@ -49,8 +51,8 @@ GetOptions(\%opts,
 	  ) or pod2usage(2);
 
 pod2usage(1) if $opts{"help"};
-
 pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
+&print_version() if $opts{"version"};
 
 
 ##################### initializer ###################
@@ -74,6 +76,7 @@ my $rootnode = $tree->get_root_node;
 
 getdistance() if $opts{'distance'};
 say $tree->total_branch_length() if $opts{'length'};
+countOTU() if $opts{'numOTU'};
 $print_tree = 1 if defined($opts{'output'});
 reroot() if $opts{'reroot'};
 subset() if $opts{'subset'};
@@ -97,9 +100,15 @@ say $tree->as_text($out_format) if $print_tree;
 
 # Get the distance between nodes
 sub getdistance {
-    my @dnodes = _n2n($opts{'distance'});
+    my @dnodes = _name2node($opts{'distance'});
     if (scalar(@dnodes) != 2) { say "Error: Provide exactly two nodes/leaves to use with --distance" }
     else { say $tree->distance(-nodes => \@dnodes) }
+}
+
+sub countOTU {
+	my $otu_ct = 0;
+	foreach (@nodes) { $otu_ct++ if $_->is_Leaf() }
+	say $otu_ct
 }
 
 # Reroot the tree
@@ -115,7 +124,7 @@ sub reroot {
 sub subset {
 	# Collect the subset of nodes from STDIN or from $_
     my @keep_nodes;
-	if ($opts{'subset'}) { @keep_nodes = _n2n($opts{'subset'}) }
+	if ($opts{'subset'}) { @keep_nodes = _name2node($opts{'subset'}) }
 	else { my $ar = $_[0]; @keep_nodes = @$ar }
 
 	# Collect list of descendents
@@ -124,9 +133,7 @@ sub subset {
 
     # Collect list of ancestors
 	my @ancestors;
-	my $tmp;
-    for (@keep_nodes) {
-		$tmp = $_;
+	for my $tmp (@keep_nodes) {
         while ($tmp->ancestor) {
 			push @ancestors, $tmp->ancestor;
 			$tmp = $tmp->ancestor
@@ -139,7 +146,7 @@ sub subset {
 	$keep{$_->internal_id} = $_ for @ancestors;
 
 	# Remove all nodes but those in %keep
-    for my $nd (@nodes) { $tree->remove_Node($nd) unless exists($keep{$nd->internal_id}) }
+    for (@nodes) { $tree->remove_Node($_) unless exists($keep{$_->internal_id}) }
 
 	# Clean up internal single-descendent nodes
     my @desc;
@@ -173,7 +180,7 @@ sub print_leaves_lengths {
 # Get LCA
 sub getlca {
     my @lca_nodes;
-	if (_n2n($opts{'lca'})) { @lca_nodes = _n2n($opts{'lca'}) }
+	if (_name2node($opts{'lca'})) { @lca_nodes = _name2node($opts{'lca'}) }
 	else { my $ar = $_[0]; @lca_nodes = @$ar } 
     my @nd_pair;
     my $lca;
@@ -185,9 +192,9 @@ sub getlca {
             $lca = $tree->get_lca(-nodes => \@nd_pair);
             $nd_pair[0] = $lca
         }
-		if (_n2n($opts{'lca'})) { say $lca->internal_id } else { return $lca }
+		if (_name2node($opts{'lca'})) { say $lca->internal_id } else { return $lca }
     } elsif (@lca_nodes == 1) {
-		if (_n2n($opts{'lca'})) { say $lca_nodes[0]->ancestor->internal_id }
+		if (_name2node($opts{'lca'})) { say $lca_nodes[0]->ancestor->internal_id }
 		else { return $lca_nodes[0]->ancestor->internal_id }
 	}
 }
@@ -240,7 +247,7 @@ sub bin {
 	for (@bins) { shift @bins if $_ < 1e-10 }
 	unshift @bins, 0;
 
-	for (my $i=0;$i+1<@bins;$i++) {
+	for (my $i=0; $i+1<@bins; $i++) {
 		my $branchcount = 1; # branch from root
 		# Starting from the root, add a branch for each found descendent
 		$branchcount += _binrecursive(\$rootnode, $bins[$i+1]);
@@ -273,7 +280,7 @@ sub random_tree{
 
 # Depth to the root for a node
 sub depth_to_root {
-    say $_->depth for _n2n($opts{'depth'})
+    say $_->depth for _name2node($opts{'depth'})
 }
 
 # Remove Branch Lenghts
@@ -282,18 +289,23 @@ sub remove_brlengths {
     $print_tree = 1
 }
 
-sub alldesc{
+sub alldesc {
     my @inodes;
-    my $inode_ids_ref = $opts{'allchildOTU'};
+	my $inode_id = $opts{'allchildOTU'};
 
-    if ($$inode_ids_ref[0] eq 'all') { push (@inodes, $_) for _walk_up($rootnode) }
-    else { push @inodes, $tree->find_node(-internal_id => $_) for @$inode_ids_ref }
+    if ($inode_id eq 'all') { push (@inodes, $_) for _walk_up($rootnode) }
+    else { push @inodes, $tree->find_node(-internal_id => $inode_id) }
 
     for my $nd (@inodes) {
         print $nd->internal_id, " ";
         if ($nd->is_Leaf) { print $nd->id } else { print $_->id, " " for _each_leaf($nd) }
-        print "\n";
+        print "\n"
     }
+}
+
+sub print_version {
+    say "bp-utils release version: ", $RELEASE;
+    exit
 }
 
 # Walks from starting OTU
@@ -322,18 +334,14 @@ sub walk {
 
 ################# internal subroutines ##############
 
-# _n2n - NAMES TO NODES
-# Input: An $opts{'SWITCH'} array reference of potential node names
-# Output: An array of Bio::Tree:Node objects corresponding to those node names
-# Prints a warning if a node matching a given name is not found
-sub _n2n($) {
-    my $arr_ref = $_[0];
+sub _name2node {
+    my $str = shift;
+    my @node_names = split /,/, $str;
     my $nd;
     my @node_objects;
-
-    for my $node_name (@$arr_ref) {
+    for my $node_name (@node_names) {
         $nd = $tree->find_node(-id => $node_name) || $tree->find_node(-internal_id => $node_name);
-        if ($nd) { push(@node_objects, $nd) } else { say "Node/leaf '$node_name' not found. Ignoring..." }
+        if ($nd) { push @node_objects, $nd } else { say "Node/leaf '$node_name' not found. Ignoring..." }
     }
     return @node_objects
 }
@@ -467,6 +475,10 @@ Input file format. Accepts newick and nhx.
 
 Print total branch length.
 
+=head2 --numOTU, -n
+
+Print total number of OTUs (leaves).
+
 =head2 --output, -o 'format'
 
 Output file format. Accepts newick, nhx, and tabtree.
@@ -483,7 +495,7 @@ Creates a tree of only the specified leaves/nodes and their descendants. Specify
 
 Print leaf nodes with branch lengths.
 
-=head2 --lca, -A 'node1' [-a 'node2'] [-a 'node3']...
+=head2 --lca, -A 'node1,node2,node3,...'
 
 Returns ID of most recent common ancestor across provided nodes. Returns direct ancestor if single leaf/node provided. 
 
@@ -518,6 +530,12 @@ Remove branch lengths from tree.
 =head2 --allchildOTU, -U 'internal_node_id' | 'all'
 
 Prints all OTU's that are descended from the given internal node. If no node is provided, a complete list of all internal nodes and their descendents is returned instead (given in the order of "walking" through the tree from the root node).
+
+=head2 --version, -V
+
+Print current release version of bp-utils.
+
+Usage: bioseq -V
 
 =head2 --walk, -W 'otu'
 

@@ -25,6 +25,7 @@ GetOptions(
     "pi|p",
     "stats|s=s@",    # Comma-separated, or multiply specified, list
     "varsites|v",
+    "version|V",
 #    "mutrec|b",
 #    "exclude|group3|seq3|r=s@",
 #    "ingroup|group1|seq1|p=s@",
@@ -35,6 +36,8 @@ GetOptions(
 
 pod2usage(1) if $opts{"help"};
 pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
+&print_version() if $opts{"version"};
+
 
 
 ######################## Main #####################
@@ -116,6 +119,12 @@ Can also be specified by giving the option multiple times. e.g.,
 =head2 --varsites, -v
 
 This method outputs the number of segregating or SNP sites within your alignment. 
+
+=head2 --version, -V
+
+Print current release version of bp-utils.
+
+Usage: bioseq -V
 
 =head1 REQUIRES
 

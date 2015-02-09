@@ -49,11 +49,12 @@ GetOptions(
     "uppercase|U", # make upper case (for DNAStatistics)
     "version|V",
   #  "dnadist|D=s", # Needs fixing
-  #  "inform|Z",    Retired for now
+  #  "inform|Z",
 ) or pod2usage(2);
 
 pod2usage(1) if $opts{"help"};
 pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
+&print_version() if $opts{"version"};
 
 
 ######################## Main #####################
@@ -62,7 +63,7 @@ pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
 initialize(\%opts);
 
 for my $option (keys %opts) {
-    next if (($option eq 'input') || ($option eq 'output') || ($option eq 'noflatname')); # Don't process these options: they are for AlignIO
+    next if ($option eq 'input') || ($option eq 'output') || ($option eq 'noflatname'); # Don't process these options: they are for AlignIO
 
     if (can_handle($option)) { handle_opt($option) } # If there is a function to handle the current option, execute it
     else { warn "Missing handler for: $option\n" }
@@ -546,6 +547,12 @@ Usage: bioaln -T <alignment_file>
 Make an uppercase alignment.
 
 Usage: bioaln -U <alignment_file>
+
+=head2 --version, -V
+
+Print current release version of bp-utils.
+
+Usage: bioseq -V
 
 =head1 REQUIRES
 

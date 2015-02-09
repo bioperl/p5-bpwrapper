@@ -18,9 +18,7 @@ use Data::Dumper;
 use List::Util qw(shuffle);
 use Bio::Align::Utilities qw(:all);
 
-if ($ENV{'DEBUG'}) {
-    use Data::Dumper;
-}
+if ($ENV{'DEBUG'}) { use Data::Dumper }
 
 # Package global variables
 my ($in, $out, $aln, %opts, $file, $in_format, $out_format, @alns);
@@ -45,8 +43,8 @@ my %opt_dispatch = (
     "concat" => \&concat,
     "conblocks" => \&conserved_blocks,
     "consensus" => \&get_consensus,
-    "erasecol" => \&remove_gapped_cols_in_one_seq,
     "dna2pep" => \&dna_to_protein,
+    "erasecol" => \&remove_gapped_cols_in_one_seq,
     "aln-index" => \&colnum_from_residue_pos,
     "listids" => \&list_ids,
     "permute-states" => \&permute_states,
@@ -55,7 +53,6 @@ my %opt_dispatch = (
     "shuffle-sites" => \&shuffle_sites,
     "third-sites" => \&third_sites,
     "uppercase" => \&upper_case,
-    "version" => \&print_version,
    );
 
 ##################### initializer & option handlers ###################
@@ -73,64 +70,55 @@ sub initialize {
     
     $in_format = $opts{"input"} || $default_format;
 
-    if ($opts{"version"}) { &print_version(); exit }
-
     if ($opts{"concat"}) { 
-	while ( $file = shift @ARGV ) {
-	    $in = Bio::AlignIO->new(-file => $file, -format => $in_format);
-	    while ( $aln=$in->next_aln() ) { push @alns, $aln }
-	}
+	   while ($file = shift @ARGV) {
+	       $in = Bio::AlignIO->new(-file => $file, -format => $in_format);
+	       while ($aln=$in->next_aln()) { push @alns, $aln }
+	   }
     } else {
-	$file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line,
-	$in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
-	$aln = $in->next_aln();
+	   $file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line,
+	   $in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
+	   $aln = $in->next_aln()
     }
 
     #### Options which *require an output FH* go *after* this ####
     $out_format = $opts{"output"} || $default_format;
-    $out = Bio::AlignIO->new(-format => $out_format, -fh => \*STDOUT) unless $out_format eq 'paml';
+    $out = Bio::AlignIO->new(-format => $out_format, -fh => \*STDOUT) unless $out_format eq 'paml'
 }
 
 sub can_handle {
     my $option = shift;
-    return defined($opt_dispatch{$option});
+    return defined($opt_dispatch{$option})
 }
 
 sub handle_opt {
     my $option = shift;
-#    warn $option, ": Access subroutine:\t", $opt_dispatch{$option}, "\n";
     # This passes option name to all functions
-    $opt_dispatch{$option}->($option);
+    $opt_dispatch{$option}->($option)
 }
 
 sub write_out {
     $aln->set_displayname_flat() unless $opts{"noflatname"};
-    if ($out_format eq 'paml') {
-	&write_out_paml($aln);
-    } else {
-	$out->write_aln($aln);
-    }
+    if ($out_format eq 'paml') { &write_out_paml($aln) }
+    else { $out->write_aln($aln) }
 }
 
 sub write_out_paml {
     my @seq;
     my $ct=0;
 
-    foreach my $seq ($aln->each_seq()){
-	my $id = $seq->display_id();
-	if ($seq->seq() =~ /^-+$/) {
-	    print STDERR "all gaps: $file\t$id\n";
-	    next;
-	}
-	$ct++;
-	push @seq, $seq;
+    foreach my $seq ($aln->each_seq()) {
+        my $id = $seq->display_id();
+        if ($seq->seq() =~ /^-+$/) { print STDERR "all gaps: $file\t$id\n"; next }
+        $ct++;
+        push @seq, $seq
     }
 
     die "No computable sequences: less than 2 seq.\n" unless $ct >= 2;
     print $ct, "\t", $aln->length(), "\n";
-    foreach my $seq (@seq){
-	print $seq->display_id(), "\n";
-	print $seq->seq(), "\n";
+    foreach (@seq) {
+	   print $_->display_id(), "\n";
+	   print $_->seq(), "\n"
     }
 }
 
@@ -138,12 +126,12 @@ sub write_out_paml {
 
 sub print_avp_id {
     say $aln->average_percentage_identity();
-    exit;
+    exit
 }
 
 sub bootstrap {
     my $replicates = bootstrap_replicates($aln,1);
-    $aln = shift @$replicates;
+    $aln = shift @$replicates
 }
 
 sub draw_codon_view {
@@ -170,7 +158,7 @@ sub draw_codon_view {
         push @display_ids, $seq->display_id;
 
        # Pad display ids so that space between them and sequence is consistent
-        $display_ids[-1] = _pad_display_id($display_ids[-1], $max_id_len);
+        $display_ids[-1] = _pad_display_id($display_ids[-1], $max_id_len)
     }
 
     my $nuc_count = 0;
@@ -194,8 +182,7 @@ sub draw_codon_view {
             if ($j + 1 == $aln_length || (($j + 1) % $block_length) == 0) {
                 if ($i + 1 == $num_seqs) { $nuc_count = $j + 1 }  # If this is the last sequence, save the ending (next) position.
                 else { print "\n" } # Otherwise, start on the next line.
-
-                last;  # In either case, need to exit this loop.
+                last  # In either case, need to exit this loop.
             }
         }    # END for LOOP OVER NUCLEOTIDES
 
@@ -206,38 +193,38 @@ sub draw_codon_view {
       # all sequences, print final block position and start at first sequence.
         elsif (($i + 1 == $num_seqs) && ($nuc_count < $aln_length)) {
             $i = -1;  # Always increments after a loop; next increment sets to 0.
-            print "\n\n";
+            print "\n\n"
         }
     }    # END for LOOP OVER SEQUENCES
 
   # Can't let script terminate normally: produces traditional alignment output
-    exit 0;
+    exit 0
 }
 
 sub del_seqs {
-    _del_or_pick($opts{"delete"}, "remove_seq", 0);
+    _del_or_pick($opts{"delete"}, "remove_seq", 0)
 }
 
 sub remove_gaps {
-    $aln = $aln->remove_gaps();
+    $aln = $aln->remove_gaps()
 }
 
 sub print_length {
     say $aln->length();
-    exit;
+    exit
 }
 
 sub print_match {
-    $aln->match();
+    $aln->match()
 }
 
 sub print_num_seq {
     say $aln->num_sequences();
-    exit;
+    exit
 }
 
 sub pick_seqs {
-    _del_or_pick($opts{"pick"}, "add_seq", 1);
+    _del_or_pick($opts{"pick"}, "add_seq", 1)
 }
 
 sub change_ref {
@@ -251,12 +238,12 @@ sub aln_slice {    # get alignment slice
     # beginning of the alignment, and $end to the end.
     $begin = 1            if $begin eq "-";
     $end   = $aln->length if $end   eq "-";
-    $aln = $aln->slice($begin, $end);
+    $aln = $aln->slice($begin, $end)
 }
 
 sub get_unique {
     $aln->verbose(1);
-    $aln = $aln->uniq_seq();
+    $aln = $aln->uniq_seq()
 }
 
 sub variable_sites {
@@ -270,14 +257,14 @@ sub variable_sites {
         my ($ref_bases, $ref_ids) = &_get_a_site($i);
         %seq_ids = %{$ref_ids};
         my $is_constant = &_is_constant(&_paste_nt($ref_bases));
-        push @sites, $ref_bases if $is_constant < 1;
+        push @sites, $ref_bases if $is_constant < 1
     }
 
     # Recreate the object for output
     foreach my $id (sort keys %seq_ids) {
         my $seq_str;
         foreach my $aln_site (@sites) {
-            foreach my $char (@$aln_site) { $seq_str .= $char->{nt} if $char->{id} eq $id }
+            foreach (@$aln_site) { $seq_str .= $_->{nt} if $_->{id} eq $id }
         }
 
         my $loc_seq = Bio::LocatableSeq->new(-seq => $seq_str, -id => $id, -start => 1);
@@ -291,7 +278,6 @@ sub variable_sites {
 
 sub avg_id_by_win {
     my $window_sz = $opts{"window"};
-
     for my $i (1 .. ($aln->length() - $window_sz + 1)) {
         my $slice = $aln->slice($i, $i + $window_sz - 1);
         my $pi = (100 - $slice->average_percentage_identity()) / 100;
@@ -301,7 +287,7 @@ sub avg_id_by_win {
 }
 
 sub concat {
-    $aln = cat(@alns);
+    $aln = cat(@alns)
 }
 
 
@@ -327,18 +313,18 @@ sub conserved_blocks {
                 $block->{sites} = \@sites;
                 if ($i == $len) {
                     warn "Leaving a constant block at the end of alignment: $i\n";
-                    push @blocks, $block if $block->{length} >= $min_block_size;
-                } 
+                    push @blocks, $block if $block->{length} >= $min_block_size
+                }
             } else {
                 $in_block = 0;
                 push @blocks, $block if $block->{length} >= $min_block_size;
-                warn "Leaving a constant block at $i\n";
+                warn "Leaving a constant block at $i\n"
             }
         } else { # previous site not a constant one
             if ($is_constant) { # entering a block
                 warn "Entering a constant block at site $i ...\n";
                 $in_block=1;
-                $block = {start => $i, length => 1, num_seq => $nseq, sites => [($ref_bases)]};   # start a new block
+                $block = {start => $i, length => 1, num_seq => $nseq, sites => [($ref_bases)]}  # start a new block
             }
         }
     }
@@ -348,14 +334,14 @@ sub conserved_blocks {
         my $block_aln = Bio::SimpleAlign->new();
         foreach my $id (sort keys %seq_ids) {
             my ($seq_str, $ungapped_start, $ungapped_end);
-            my @sites = @{ $bl->{sites} };
+            my @sites = @{$bl->{sites}};
             for (my $i = 0; $i <= $#sites; $i++) {
                 my $ref_chars = $sites[$i];
-                foreach my $char (@$ref_chars) {
-                    next unless $char->{id} eq $id;
-                    $ungapped_start = $char->{ungapped_pos} if $i == 0;
-                    $ungapped_end = $char->{ungapped_pos} if $i == $#sites;
-                    $seq_str .= $char->{nt}
+                foreach (@$ref_chars) {
+                    next unless $_->{id} eq $id;
+                    $ungapped_start = $_->{ungapped_pos} if $i == 0;
+                    $ungapped_end = $_->{ungapped_pos} if $i == $#sites;
+                    $seq_str .= $_->{nt}
                 }
             }
 
@@ -375,26 +361,26 @@ sub get_consensus {
         -start => 1,
         -end   => $aln->length()
    );
-    $aln->add_seq($consense);
+    $aln->add_seq($consense)
 }
 
 sub dna_to_protein {
-    $aln = dna_to_aa_aln($aln);
+    $aln = dna_to_aa_aln($aln)
 }
 
 sub remove_gapped_cols_in_one_seq {
     my $id = $opts{"erasecol"};
     my $nmatch=0;
     my $ref_seq;
-    foreach my $seq ($aln->each_seq) {
-        if ($seq->id() =~ /$id/) { $nmatch++; $ref_seq = $seq }
+    foreach ($aln->each_seq) {
+        if ($_->id() =~ /$id/) { $nmatch++; $ref_seq = $_ }
     }
     die "Quit. No ref seq found or more than one ref seq!\n" if !$nmatch || $nmatch > 1;
     my ($ct_gap, $ref) = &_get_gaps($ref_seq);
     warn "Original length: " . $aln->length() . "\n";
     if ($ct_gap) {
         my @args;
-        foreach my $pos (@$ref) { push @args, [$pos, $pos] }
+        push @args, [$_, $_] foreach @$ref;
         $aln = $aln->remove_columns(@args);
         warn "New length: " . $aln->length() . "\n"
     } else {
@@ -405,14 +391,14 @@ sub remove_gapped_cols_in_one_seq {
 sub colnum_from_residue_pos {
     my ($id, $pos) = split /\s*,\s*/, $opts{"aln-index"};
     print $aln->column_from_residue_number($id, $pos), "\n";
-    exit;
+    exit
 }
 
 sub list_ids {
     my @ids;
-    foreach my $seq ($aln->each_seq) { push @ids, $seq->display_id() }
+    foreach ($aln->each_seq) { push @ids, $_->display_id() }
     say join "\n", @ids;
-    exit;
+    exit
 }
 
 sub permute_states {
@@ -425,10 +411,10 @@ sub permute_states {
 
     my @sites;
     my $ref_bases = &_get_a_site_v2();
-    foreach my $seq_id (sort keys %$ref_bases) { push @seq_ids, $seq_id }
+    foreach (sort keys %$ref_bases) { push @seq_ids, $_ }
     for (my $i=1; $i<=$len; $i++) {
         my @bases;
-        foreach my $seq_id (keys %$ref_bases) { push @bases, $ref_bases->{$seq_id}->{$i} }
+        foreach (keys %$ref_bases) { push @bases, $ref_bases->{$_}->{$i} }
         @bases = shuffle(@bases);
         for (my $j=0; $j<$nseq; $j++) { $ref_bases->{$seq_ids[$j]}->{$i} = $bases[$j] }
     }
@@ -449,7 +435,7 @@ sub protein_to_dna {
     use Bio::SeqIO;
     my $cds_in = Bio::SeqIO->new(-file=>$opts{pep2dna}, -format=>'fasta');
     my %CDSs;
-    while ( my $seq = $cds_in->next_seq() ) { $CDSs{$seq->display_id()} = $seq }
+    while (my $seq = $cds_in->next_seq()) { $CDSs{$seq->display_id()} = $seq }
     $aln = aa_to_dna_aln($aln, \%CDSs);
 }
 
@@ -469,7 +455,7 @@ sub sample_seqs {
 
     warn "Sampled the following sequences: @sampled\n\n";
     my $tmp_aln = $aln->select_noncont(@sampled);
-    $aln = $tmp_aln;
+    $aln = $tmp_aln
 }
 
 sub shuffle_sites {
@@ -484,32 +470,29 @@ sub shuffle_sites {
     for (my $i=1; $i<=$len; $i++) {
         my ($ref_bases, $ref_ids) = &_get_a_site($i);
         %seq_ids = %{$ref_ids};
-        push @sites, $ref_bases;
+        push @sites, $ref_bases
     }
 
     @sites = shuffle(@sites);
 
     my @order;
-    foreach my $site (@sites) {
-        my $char = $site->[0];
-        push @order, $char->{pos};
-    }
+    push @order, $_->[0]->{pos} foreach @sites;
     print STDERR "Shuffled site order:\t", join(",", @order);
     print STDERR "\n";
 
     foreach my $id (sort keys %seq_ids) {
         my $seq_str;
         foreach my $aln_site (@sites) {
-            foreach my $char (@$aln_site) { $seq_str .= $char->{nt} if $char->{id} eq $id }
+            foreach (@$aln_site) { $seq_str .= $_->{nt} if $_->{id} eq $id }
         }
 
         my $loc_seq = Bio::LocatableSeq->new(-seq => $seq_str, -id => $id, -start => 1);
         my $end = $loc_seq->end;
         $loc_seq->end($end);
 
-        $new_aln->add_seq($loc_seq);
+        $new_aln->add_seq($loc_seq)
     }
-    $aln = $new_aln;
+    $aln = $new_aln
 }
 
 sub third_sites {
@@ -521,30 +504,31 @@ sub third_sites {
     die "Alignment contains only one sequence: $file\n" if $nseq < 2;
 
     my $ref_bases = &_get_a_site_v2();
-    foreach my $seq_id (sort keys %$ref_bases) { push @seq_ids, $seq_id }
+    foreach (sort keys %$ref_bases) { push @seq_ids, $_ }
 
     my @sites;
     for (my $i=3; $i<=$len; $i+=3) { push @sites, $i }
 
     foreach my $id (sort @seq_ids) {
         my $seq_str;
-        foreach my $aln_site (@sites) { $seq_str .= $ref_bases->{$id}->{$aln_site} }
+        $seq_str .= $ref_bases->{$id}->{$_} foreach @sites;
 
         my $loc_seq = Bio::LocatableSeq->new(-seq => $seq_str, -id => $id, -start => 1);
         my $end = $loc_seq->end;
         $loc_seq->end($end);
 
-        $new_aln->add_seq($loc_seq);
+        $new_aln->add_seq($loc_seq)
     }
-    $aln = $new_aln;
+    $aln = $new_aln
 }
 
 sub upper_case {
-    $aln->uppercase();
+    $aln->uppercase()
 }
 
 sub print_version {
     say "bp-utils release version: ", $RELEASE;
+    exit
 }
 
 
@@ -556,11 +540,9 @@ sub print_version {
 sub _pad_display_id {
     my $display_id = shift;
     my $max_len    = shift;
-
     my $padding = ($max_len - length($display_id));
     $display_id .= " " x $padding;
-
-    return $display_id;
+    return $display_id
 }
 
 # Used by draw_codon_view. Calculates position of final position in alinged block, prints the current position there.
@@ -577,13 +559,10 @@ sub _print_positions {
     if (($nuc_count + $block_length) >= $aln_length) {
         $last_pos = $aln_length;
         my $diff = $aln_length - $nuc_count;
-
-        # $diff % 3 gives the number of extra non-codon nucleotides
-        $offset = $diff + ($diff) / 3 + ($diff % 3) - 2;
-    }
-    else {
+        $offset = $diff + ($diff) / 3 + ($diff % 3) - 2 # $diff % 3 gives the number of extra non-codon nucleotides
+    } else {
         $last_pos = $nuc_count + $block_length;
-        $offset = $block_length + ($block_length) / 3 - 2;
+        $offset = $block_length + ($block_length) / 3 - 2
     }
 
     # -1 since we are also printing the starting position.
@@ -616,12 +595,12 @@ sub _del_or_pick {
     my @selected = split(/\s*,\s*/, $id_list);
     foreach my $seq ($aln->each_seq) {
         my $seqid = $seq->display_id();
-        foreach my $id (@selected) {
-            next unless $seqid eq $id;
-            $new_aln->$method($seq);
+        foreach (@selected) {
+            next unless $seqid eq $_;
+            $new_aln->$method($seq)
         }
     }
-    $aln = $new_aln if $need_new == 1;
+    $aln = $new_aln if $need_new == 1
 }
 
 sub _get_gaps {
@@ -631,22 +610,17 @@ sub _get_gaps {
     my $cts = 0;
     my @pos=();
     for (my $i=0; $i<=$#chars; $i++) {
-	if ($chars[$i] eq '-') { 
-	    push @pos, $i;
-	    $cts++;
-	}
+	   if ($chars[$i] eq '-') { push @pos, $i; $cts++ }
     }
     warn "Found " . scalar(@pos) ." gaps at (@pos) on " . $seq->id() . "\n";
-    return ($cts, \@pos);
+    return ($cts, \@pos)
 }
 
 sub _paste_nt {
     my $ref = shift;
     my @nts;
-    foreach my $char (@$ref) {
-	push @nts, $char->{nt};
-    }
-    return \@nts;
+    push @nts, $_->{nt} foreach @$ref;
+    return \@nts
 }
 
 sub _get_a_site {
@@ -654,23 +628,22 @@ sub _get_a_site {
     my (@chars, %seq_ids);
 
     foreach my $seq ($aln->each_seq) {
-	my $ungapped = 0;
-	$seq_ids{ $seq->id() }++;
-	my $state;
-	for (my $i = 1; $i <= $pos; $i++) {
-	    $state = $seq->subseq($i, $i);
-	    $ungapped++ unless $state eq '-';
-	}
+        my $ungapped = 0;
+        $seq_ids{$seq->id()}++;
+        my $state;
+        for (my $i = 1; $i <= $pos; $i++) {
+            $state = $seq->subseq($i, $i);
+            $ungapped++ unless $state eq '-'
+        }
 
-	push @chars, {
-	    nt => $seq->subseq($pos, $pos),
-	    ungapped_pos => ($state eq '-') ? "gap" : $ungapped++,
-	    id => $seq->id(),
-	    pos => $pos,
-	};
+        push @chars, {
+	       nt => $seq->subseq($pos, $pos),
+	       ungapped_pos => ($state eq '-') ? "gap" : $ungapped++,
+	       id => $seq->id(),
+	       pos => $pos,
+	   }
     }
-
-    return (\@chars, \%seq_ids);
+    return (\@chars, \%seq_ids)
 }
 
 sub _is_constant {
@@ -679,69 +652,45 @@ sub _is_constant {
     my @array = @$ref;
     my $constant = 1;
 
-    foreach my $char (@array) {
-        $count{$char}++;
-    }
-
+    $count{$_}++ foreach @array;
     my @keys = keys %count;
-
-    if (@keys > 1) {  
-        $constant = 0;
-    }
-
-    return $constant;
-
+    $constant = 0 if @keys > 1;
+    return $constant
 }
 
 sub _column_status {
     my %count;
     my $ref   = shift;
     my @array = @$ref;
-    my $st    = {
-        gap         => 0,
-        informative => 1,
-        constant    => 1
-    };
+    my $st    = { gap => 0, informative => 1, constant => 1 };
 
-    foreach my $char (@array) {
-        $count{$char}++;
-        $st->{gap} = 1 if $char =~ /[\-\?]/;
+    foreach (@array) {
+        $count{$_}++;
+        $st->{gap} = 1 if $_ =~ /[\-\?]/
     }
 
     my @keys = keys %count;
-
-    foreach my $ct (values %count) {
-        if ($ct < 2) {
-            $st->{informative} = 0;    # including gap
-            last;
-        }
+    foreach (values %count) {
+        if ($_ < 2) { $st->{informative} = 0; last }
     }
-
-    if (@keys > 1) {                 # variable (including gaps)
-        $st->{constant} = 0;
-    }
-
-    return $st;
+    $st->{constant} = 0 if @keys > 1;
+    return $st
 }
 
 sub _get_a_site_v2 {
     my %seq_ids;
     my $len = $aln->length();
     foreach my $seq ($aln->each_seq) {
-    my $id = $seq->id();
-    for (my $i = 1; $i <= $len; $i++) {
-        $seq_ids{$id}{$i} = $seq->subseq($i, $i);
+        my $id = $seq->id();
+        for (my $i = 1; $i <= $len; $i++) { $seq_ids{$id}{$i} = $seq->subseq($i, $i) }
     }
-    }
-    return (\%seq_ids);
+    return \%seq_ids
 }
 
 sub _find_max_id_len {
     my $seqs = shift;
-    my @sorted_by_length
-        = sort { length $a->display_id <=> length $b->display_id } @$seqs;
-
-    return length $sorted_by_length[-1]->display_id;
+    my @sorted_by_length = sort {length $a->display_id <=> length $b->display_id} @$seqs;
+    return length $sorted_by_length[-1]->display_id
 }
 
 1;
