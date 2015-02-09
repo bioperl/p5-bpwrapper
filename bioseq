@@ -9,10 +9,7 @@ use 5.010;
 use Getopt::Long qw(:config gnu_getopt);
 use Pod::Usage;
 
-my $RELEASE = '1.0';
-#########################################################################
-# Option parsing
-#########################################################################
+####################### Option parsing ######################
 my %opts;
 GetOptions(
     \%opts,
@@ -41,28 +38,28 @@ GetOptions(
     "reloop|R=i", # recircularize a genome at "loop_at"
     "version|V",
     "removestop|X", # for PAML/codeml    
- #   "longest-orf|C", Retired for now
- #   "extract|e", Retired for now
- #   "dotplot|D=s", Retired for now
- #   "rename|N=s",  Retired for now
- #   "slidingwindow|S=i", Retired for now
- #   "prefix=s",   Retired for now
- #   "split|S=i", Retired for now
+ #   "longest-orf|C",
+ #   "extract|e",
+ #   "dotplot|D=s",
+ #   "rename|N=s",
+ #   "slidingwindow|S=i",
+ #   "prefix=s",
+ #   "split|S=i",
 ) or pod2usage(2);
 
 pod2usage(1) if $opts{"help"};
 pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
+&print_version() if $opts{"version"};
 
-#########################################################################
-# Main
-#########################################################################
+
+######################## Main #####################
 
 # This sets all internal variables, and loads Bio::Seq objects
 initialize(\%opts);
 
 for my $option (keys %opts) {
     # Don't process these options: they are for SeqIO
-    next if ($option eq 'input' || $option eq 'output');
+    next if $option eq 'input' || $option eq 'output';
 
     # If there is a function to handle the current option, execute it
     if (can_handle($option)) { handle_opt($option); exit }
@@ -284,6 +281,12 @@ Usage: bioseq -L <input_file>
 Re-circularize a bacterial genome by starting at a specified position, e.g. for sequence "ABCDE", bioseq -R'2' would generate 'BCDEA'.
 
 Usage: bioseq -R 'number' <input_file>
+
+=head2 --version, -V
+
+Print current release version of bp-utils.
+
+Usage: bioseq -V
 
 =head2 --removestop, -X
 

@@ -47,7 +47,6 @@ my %opt_dispatch = (
     'hydroB' => \&hydroB,
     'linearize' => \&linearize,
     'reloop' => \&reloop_at,
-    'version' => \&print_version,
     'removestop' => \&remove_stop,
 #   'dotplot' => \&draw_dotplot,
 #    'extract' => \&reading_frame_ops,
@@ -85,7 +84,7 @@ sub initialize {
     my $val = shift;
     %opts = %{$val};
 
-    die "Option 'prefix' requires a value\n" if (defined $opts{"prefix"} && $opts{"prefix"} =~ /^$/);
+    die "Option 'prefix' requires a value\n" if defined $opts{"prefix"} && $opts{"prefix"} =~ /^$/;
 
     $filename = shift @ARGV || "STDIN";    # If no more arguments were given on the command line, assume we're getting input from standard input
 
@@ -120,10 +119,14 @@ sub print_composition {
     while ($seq = $in->next_seq()) {
         my $hash_ref = Bio::Tools::SeqStats->count_monomers($seq);
         my $count;
-        foreach (keys %$hash_ref) { $count += $hash_ref->{$_} }
+        $count += $hash_ref->{$_} foreach keys %$hash_ref;
         print $seq->id();
-        foreach (sort keys %$hash_ref) { print "\t", $_, ":", $hash_ref->{$_}, "("; printf "%.2f", $hash_ref->{$_}/$count*100; print "%)" }
-        print "\n";
+        foreach (sort keys %$hash_ref) {
+            print "\t", $_, ":", $hash_ref->{$_}, "(";
+            printf "%.2f", $hash_ref->{$_}/$count*100;
+            print "%)"
+        }
+        print "\n"
     }
 }
 
@@ -139,20 +142,19 @@ sub filter_seqs {
     my @selected = split(/,/, $value);
     my $callsub = "find_by_" . "$tag"; 
 
-    die "Bad tag or function not implemented. Tag was: $tag\n" if (!defined($filter_dispatch{$callsub}));
+    die "Bad tag or function not implemented. Tag was: $tag\n" if !defined($filter_dispatch{$callsub});
 
     if ($tag eq 'order') {
         my $ct = 0;
         my %order_list = parse_orders(\@selected);   # Parse selected orders and create a hash
         while (my $currseq = $in->next_seq) { $ct++; $filter_dispatch{$callsub}->($action, $ct, $currseq, \%order_list) }
-        foreach my $order (keys %order_list) { print STDERR "No matches found for order number $order\n" if $order > $ct }
+        foreach (keys %order_list) { print STDERR "No matches found for order number $_\n" if $_ > $ct }
     }
     elsif ($tag eq 'id') {
         my %id_list = map { $_ => 1 } @selected;    # create a hash from @selected
         while (my $currseq = $in->next_seq) { $filter_dispatch{$callsub}->($action, $match, $currseq, \%id_list) }
-        foreach my $id (keys %id_list) { warn "No matches found for '$id'\n" if $id_list{$id} == 1 }
-    }
-    else {
+        foreach (keys %id_list) { warn "No matches found for '$_'\n" if $id_list{$_} == 1 }
+    } else {
         while (my $currseq = $in->next_seq) { $filter_dispatch{$callsub}->($action, $currseq, $value) }
     }
 }
@@ -169,7 +171,7 @@ sub remove_gaps {    # remove gaps
         my $string = $seq->seq();
         $string =~ s/-//g;
         my $new_seq = Bio::Seq->new(-id => $seq->id(), -seq => $string);
-        $out->write_seq($new_seq);
+        $out->write_seq($new_seq)
     }
 }
 
@@ -203,14 +205,13 @@ sub print_subseq {
 sub reading_frame_ops {
     my $frame = $opts{"translate"};
     while ($seq = $in->next_seq()) {
-        if ($frame == 1) {
-                $out->write_seq($seq->translate());  
-        } elsif ($frame == 3) {
+        if ($frame == 1) { $out->write_seq($seq->translate()) }
+        elsif ($frame == 3) {
                 my @prots = Bio::SeqUtils->translate_3frames($seq);
-                foreach (@prots) { $out->write_seq($_) }
+                $out->write_seq($_) foreach @prots
         } elsif ($frame == 6) {
                 my @prots = Bio::SeqUtils->translate_6frames($seq);
-                foreach (@prots) { $out->write_seq($_) }
+                $out->write_seq($_) foreach @prots
         } else { warn "Accepted frame arguments: 1, 3, and 6\n"}
     }
 }
@@ -234,14 +235,14 @@ sub anonymize {
     my $char_len = $opts{"anonymize"} // die "Tried to use option 'preifx' without using option 'anonymize'. Exiting...\n";
     my $prefix = (defined($opts{"prefix"})) ? $opts{"prefix"} : "S";
 
-    pod2usage(1) if ($char_len < 1);
+    pod2usage(1) if $char_len < 1;
 
     my $ct = 1;
     my %serial_name;
     my $length_warn = 0;
     while ($seq = $in->next_seq()) {
         my $serial = $prefix . sprintf "%0" . ($char_len - length($prefix)) . "s", $ct;
-        $length_warn = 1 if (length($serial) > $char_len);
+        $length_warn = 1 if length($serial) > $char_len;
         $serial_name{$serial} = $seq->id();
         $seq->id($serial);
         $out->write_seq($seq);
@@ -272,8 +273,12 @@ sub count_codons {
     while ($seq = $in->next_seq()) { $new_seq .= $seq->seq() }
     my $hash_ref = Bio::Tools::SeqStats->count_codons(Bio::Seq->new(-seq=>$new_seq, -id=>'concat'));   
     my $count;
-    foreach (keys %$hash_ref) { $count += $hash_ref->{$_} }
-    foreach (sort keys %$hash_ref) { print $_, ":\t", $myCodonTable->translate($_), "\t", $hash_ref->{$_}, "\t"; printf "%.2f", $hash_ref->{$_}/$count*100; print "%\n" } 
+    $count += $hash_ref->{$_} foreach keys %$hash_ref;
+    foreach (sort keys %$hash_ref) {
+        print $_, ":\t", $myCodonTable->translate($_), "\t", $hash_ref->{$_}, "\t";
+        printf "%.2f", $hash_ref->{$_}/$count*100;
+        print "%\n"
+    } 
 }
 
 sub print_gb_gene_feats { # works only for prokaryote genome
@@ -330,6 +335,7 @@ sub reloop_at {
 
 sub print_version {
     say "bp-utils release version: ", $RELEASE;
+    exit
 }
 
 sub remove_stop {
@@ -350,7 +356,7 @@ sub remove_stop {
 ####################### internal subroutine ###########################
 
 sub parse_orders {
-    my @selected = @{ shift() };
+    my @selected = @{shift()};
 
     my @orders;
     # Parse if $value contains ranges: allows mixing ranges and lists
@@ -359,10 +365,8 @@ sub parse_orders {
             my ($first, $last) = ($1, $2);
             die "Invalid seq range: $first, $last\n" unless $last > $first;
             push @orders, ($first .. $last)
-        }
-        else { push @orders, $val }          # Single value
+        } else { push @orders, $val }          # Single value
     }
-
     return map { $_ => 1 } @orders
 }
 
@@ -377,9 +381,9 @@ sub _make_sed_file {
 
     print SEDOUT "# usage: sed -f $filename.sed <anonymized file>\n";
 
-    foreach my $serial (keys %serial_names) {
-        my $real_name = $serial_names{$serial};
-        my $sed_cmd   = "s/$serial/" . $real_name . "/g;\n";
+    foreach (keys %serial_names) {
+        my $real_name = $serial_names{$_};
+        my $sed_cmd   = "s/$_/" . $real_name . "/g;\n";
         print SEDOUT $sed_cmd
     }
     close SEDOUT;
@@ -396,7 +400,7 @@ sub find_by_order {
 
 sub pick_by_order {
     my ($ct, $currseq, $order_list) = @_;
-    $out->write_seq($currseq) if ($order_list->{$ct})
+    $out->write_seq($currseq) if $order_list->{$ct}
 }
 
 sub del_by_order {
@@ -408,7 +412,7 @@ sub del_by_order {
 sub find_by_id {
     my ($action, $match, $currseq, $id_list) = @_;
     my $seq_id = $currseq->id();
-    $filter_dispatch{ $action . "_by_id" }->($match, $currseq, $id_list, $seq_id);
+    $filter_dispatch{$action . "_by_id"}->($match, $currseq, $id_list, $seq_id)
 }
 
 sub pick_by_id {
@@ -427,8 +431,7 @@ sub del_by_id {
     if ($id_list->{$seq_id}) {
         $id_list->{$seq_id}++;
         warn "Deleted sequence: ", $currseq->id(), "\n"
-    }
-    else { $out->write_seq($currseq) }
+    } else { $out->write_seq($currseq) }
 }
 
 sub find_by_re {
@@ -440,7 +443,7 @@ sub find_by_re {
 
 sub pick_by_re {
     my ($currseq, $regex, $seq_id) = @_;
-    $out->write_seq($currseq) if ($seq_id =~ /$regex/)
+    $out->write_seq($currseq) if $seq_id =~ /$regex/
 }
 
 sub del_by_re {
@@ -456,7 +459,7 @@ sub find_by_ambig {
     my $string        = $currseq->seq();
     my $ct            = ($string =~ s/n/n/gi);
     my $percent_ambig = $ct / $currseq->length();
-    $filter_dispatch{ "$action" . "_by_ambig" }->($currseq, $cutoff, $ct, $percent_ambig)
+    $filter_dispatch{"$action" . "_by_ambig"}->($currseq, $cutoff, $ct, $percent_ambig)
 }
 
 # TODO Probably better to change behavior when 'picking'?
@@ -474,7 +477,7 @@ sub del_by_ambig {
 
 sub find_by_length {
     my ($action, $currseq, $value) = @_;
-    $filter_dispatch{ $action . "_by_length" }->($currseq, $value)
+    $filter_dispatch{$action . "_by_length"}->($currseq, $value)
 }
 
 sub pick_by_length {
