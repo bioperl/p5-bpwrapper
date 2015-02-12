@@ -21,6 +21,14 @@ else
     exit 1;
 fi
 
+bp_version=$(perl -MBio::Root::Version -e 'print $Bio::Root::Version::VERSION');
+if_true=$(echo "$bp_version > 1.006" | bc);
+if [ $if_true -ne 1 ]; then
+    echo "Warning: Your BioPerl version ($bp_version) may be old (< 1.6) and some functions may fail."
+else 
+    echo "Great, your BioPerl version ($bp_version) is compatible."
+fi;
+
 #-----------------------------
 # Test options, one by one
 #-----------------------------

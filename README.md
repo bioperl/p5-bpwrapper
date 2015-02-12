@@ -7,7 +7,7 @@ In reality, though, some methods are new and unique to bp-utils. In the future, 
 
 # Dependencies
 * Perl 5.10.0 or higher
-* BioPerl
+* BioPerl 1.6.0 or higher
 
 # Install & Test (assuming a UNIX/Linux-like environment)
 * Go to repository: https://github.com/bioperl/bp-utils
@@ -24,8 +24,9 @@ In reality, though, some methods are new and unique to bp-utils. In the future, 
 # Developers & Contact
 * Yozen Hernandez
 * Pedro Pagan
-* Girish Ramrattan 
-* Corresonding author: Weigang Qiu, City University of New York, Hunter College  (weigang@genectr.hunter.cuny.edu)
+* Girish Ramrattan
+* Levy Vargas
+* Weigang Qiu, City University of New York, Hunter College (Correspondence: weigang@genectr.hunter.cuny.edu)
 
 # Checklist for adding a method (for developers):
 * We encourage BioPerl developers to add command-line interface to their BioPerl methods by using bp-utils.

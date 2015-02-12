@@ -10,9 +10,9 @@ echo "----------";
 testDir=$HOME/bp-utils; # change this if bp-utils are installed somewhere else
 if ! cd $testDir; then echo "Stop: check if $testDir exist" >&2; exit 1; fi;
 
-#-----------------------------
-# Test existence of BioPerl
-#-----------------------------
+#-------------------------------------
+# Test existence of BioPerl & version
+#------------------------------------
 echo -ne "Testing if BioPerl is installed: ...";
 if perldoc -l Bio::Perl; then
     echo " ... Great, bioperl found!"
@@ -21,6 +21,13 @@ else
     exit 1;
 fi
 
+bp_version=$(perl -MBio::Root::Version -e 'print $Bio::Root::Version::VERSION');
+if_true=$(echo "$bp_version > 1.006" | bc);
+if [ $if_true -ne 1 ]; then
+    echo "Warning: Your BioPerl version ($bp_version) may be old (< 1.6) and some functions may fail."
+else 
+    echo "Great, your BioPerl version ($bp_version) is compatible."
+fi;
 #-----------------------------
 # Test options, one by one
 #-----------------------------
