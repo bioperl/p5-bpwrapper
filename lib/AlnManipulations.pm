@@ -250,15 +250,17 @@ sub variable_sites {
     $aln = $aln->remove_gaps();
     my $new_aln = Bio::SimpleAlign->new();
     my $len=$aln->length();
-    my (%seq_ids, @sites);
+    my (%seq_ids, @sites, @var_sites);
     
-    # Goes through each column and takes variable ones
+    # Go through each column and save variable sites
     for (my $i=1; $i<=$len; $i++) {
         my ($ref_bases, $ref_ids) = &_get_a_site($i);
         %seq_ids = %{$ref_ids};
         my $is_constant = &_is_constant(&_paste_nt($ref_bases));
-        push @sites, $ref_bases if $is_constant < 1
+        if ($is_constant < 1) { push @sites, $ref_bases; push @var_sites, $i } 
     }
+
+    foreach (@var_sites) { warn $_, "\n" }
 
     # Recreate the object for output
     foreach my $id (sort keys %seq_ids) {
