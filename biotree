@@ -487,7 +487,7 @@ Output file format. Accepts newick, nhx, and tabtree.
 
 Reroot tree to specified node by creating new branch.
 
-=head2 --subset, -s 'node1' [-s 'node2'] [-s 'node3']...
+=head2 --subset, -s 'node1,node2,node3'
 
 Creates a tree of only the specified leaves/nodes and their descendants. Specifying a single internal node produces a subtree from that node.
 
@@ -560,7 +560,7 @@ perl(1)
 
 =head1 AUTHOR
 
-Yozen Hernandez, Pedro Pagan
+Yozen Hernandez, Pedro Pagan, Weigang Qiu
 
 =cut
 

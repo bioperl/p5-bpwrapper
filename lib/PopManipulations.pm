@@ -43,6 +43,7 @@ my %opt_dispatch = (
     'distance' => \&print_distance,
     'heterozygosity' => \&print_heterozygosity,
     'mismatch' => \&print_mismatch_distr,
+    'mut-info' => \&pairwise_mutual_info,
     'pi' => \&print_diversity,
     'stats'    => \&print_stats,
     'segsites' => \&print_num_snps,
@@ -135,6 +136,18 @@ sub print_mismatch_distr {
     }
 }
 
+sub pairwise_mutual_info {
+    my @sites = $pop->get_marker_names();
+    for my $site ( sort {$a <=> $b} @sites ) {
+        my $pop_marker = $pop->get_Marker($site);
+	my @alleles = $pop_marker->get_Alleles(); 
+        next if &_has_gap($site);  # skip gapped sites
+	next if @alleles == 1;
+        if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  
+        my %freqs = $pop_marker->get_Allele_Frequencies; # print $site, "\t", Dumper(\%freqs); 
+    }
+}
+
 sub print_diversity {
     printf "%s\t%.4f\n", "Nucleotide diversity =>", $pop_stats->pi($pop)
 }
@@ -149,7 +162,7 @@ sub snp_coding {
     for my $site ( sort {$a <=> $b} @sites ) {
         my $pop_marker = $pop_cds->get_Marker($site);
 	my @alleles = $pop_marker->get_Alleles(); #print $name, "=>\t", Dumper(\@alleles); next;
-        next if &_has_gap($site);  # skip gapped sites
+        next if &_has_gap_codon($site);  # skip gapped sites
         if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  # consider only 2-state polymorphic sites
         my %freqs = $pop_marker->get_Allele_Frequencies; # print $out_aa, "=>", Dumper(\%freqs); next;
         my ($minor, $major, $syn) = &_syn_nonsyn(\%freqs);
@@ -173,7 +186,7 @@ sub snp_coding {
 #}
 
 sub print_num_snps {
-    print "Number of segregating sites =>", "\t", $pop_stats->segregating_sites_count($pop), "\n"
+    print $pop_stats->segregating_sites_count($pop), "\n"
 }
 
 sub print_version {
@@ -241,10 +254,18 @@ sub _mk_counts {
     say join "\t", ($mk1->{poly_N}, $mk1->{fixed_N}, $mk1->{poly_S}, $mk1->{fixed_S})
 }
 
-sub _has_gap { # internal methods
+sub _has_gap_codon { # internal methods
     my $pos = shift @_;
     foreach my $seq ($aln->each_seq) {
         return 1 if $seq->subseq(3*$pos+1, 3*$pos+3) =~ /-/;
+    }
+    return 0;
+}
+
+sub _has_gap { # internal methods
+    my $pos = shift @_;
+    foreach my $seq ($aln->each_seq) {
+        return 1 if $seq->subseq($pos, $pos) eq '-';
     }
     return 0;
 }
