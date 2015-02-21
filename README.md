@@ -7,7 +7,21 @@ In reality, though, some methods are new and unique to bp-utils. In the future, 
 
 # Dependencies
 * Perl 5.10.0 or higher
-* BioPerl 1.6.0 or higher
+* BioPerl 1.6.924 or higher
+
+You can check you version of perl using
+
+```
+perl -v
+```
+
+and your version of BioPerl using
+
+```
+perl -MBio::Root::Version -Mversion -e 'print version->parse($Bio::Root::Version::VERSION)->normal,"\n"'
+```
+
+in a terminal.
 
 # Install & Test (assuming a UNIX/Linux-like environment)
 * Go to repository: https://github.com/bioperl/bp-utils
