@@ -1,5 +1,5 @@
-# Descritpion
-bp-utils are command-line utilities that are wrappers of popular BioPerl classes (Bio::SeqIO, Bio::Seq, Bio::AlignIO, Bio::SimpleAlign, etc). The motivation is to relieve BioPerl users from writing full-blown scripts for routine manipulations of sequences, alignments, trees, and others. For common operations of sequences and alignments, bp-utils make it easy to create workflows with a single BASH script containing a combination of bp-utils calls (and no Perl or BioPerl coding is necessary).
+# Description
+bp-utils are command-line utilities that are wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign`, etc). The motivation is to relieve BioPerl users from writing full-blown scripts for routine manipulations of sequences, alignments, trees, and others. For common operations of sequences and alignments, bp-utils make it easy to create workflows with a single BASH script containing a combination of bp-utils calls (and no Perl or BioPerl coding is necessary).
 
 Internally, bp-utils follow a "Wrap, don't Write" design principle. That is, we have full faith in the robustness of the BioPerl development framework. As such, bp-utils methods should ALL be wrappers to BioPerl methdos so that exceptions can be handled properly by BioPerl. 
 
@@ -7,18 +7,39 @@ In reality, though, some methods are new and unique to bp-utils. In the future, 
 
 # Dependencies
 * Perl 5.10.0 or higher
-* BioPerl 1.6.0 or higher
+* BioPerl 1.6.924 or higher
+
+You can check your version of perl using
+
+```
+perl -v
+```
+
+and your version of BioPerl using
+
+```
+perl -MBio::Root::Version -Mversion -e 'print version->parse($Bio::Root::Version::VERSION)->normal,"\n"'
+```
+
+in a terminal.
 
 # Install & Test (assuming a UNIX/Linux-like environment)
 * Go to repository: https://github.com/bioperl/bp-utils
-* Download current release: https://github.com/bioperl/bp-utils/blob/master/bp-utils-current-release.tar.gz
-* Unzip and untar: tar -zxf bp-utils-current-release.tar.gz
-* Add "bp-utils" directory to your $PATH: export PATH=$PATH:/path/to/bputils (add this line to .bashrc or .bash_profile to make it permanent)
-* Run test scripts: "./Test-bioseq" and "./Test-bioaln"
+* Download current release: https://github.com/bioperl/bp-utils/releases/download/v1.0/bp-utils-release-v1.0.tar.gz
+* Unzip and untar
+  
+        tar -zxf bp-utils-current-release.tar.gz
+
+* Add "bp-utils" directory to your `$PATH`:
+  
+        # Add this line to your .profile (or equivalent) to make it permanent
+        export PATH=$PATH:/path/to/bputils
+
+* Run test scripts: `./Test-bioseq` and `./Test-bioaln`
 
 # Get Help
-* Run "perldoc": e.g., perldoc bioseq; perldoc bioaln
-* Run "--help" or "--man": e.g., bioseq --help; bioaln --help
+* Run `perldoc`: e.g., `perldoc bioseq`; `perldoc bioaln`
+* Run with `--help` or `--man`: e.g., `bioseq --help`; `bioaln --help`
 * A help file with use cases is maintained at: http://diverge.hunter.cuny.edu/labwiki/Bioutils
 
 # Developers & Contact
