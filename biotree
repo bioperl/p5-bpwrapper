@@ -132,42 +132,44 @@ sub subset {
     for my $nd (@keep_nodes) { push @descendents, $_ for $nd->get_all_Descendents }
 
     # Collect list of ancestors
-	my @ancestors;
-	for my $tmp (@keep_nodes) {
+    my @ancestors;
+    my $tmp;
+    for (@keep_nodes) {
+	$tmp = $_;
         while ($tmp->ancestor) {
-			push @ancestors, $tmp->ancestor;
-			$tmp = $tmp->ancestor
-	     }
+	    push @ancestors, $tmp->ancestor;
+	    $tmp = $tmp->ancestor
+	}
     }
-	
-	# Make a hash of nodes to keep
+    
+    # Make a hash of nodes to keep
     my %keep = map { $_->internal_id => $_ } @keep_nodes;
-	$keep{$_->internal_id} = $_ for @descendents;
-	$keep{$_->internal_id} = $_ for @ancestors;
-
-	# Remove all nodes but those in %keep
+    $keep{$_->internal_id} = $_ for @descendents;
+    $keep{$_->internal_id} = $_ for @ancestors;
+    
+    # Remove all nodes but those in %keep
     for (@nodes) { $tree->remove_Node($_) unless exists($keep{$_->internal_id}) }
-
-	# Clean up internal single-descendent nodes
+    
+    # Clean up internal single-descendent nodes
     my @desc;
     my $nd_len;
     my $desc_len;
     for my $nd ($tree->get_nodes) {
-		next if $nd == $rootnode;
-		@desc = $nd->each_Descendent;
-		next unless scalar(@desc) == 1;
-		$nd_len   = $nd->branch_length()      || 0;
-		$desc_len = $desc[0]->branch_length() || 0;
-		$desc[0]->branch_length($nd_len + $desc_len);
-		$nd->ancestor->add_Descendent($desc[0]);
-		$tree->remove_Node($nd)
+	next if $nd == $rootnode;
+	@desc = $nd->each_Descendent;
+	next unless scalar(@desc) == 1;
+	$nd_len   = $nd->branch_length()      || 0;
+	$desc_len = $desc[0]->branch_length() || 0;
+	$desc[0]->branch_length($nd_len + $desc_len);
+	$nd->ancestor->add_Descendent($desc[0]);
+	$tree->remove_Node($nd)
     }
-	
-	# Take care of the a single-descendent root node
-	@desc = $rootnode->each_Descendent;
+    
+    # Take care of the a single-descendent root node
+    @desc = $rootnode->each_Descendent;
     if (scalar(@desc) == 1) {
-		$rootnode->add_Descendent($_) for $desc[0]->each_Descendent;
-		$tree->remove_Node($desc[0])
+	$rootnode->add_Descendent($_) for $desc[0]->each_Descendent;
+	$tree->remove_Node($desc[0])
     }
     $print_tree = 1
 }
