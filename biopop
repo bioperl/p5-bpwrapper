@@ -119,6 +119,10 @@ Specify the statistics you would like to gather from input data. e.g., "theta,pi
 Can also be specified by giving the option multiple times. e.g.,
  biopop --stats=pi --stats=theta
 
+=head2 --snp_coding
+
+Identify & print, for each 2-state SNP, codon position, aligned nucleotide position, syn/nonsyn, frequencies of each allleic state, for a coding alignment.
+
 =head2 --varsites, -v
 
 This method outputs the number of segregating or SNP sites within your alignment. 

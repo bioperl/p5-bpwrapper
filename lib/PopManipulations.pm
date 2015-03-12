@@ -47,7 +47,7 @@ my %opt_dispatch = (
     'pi' => \&print_diversity,
     'stats'    => \&print_stats,
     'segsites' => \&print_num_snps,
-    'var_coding' => \&snp_coding,
+    'snp_coding' => \&snp_coding,
     'var_noncoding' => \&snp_noncoding,
 #    'mutrec' => \&_mutation_or_recombination,
 #    'simmk'    => \&_sim_mk,
@@ -84,7 +84,7 @@ sub initialize {
         $dna_stats = Bio::Align::DNAStatistics->new();
     } else {
         $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 1, -site_model => 'all');
-        $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"var_coding"};
+        $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"snp_coding"};
 #        $stat_obj = PopGenStatistics->new();
         $pop_stats = Bio::PopGen::Statistics->new()
     }
