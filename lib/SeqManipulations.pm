@@ -377,16 +377,16 @@ sub _make_sed_file {
     $filename = "STDOUT" if $filename eq '-';
 
     my $sedfile = basename($filename) . ".sed";
-    open(SEDOUT, ">", $sedfile) or die $!;
+    open(my $sedout, ">", $sedfile) or die $!;
 
-    print SEDOUT "# usage: sed -f $filename.sed <anonymized file>\n";
+    print $sedout "# usage: sed -f $filename.sed <anonymized file>\n";
 
     foreach (keys %serial_names) {
         my $real_name = $serial_names{$_};
         my $sed_cmd   = "s/$_/" . $real_name . "/g;\n";
-        print SEDOUT $sed_cmd
+        print $sedout $sed_cmd
     }
-    close SEDOUT;
+    close $sedout;
 
     print STDERR "\nCreated $filename.sed\tusage: sed -f $filename.sed <anonymized file>\n\n"
 }
