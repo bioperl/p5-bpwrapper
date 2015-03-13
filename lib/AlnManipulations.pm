@@ -1,10 +1,10 @@
 =head1 NAME
 
-SeqManipulations - Functions for bioseq
+AlnManipulations - Functions for bioaln
 
 =head1 SYNOPSIS
 
-require B<SeqManipulations>;
+require B<AlnManipulations>;
 
 =cut
 
