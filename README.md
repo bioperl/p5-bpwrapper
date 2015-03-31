@@ -42,12 +42,12 @@ in a terminal.
 * Run with `--help` or `--man`: e.g., `bioseq --help`; `bioaln --help`
 * A help file with use cases is maintained at: http://diverge.hunter.cuny.edu/labwiki/Bioutils
 
-# Developers & Contact
+# Developers, Contact, Citation
 * Yozen Hernandez
 * Pedro Pagan
 * Girish Ramrattan
-* Levy Vargas
 * Weigang Qiu, City University of New York, Hunter College (Correspondence: weigang@genectr.hunter.cuny.edu)
+* If you find the tools useful, please cite: Hernandez Y., P. Pagan,  G. Ramrattan, & W.-G. Qiu. (2015). Bp-utils (Release 1.0): BioPerl-based command-line utilities for manipulating sequences, alignments, and phylogenetic trees. URL: https://github.com/bioperl/bp-utils. 
 
 # Checklist for adding a method (for developers):
 * We encourage BioPerl developers to add command-line interface to their BioPerl methods by using bp-utils.
@@ -60,4 +60,3 @@ in a terminal.
 
 # Release Notes
 * Release 1.0. (Feb 10, 2015): Contains two utilities with tests: bioseq & bioaln. To be released: biopop & biotree
-
