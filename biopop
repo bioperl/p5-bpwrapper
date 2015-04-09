@@ -27,6 +27,7 @@ GetOptions(
     "stats|s=s@",    # Comma-separated, or multiply specified, list
     "snp",
     "snp_coding",
+    "snp_coding_long",
     "version|V",
     "segsites|S",
 #    "mutrec|b",
