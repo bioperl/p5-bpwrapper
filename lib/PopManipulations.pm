@@ -48,6 +48,7 @@ my %opt_dispatch = (
     'stats'    => \&print_stats,
     'segsites' => \&print_num_snps,
     'snp_coding' => \&snp_coding,
+    'snp_coding_long' => \&snp_coding_long,
     'var_noncoding' => \&snp_noncoding,
 #    'mutrec' => \&_mutation_or_recombination,
 #    'simmk'    => \&_sim_mk,
@@ -84,7 +85,7 @@ sub initialize {
         $dna_stats = Bio::Align::DNAStatistics->new();
     } else {
         $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 1, -site_model => 'all');
-        $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"snp_coding"};
+        $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"snp_coding"} || $opts->{"snp_coding_long"};
 #        $stat_obj = PopGenStatistics->new();
         $pop_stats = Bio::PopGen::Statistics->new()
     }
@@ -170,6 +171,33 @@ sub snp_coding {
         say join "\t", ("codon_".$site, $aln_file, $site, $snp_site, $syn, $minor->{codon}, $minor->{aa}, $minor->{freq}, $major->{codon}, $major->{aa}, $major->{freq});
     }
 }
+
+sub snp_coding_long {
+    my @sites = $pop_cds->get_marker_names();
+#    warn "total variable sites: ", join ",", @sites, "\n\nTotal=>", scalar(@sites), "\n\n";
+    if ( ! scalar @sites ) {
+	die "No polymorphic sites: $aln_file\n";
+    }
+
+    for my $site ( sort {$a <=> $b} @sites ) {
+        my $pop_marker = $pop_cds->get_Marker($site);
+	my @alleles = $pop_marker->get_Alleles(); #print $name, "=>\t", Dumper(\@alleles); next;
+        next if &_has_gap_codon($site);  # skip gapped sites
+        if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  # consider only 2-state polymorphic sites
+        my %freqs = $pop_marker->get_Allele_Frequencies; # print $out_aa, "=>", Dumper(\%freqs); next;
+        my ($minor, $major, $syn) = &_syn_nonsyn(\%freqs);
+	my $snp_site = 3 * $site + &_snp_position($minor->{codon}, $major->{codon});
+	
+	foreach my $ind ($pop_cds->get_Individuals) {
+            my @genotypes = $ind->get_Genotypes(-marker => $site);
+            my $id = $ind->unique_id();
+            my $geno = shift @genotypes;
+            my ($allele) = $geno->get_Alleles();
+	    say join "\t", ($aln_file, $site, $id, $snp_site, $syn, $allele);
+	}
+    }
+}
+
 
 #sub print_stats {
 #    @stats = _parse_stats();
