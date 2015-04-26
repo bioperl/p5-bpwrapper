@@ -114,6 +114,7 @@ __END__
  bioaln -U aln_file                  # turn into [U]pper-case
 
  # Evolutionary analysis:
+ bioaln -A *.aln                     # conc(A)tenate aln files
  bioaln -B aln_file                  # extract conserved [B]locks
  bioaln -S aln_file                  # [S]huffle sites (for testing conserved blocks)
  bioaln -R '10' aln_file             # [R]e-sampled an alignment of 10 sequences
