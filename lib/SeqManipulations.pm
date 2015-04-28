@@ -19,6 +19,7 @@ use Bio::Tools::CodonTable;
 use Bio::DB::GenBank;
 use Bio::Tools::SeqStats;
 use Bio::SeqUtils;
+use Scalar::Util;
 if ($ENV{'DEBUG'}) { use Data::Dumper }
 
 # Package global variables
@@ -286,9 +287,11 @@ sub print_gb_gene_feats { # works only for prokaryote genome
     my $gene_count = 0;
     foreach my $feat ($seq->get_SeqFeatures()) {
         if ($feat->primary_tag eq 'gene') {
+	    my $location = $feat->location();
+	    next if $location->isa('Bio::Location::Split');
             my $gene_tag = "gene_" . $gene_count++;
             foreach my $tag ($feat->get_all_tags()) { ($gene_tag) = $feat->get_tag_values($tag) if $tag eq 'locus_tag' }
-            my $gene = Bio::Seq->new(-id => (join "_", ($gene_tag, $feat->start, $feat->end, $feat->strand)), 
+            my $gene = Bio::Seq->new(-id => (join "|", ($gene_tag, $feat->start, $feat->end, $feat->strand)), 
 				     -seq=>$seq->subseq($feat->start, $feat->end));
             if ($feat->strand() > 0) { $out->write_seq($gene) } else { $out->write_seq($gene->revcom())}
 #            print join "\t",
