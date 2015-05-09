@@ -53,6 +53,7 @@ my %opt_dispatch = (
     "shuffle-sites" => \&shuffle_sites,
     "third-sites" => \&third_sites,
     "uppercase" => \&upper_case,
+    "gapstates" => \&gap_states,
    );
 
 ##################### initializer & option handlers ###################
@@ -123,6 +124,53 @@ sub write_out_paml {
 }
 
 ###################### subroutine ######################
+
+sub gap_states {
+    my (@seqs, @gaps);
+    foreach my $seq ($aln->each_seq()) {
+        my $id = $seq->display_id();
+        my @nts = split //, $seq->seq();
+	my $gap_start = 0;
+	my $new;
+	for (my $i=0; $i< $aln->length(); $i++) {
+	    if ($nts[$i] eq '-') {
+		if ($gap_start) { # gap -> gap
+		    $new->{end}++;
+		} else { # nt -> gap
+		    $gap_start = 1;
+		    $new = { 'start' => $i+1, 'end' => $i+1, 'seq_name' => $id }
+		}
+	    } else {
+		if ($gap_start) { # gap -> nt
+		    $gap_start = 0; 
+		    push @gaps, $new;
+		} else { # nt -> nt
+		    next;
+		}
+	    }
+	}
+    }
+    my (%gap_freqs, @uniq_gaps);
+    foreach my $gap (@gaps) {
+	my $id = $gap->{start} . "-" . $gap->{end};
+	$gap->{id} = $id;
+	$gap_freqs{$id}++;
+    }
+
+    foreach my $id (keys %gap_freqs) {
+	my ($start, $end) = split /-/, $id;
+	push @uniq_gaps, {
+	    'start' => $start,
+	    'end' => $end,
+	    'is_edge' => ($start == 1 || $end == $aln->length) ? 1 : 0,
+	    'counts' => $gap_freqs{$id},
+	};
+    }
+
+    foreach my $gap (@uniq_gaps) { say join "\t", ($gap->{start}, $gap->{end}, $gap->{is_edge}, $gap->{counts}) }
+#    print Dumper(\@uniq_gaps);
+    exit;
+}
 
 sub print_avp_id {
     say $aln->average_percentage_identity();
