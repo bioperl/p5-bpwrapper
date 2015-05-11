@@ -45,7 +45,8 @@ GetOptions(
     "pep2dna|P=s",    
     "resample|R:i",    # Optional value, default is floor of num_sequences/2
     "shuffle-sites|S",
-    "third-sites|T",
+    "select-third|T",
+    "remove-third",
     "uppercase|U", # make upper case (for DNAStatistics)
     "gapstates",
     "version|V",
@@ -93,6 +94,7 @@ __END__
  bioaln -a input.aln                 # [a]verage percent identity
  bioaln -w '30' aln_file             # average identifies for sliding [w]indows of 30
  bioaln -I 'B31,100' aln_file        # get aln column [I]ndex of seq 'B31' residue 100
+ bioaln --gapstates  aln_file        # identify unique gaps (start, end, frequency, whether internal)
 
  # Alignment viewers:
  bioaln -m input.aln                 # [m]atch view (show variable sites)
@@ -122,6 +124,7 @@ __END__
  bioaln -b aln_file                  # [b]ootstrap an alignment (for testing branch stability)
  bioaln -M aln_file                  # per[m]ute at each site (for testing tree-ness)
  bioaln -T aln_file                  # extract [T]hird site (assume coding sequences)
+ bioaln --remove-third aln_file      # remove [T]hird site (assume coding sequences)
 
  # change alignment format:
  bioaln -i 'fasta' -o 'phylip'       # FASTA => PHYLIP

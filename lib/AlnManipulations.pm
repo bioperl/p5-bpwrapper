@@ -51,7 +51,8 @@ my %opt_dispatch = (
     "pep2dna" => \&protein_to_dna,
     "resample" => \&sample_seqs,
     "shuffle-sites" => \&shuffle_sites,
-    "third-sites" => \&third_sites,
+    "select-third" => \&select_third_sites,
+    "remove-third" => \&remove_third_sites,
     "uppercase" => \&upper_case,
     "gapstates" => \&gap_states,
    );
@@ -545,7 +546,7 @@ sub shuffle_sites {
     $aln = $new_aln
 }
 
-sub third_sites {
+sub select_third_sites {
     my $new_aln = Bio::SimpleAlign->new();
     my $len=$aln->length();
     my $nseq = $aln->num_sequences();
@@ -558,6 +559,33 @@ sub third_sites {
 
     my @sites;
     for (my $i=3; $i<=$len; $i+=3) { push @sites, $i }
+
+    foreach my $id (sort @seq_ids) {
+        my $seq_str;
+        $seq_str .= $ref_bases->{$id}->{$_} foreach @sites;
+
+        my $loc_seq = Bio::LocatableSeq->new(-seq => $seq_str, -id => $id, -start => 1);
+        my $end = $loc_seq->end;
+        $loc_seq->end($end);
+
+        $new_aln->add_seq($loc_seq)
+    }
+    $aln = $new_aln
+}
+
+sub remove_third_sites {
+    my $new_aln = Bio::SimpleAlign->new();
+    my $len=$aln->length();
+    my $nseq = $aln->num_sequences();
+    my @seq_ids;
+
+    die "Alignment contains only one sequence: $file\n" if $nseq < 2;
+
+    my $ref_bases = &_get_a_site_v2();
+    foreach (sort keys %$ref_bases) { push @seq_ids, $_ }
+
+    my @sites;
+    for (my $i=1; $i<=$len; $i++) { push @sites, $i if $i % 3 }
 
     foreach my $id (sort @seq_ids) {
         my $seq_str;
