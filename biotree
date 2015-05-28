@@ -37,6 +37,10 @@ GetOptions(\%opts,
 	   "allchildOTU|U=s",
 	   "version|V",
 	   "walk|W=s",
+	   "multi2bi",
+	   "cleanbr",
+	   "cleanboot",
+	   "delete-otus=s",
 	   #    "bootclean|b:f",
 	   #    "collapse|c=s@",
 	   #    "getroot|g",
@@ -91,8 +95,9 @@ depth_to_root() if $opts{'depth'};
 remove_brlengths() if $opts{'rmbl'};
 alldesc() if $opts{'allchildOTU'};
 walk() if $opts{'walk'};
-
-
+multi2bi() if $opts{'multi2bi'};
+clean_tree() if $opts{'cleanbr'} || $opts{'cleanboot'};
+delete_otus() if $opts{'delete-otus'};
 say $tree->as_text($out_format) if $print_tree;
 
 
@@ -117,7 +122,74 @@ sub reroot {
     my $outgroup    = $tree->find_node($outgroup_id);
     my $newroot     = $outgroup->create_node_on_branch(-FRACTION => 0.5, -ANNOT => {id => 'newroot'});
     $tree->reroot($newroot);
-    $print_tree = 1
+    $print_tree = 1;
+}
+
+sub clean_tree {
+    foreach my $nd (@nodes) {
+	$nd->branch_length(0) if $opts{'cleanbr'};
+	if ($opts{'cleanboot'}) {
+	    $nd->bootstrap(0); 
+	    $nd->id('') unless $nd->is_Leaf;
+	}
+    }
+    $print_tree = 1;
+}
+
+sub delete_otus {
+    my $ref_otus = &_get_otus();
+    my @otus_to_retain = &_remove_otus($ref_otus, $opts{'delete-otus'});
+#    print Dumper(\@otus_to_retain);
+    $opts{'subset'} = join ",", @otus_to_retain;
+    &subset();
+}
+
+sub _get_otus {
+    my @list;
+    foreach my $nd (@nodes) { push @list, $nd if $nd->is_Leaf }
+    return \@list;
+}
+
+sub _remove_otus {
+    my $ref = shift;
+    my $str = shift;
+    my @list;
+    my @otus_to_remove = split /\s*,\s*/, $str;
+
+    foreach my $nd (@$ref) {
+	foreach my $otu (@otus_to_remove) {
+	    push @list, $nd->id() unless $otu eq $nd->id();
+	}
+    }
+    return @list;
+}
+
+sub multi2bi {
+    foreach my $nd (@nodes) {
+#	next if $nd eq $rootnode;
+	&_add_node($nd); 
+    }
+    $print_tree = 1;
+}
+
+sub _add_node {
+    my $node = shift;
+#    warn "processing\t", $node->internal_id, "\n";
+    my @desc = $node->each_Descendent;
+    return if scalar(@desc) <= 2;
+#    warn "multifurcating node:\t", $node->internal_id, " ... add a new node\n";
+    shift @desc; # retain the first descent
+#    my $new_node = $node->create_node_on_branch(-FRACTION => 0.5, -FORCE => 1, -ANNOT=>{ -id => "new_id" });
+    my $new_node = Bio::Tree::Node->new(-id => "new", -branch_length => 0);
+    $node->add_Descendent($new_node);
+#    warn "\ta new node created:\t", $new_node->id, "\n";
+    foreach (@desc) {
+	$node->remove_Descendent($_); # remove from grand-parent
+#	warn "\t\tremove descendant:\t", $_->internal_id, "\n";
+	$new_node->add_Descendent($_); # re-attarch to parent
+#	warn "\t\tadd descendant to the new node:\t", $_->internal_id, "\n";
+    }
+    &_add_node($new_node);
 }
 
 # Subset a tree

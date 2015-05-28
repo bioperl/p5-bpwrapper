@@ -53,6 +53,7 @@ my %opt_dispatch = (
     "shuffle-sites" => \&shuffle_sites,
     "select-third" => \&select_third_sites,
     "remove-third" => \&remove_third_sites,
+    "random-slice" => \&random_slice,
     "uppercase" => \&upper_case,
     "gapstates" => \&gap_states,
    );
@@ -540,10 +541,17 @@ sub shuffle_sites {
         my $loc_seq = Bio::LocatableSeq->new(-seq => $seq_str, -id => $id, -start => 1);
         my $end = $loc_seq->end;
         $loc_seq->end($end);
-
-        $new_aln->add_seq($loc_seq)
+        $new_aln->add_seq($loc_seq);
     }
-    $aln = $new_aln
+    $aln = $new_aln;
+}
+
+sub random_slice {
+    my $slice_length = $opts{'random-slice'};
+    my $len=$aln->length();
+    my $start = int(rand($len - $slice_length+1));
+    my $end = $start + $slice_length - 1;
+    $aln = $aln->slice($start, $end);
 }
 
 sub select_third_sites {
