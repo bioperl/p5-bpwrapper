@@ -30,6 +30,7 @@ GetOptions(
     "snp_coding_long",
     "version|V",
     "segsites|S",
+    "bipart",
 #    "mutrec|b",
 #    "exclude|group3|seq3|r=s@",
 #    "ingroup|group1|seq1|p=s@",

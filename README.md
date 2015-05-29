@@ -69,3 +69,6 @@ in a terminal.
 * biotree: --cleanbr remove branch length; need to add to POD & test
 * biotree: --cleanboot remove boot/node labels; need to add to POD & test
 * biotree: --remove an OTU
+* bioaln: -- add --informative
+* biopop: bipart added; needs to add POD & test
+

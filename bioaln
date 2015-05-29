@@ -50,6 +50,7 @@ GetOptions(
     "uppercase|U", # make upper case (for DNAStatistics)
     "gapstates",
     "random-slice=i",
+#    "bipart", # print bipartitions
     "version|V",
   #  "dnadist|D=s", # Needs fixing
   #  "inform|Z",

@@ -50,6 +50,7 @@ my %opt_dispatch = (
     'snp_coding' => \&snp_coding,
     'snp_coding_long' => \&snp_coding_long,
     'var_noncoding' => \&snp_noncoding,
+    'bipart' => \&bi_partition,
 #    'mutrec' => \&_mutation_or_recombination,
 #    'simmk'    => \&_sim_mk,
 #    'kaks'     => \&_print_kaks_calc,
@@ -153,6 +154,43 @@ sub print_diversity {
     printf "%s\t%.4f\n", "Nucleotide diversity =>", $pop_stats->pi($pop)
 }
 
+sub bi_partition {
+    my @sites = $pop->get_marker_names();
+    my %biparts;
+    for my $site ( sort {$a <=> $b} @sites ) {
+        my $pop_marker = $pop->get_Marker($site);
+	my @alleles = $pop_marker->get_Alleles(); 
+        next if &_has_gap($site);  # skip gapped sites
+	next if @alleles == 1; # skip constant sites
+        next if scalar @alleles > 2; # skip if more than two states
+	my %seen_allele;
+	foreach my $ind ($pop->get_Individuals) {
+            my @genotypes = $ind->get_Genotypes(-marker => $site);
+            my $id = $ind->unique_id();
+            my $geno = shift @genotypes;
+            my ($allele) = $geno->get_Alleles();
+	    my @ids;
+	    @ids = @{$seen_allele{$allele}} if $seen_allele{$allele};
+	    push @ids, $id;
+	    $seen_allele{$allele} = \@ids;
+	}
+	my $not_informative = 0;
+	my $newick_string = "informative_site_" . $site . "_(";
+	foreach my $allele (keys %seen_allele) {
+	    my @ids = @{$seen_allele{$allele}};
+	    $not_informative = 1 if @ids == 1;
+	    $newick_string .= "(";
+	    $newick_string .= join ",", @ids;
+	    $newick_string .= ")";
+	}
+	next if $not_informative;
+	$newick_string .= ");";
+	$newick_string =~ s/\)\(/\),\(/;
+	print $newick_string, "\n";
+#	print $site, "=>\t", Dumper(\%seen_allele);
+    }
+}
+
 sub snp_coding {
     my @sites = $pop_cds->get_marker_names();
 #    warn "total variable sites: ", join ",", @sites, "\n\nTotal=>", scalar(@sites), "\n\n";
@@ -171,6 +209,7 @@ sub snp_coding {
         say join "\t", ("codon_".$site, $aln_file, $site, $snp_site, $syn, $minor->{codon}, $minor->{aa}, $minor->{freq}, $major->{codon}, $major->{aa}, $major->{freq});
     }
 }
+
 
 sub snp_coding_long {
     my @sites = $pop_cds->get_marker_names();
