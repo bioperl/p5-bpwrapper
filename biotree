@@ -121,7 +121,7 @@ sub sister_pairs {
 	$otu_ct++;
     }
 
-    @otus = sort @otus;
+    @otus = sort {$a->id() <=> $b->id() } @otus;
     for (my $i = 0; $i < $otu_ct; $i++) {
 	my $pa_i = $otus[$i]->ancestor();
 	for (my $j = $i+1; $j < $otu_ct; $j++) {
