@@ -41,6 +41,7 @@ GetOptions(\%opts,
 	   "cleanbr",
 	   "cleanboot",
 	   "delete-otus=s",
+	   "bipart", # pairwise OTU togetherness
 	   #    "bootclean|b:f",
 	   #    "collapse|c=s@",
 	   #    "getroot|g",
@@ -98,6 +99,7 @@ walk() if $opts{'walk'};
 multi2bi() if $opts{'multi2bi'};
 clean_tree() if $opts{'cleanbr'} || $opts{'cleanboot'};
 delete_otus() if $opts{'delete-otus'};
+sister_pairs() if $opts{'bipart'};
 say $tree->as_text($out_format) if $print_tree;
 
 
@@ -108,6 +110,27 @@ sub getdistance {
     my @dnodes = _name2node($opts{'distance'});
     if (scalar(@dnodes) != 2) { say "Error: Provide exactly two nodes/leaves to use with --distance" }
     else { say $tree->distance(-nodes => \@dnodes) }
+}
+
+sub sister_pairs {
+    my @otus;
+    my $otu_ct = 0;
+    foreach (@nodes) { 
+	next unless $_->is_Leaf();
+	push @otus, $_;
+	$otu_ct++;
+    }
+
+    @otus = sort @otus;
+    for (my $i = 0; $i < $otu_ct; $i++) {
+	my $pa_i = $otus[$i]->ancestor();
+	for (my $j = $i+1; $j < $otu_ct; $j++) {
+	    my $pa_j = $otus[$j]->ancestor();
+	    print $otus[$i]->id, "\t", $otus[$j]->id, "\t";
+	    print $pa_i eq $pa_j ? 1 : 0;
+	    print "\n";
+	}
+    }
 }
 
 sub countOTU {
