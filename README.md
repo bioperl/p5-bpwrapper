@@ -72,5 +72,7 @@ in a terminal.
 * bioaln: -- add --informative
 * biopop: bipart added; needs to add POD & test
 * biotree: bipart (sister_pairs) added; needs to add POD & test
+* biotree: swap-otus added; needs to add POD & test
+
 
 
