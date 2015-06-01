@@ -41,7 +41,8 @@ GetOptions(\%opts,
 	   "cleanbr",
 	   "cleanboot",
 	   "delete-otus=s",
-	   "bipart", # pairwise OTU togetherness
+	   "sis-pairs", # pairwise OTU togetherness
+	   "swap-otus=s", # output trees with each possible pairs (with the designated one) swapped 
 	   #    "bootclean|b:f",
 	   #    "collapse|c=s@",
 	   #    "getroot|g",
@@ -99,11 +100,40 @@ walk() if $opts{'walk'};
 multi2bi() if $opts{'multi2bi'};
 clean_tree() if $opts{'cleanbr'} || $opts{'cleanboot'};
 delete_otus() if $opts{'delete-otus'};
-sister_pairs() if $opts{'bipart'};
+sister_pairs() if $opts{'sis-pairs'};
+swap_otus() if $opts{'swap-otus'};
 say $tree->as_text($out_format) if $print_tree;
 
 
 ###################### subroutine ######################
+
+sub swap_otus {
+    my @otus;
+    my $otu_ct = 0;
+    foreach (@nodes) { 
+	next unless $_->is_Leaf();
+	push @otus, $_;
+	$otu_ct++;
+    }
+    @otus = sort {$a->id() cmp $b->id() } @otus;
+    my $ref_otu;
+    if ($opts{'swap-otus'}) {
+	$ref_otu = $tree->find_node($opts{'swap-otus'}) || die "node not found\n";
+    } else {
+	$ref_otu = $otus[0];
+    }
+
+    foreach my $nd (@otus) {
+	next if $nd eq $ref_otu;
+	my $nd_id = $nd->id();
+	my $ref_id = $ref_otu->id();
+	$nd->id($ref_id);
+	$ref_otu->id($nd_id);
+	say $tree->as_text($out_format);
+	$nd->id($nd_id);
+	$ref_otu->id($ref_id);
+    }
+}
 
 # Get the distance between nodes
 sub getdistance {
@@ -121,7 +151,7 @@ sub sister_pairs {
 	$otu_ct++;
     }
 
-    @otus = sort { $a->id() cmp $b->id() } @otus;
+    @otus = sort {$a->id() cmp $b->id() } @otus;
     for (my $i = 0; $i < $otu_ct; $i++) {
 	my $pa_i = $otus[$i]->ancestor();
 	for (my $j = $i+1; $j < $otu_ct; $j++) {
@@ -372,7 +402,7 @@ sub random_tree{
 		$sampled[rand(@sampled)] = $_ if rand() < $sample_size/$_
     }
 	push @sample, $otus[--$_] for @sampled;
-	subset (\@sample)
+	&subset(\@sample)
 }
 
 # Depth to the root for a node
