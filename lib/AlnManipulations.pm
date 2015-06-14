@@ -151,6 +151,7 @@ sub gap_states {
 		}
 	    }
 	}
+	push @gaps, $new if $gap_start;
     }
     my (%gap_freqs, @uniq_gaps);
     foreach my $gap (@gaps) {
