@@ -127,8 +127,8 @@ sub swap_otus {
 	next if $nd eq $ref_otu;
 	my $nd_id = $nd->id();
 	my $ref_id = $ref_otu->id();
-	$nd->id($ref_id);
-	$ref_otu->id($nd_id);
+	$nd->id("new_".$ref_id);
+	$ref_otu->id("new_".$nd_id);
 	say $tree->as_text($out_format);
 	$nd->id($nd_id);
 	$ref_otu->id($ref_id);
