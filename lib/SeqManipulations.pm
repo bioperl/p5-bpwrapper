@@ -203,10 +203,21 @@ sub print_subseq {
     }
 }
 
+sub _internal_stop_or_x {
+    my $str = shift;
+    return ($str =~ /[A-Z]\*[A-Z]/ || $str =~ /X/i) ? 1 : 0;
+}
+
 sub reading_frame_ops {
     my $frame = $opts{"translate"};
     while ($seq = $in->next_seq()) {
-        if ($frame == 1) { $out->write_seq($seq->translate()) }
+        if ($frame == 1) { 
+	    if (&_internal_stop_or_x($seq->translate()->seq())) { 
+		warn "internal stop:\t" . $seq->id . "\tskip.\n" 
+	    } else {
+		$out->write_seq($seq->translate()) 
+	    }
+	}
         elsif ($frame == 3) {
                 my @prots = Bio::SeqUtils->translate_3frames($seq);
                 $out->write_seq($_) foreach @prots

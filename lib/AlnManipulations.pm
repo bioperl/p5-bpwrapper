@@ -166,11 +166,12 @@ sub gap_states {
 	    'start' => $start,
 	    'end' => $end,
 	    'is_edge' => ($start == 1 || $end == $aln->length) ? 1 : 0,
+	    'in_frame' => ($end - $start + 1) % 3 ? 0 : 1,
 	    'counts' => $gap_freqs{$id},
 	};
     }
 
-    foreach my $gap (@uniq_gaps) { say join "\t", ($gap->{start}, $gap->{end}, $gap->{is_edge}, $gap->{counts}) }
+    foreach my $gap (@uniq_gaps) { say join "\t", ($file, $gap->{start}, $gap->{end}, $gap->{is_edge}, $gap->{in_frame}, $gap->{counts}, $aln->length()) }
 #    print Dumper(\@uniq_gaps);
     exit;
 }
