@@ -56,6 +56,7 @@ my %opt_dispatch = (
     "random-slice" => \&random_slice,
     "uppercase" => \&upper_case,
     "gapstates" => \&gap_states,
+    "trimends" => \&trim_ends,
    );
 
 ##################### initializer & option handlers ###################
@@ -126,6 +127,64 @@ sub write_out_paml {
 }
 
 ###################### subroutine ######################
+
+sub trim_ends {
+    my (@seqs, @gaps);
+    foreach my $seq ($aln->each_seq()) {
+        my $id = $seq->display_id();
+        my @nts = split //, $seq->seq();
+	my $gap_start = 0;
+	my $new;
+	for (my $i=0; $i< $aln->length(); $i++) {
+	    if ($nts[$i] eq '-') {
+		if ($gap_start) { # gap -> gap
+		    $new->{end}++;
+		} else { # nt -> gap
+		    $gap_start = 1;
+		    $new = { 'start' => $i+1, 'end' => $i+1, 'seq_name' => $id }
+		}
+	    } else {
+		if ($gap_start) { # gap -> nt
+		    $gap_start = 0; 
+		    push @gaps, $new;
+		} else { # nt -> nt
+		    next;
+		}
+	    }
+	}
+	push @gaps, $new if $gap_start;
+    }
+
+    my (@three_end_gaps, @five_end_gaps);
+
+    foreach my $gap (@gaps) {
+	$gap->{length} = $gap->{end} - $gap->{start} + 1;
+	push @three_end_gaps, $gap if $gap->{start} == 1;
+	push @five_end_gaps, $gap if $gap->{end} == $aln->length;
+    }
+    
+    return unless @three_end_gaps or @five_end_gaps;
+
+    my $longest_three = 0;
+    my $longest_five = 0;
+
+    foreach my $gap (@three_end_gaps) {
+	$longest_three = $gap->{end} if $gap->{length} > $longest_three;
+    }
+
+    foreach my $gap (@five_end_gaps) {
+	$longest_five = $gap->{start} if $gap->{length} > $longest_five;
+    }
+    
+#    print STDERR $longest_three, "\t", $longest_five, "\n";
+    if (@three_end_gaps) {
+	$aln = $aln->slice($longest_three + 1, $aln->length);
+    }
+
+    if (@five_end_gaps) {
+	$aln = $aln->slice(1, $longest_five - $longest_three - 1);
+    }
+}
 
 sub gap_states {
     my (@seqs, @gaps);
