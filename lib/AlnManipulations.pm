@@ -165,24 +165,36 @@ sub trim_ends {
     
     return unless @three_end_gaps or @five_end_gaps;
 
-    my $longest_three = 0;
-    my $longest_five = 0;
+    my $longest_three_end = 0;
+    my $longest_five_start = 0;
+    my $longest_three_length = 0;
+    my $longest_five_length = 0;
 
     foreach my $gap (@three_end_gaps) {
-	$longest_three = $gap->{end} if $gap->{length} > $longest_three;
+	if ($gap->{length} > $longest_three_length) {
+	    $longest_three_end = $gap->{end};
+	    $longest_three_length = $gap->{length};
+	}
     }
 
     foreach my $gap (@five_end_gaps) {
-	$longest_five = $gap->{start} if $gap->{length} > $longest_five;
+	if ($gap->{length} > $longest_five_length) {
+	    $longest_five_start = $gap->{start}; 
+	    $longest_five_length = $gap->{length};
+	}
     }
     
 #    print STDERR $longest_three, "\t", $longest_five, "\n";
     if (@three_end_gaps) {
-	$aln = $aln->slice($longest_three + 1, $aln->length);
+	print STDERR Dumper(\@three_end_gaps);
+	print STDERR $longest_three_end, "\n";
+	$aln = $aln->slice($longest_three_end + 1, $aln->length);
     }
 
     if (@five_end_gaps) {
-	$aln = $aln->slice(1, $longest_five - $longest_three - 1);
+	print STDERR Dumper(\@five_end_gaps);
+	print STDERR $longest_five_start, "\n";
+	$aln = $aln->slice(1, $longest_five_start - $longest_three_end - 1);
     }
 }
 
