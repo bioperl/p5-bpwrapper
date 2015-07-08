@@ -40,6 +40,7 @@ my ($opts,     $flags,       $aln_file, $aln,         $in,
 my $RELEASE = '1.0';
 
 my %opt_dispatch = (
+    'bisites' => \&bisites,
     'distance' => \&print_distance,
     'heterozygosity' => \&print_heterozygosity,
     'mismatch' => \&print_mismatch_distr,
@@ -85,7 +86,7 @@ sub initialize {
         die "Cannot use distance or kaks options together with any of the following: @popgen_list\n" if &_in_list($opts, \@popgen_list);
         $dna_stats = Bio::Align::DNAStatistics->new();
     } else {
-        $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => $opts->{"snp-noncoding"} ? 0:1, -site_model => 'all');
+        $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => $opts->{"snp-noncoding"} || $opts->{'bisites'} ? 0:1, -site_model => 'all');
         $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"snp_coding"} || $opts->{"snp_coding_long"};
 #        $stat_obj = PopGenStatistics->new();
         $pop_stats = Bio::PopGen::Statistics->new()
@@ -190,6 +191,37 @@ sub bi_partition {
 #	print $site, "=>\t", Dumper(\%seen_allele);
     }
 }
+
+sub bisites {
+    my @sites = $pop->get_marker_names();
+#    warn "total variable sites: ", join ",", @sites, "\n\nTotal=>", scalar(@sites), "\n\n";
+    if ( ! scalar @sites ) {
+	die "No polymorphic sites: $aln_file\n";
+    }
+    my @valid_sites;
+    for my $site ( sort {$a <=> $b} @sites ) {
+        my $pop_marker = $pop->get_Marker($site);
+	my @alleles = $pop_marker->get_Alleles(); #print $name, "=>\t", Dumper(\@alleles); next;
+        next if &_has_gap($site);  # skip gapped sites
+        if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  # consi
+	push @valid_sites, $site;
+    }
+
+    say STDERR "bi-allelic, non-gapped sites:\t", scalar @valid_sites, "\t", join ",", @valid_sites;
+
+    foreach my $ind ($pop->get_Individuals) {
+	print ">", $ind->unique_id(), "\n";
+	my $varseq = "";
+	for my $site ( sort {$a <=> $b} @valid_sites ) {
+	    my @genotypes = $ind->get_Genotypes(-marker => $site);
+	    my $geno = shift @genotypes;
+	    my ($allele) = $geno->get_Alleles();
+	    $varseq .= $allele;
+	}
+	print $varseq, "\n";
+    }
+}
+
 
 sub snp_noncoding {
     my @sites = $pop->get_marker_names();

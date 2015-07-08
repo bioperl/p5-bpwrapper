@@ -18,6 +18,7 @@ GetOptions(
     "man",
 #    "distance|d",
 #    "dist-method|D=s" => \$flags{"dist-method"},
+    "bisites",
     "heterozygosity|H",
     "input|i=s" => \$flags{"input"},
     "mismatch|m",
