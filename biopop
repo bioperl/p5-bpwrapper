@@ -28,6 +28,7 @@ GetOptions(
     "snp",
     "snp_coding",
     "snp_coding_long",
+    "snp-noncoding",
     "version|V",
     "segsites|S",
     "bipart",

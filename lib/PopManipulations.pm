@@ -49,7 +49,7 @@ my %opt_dispatch = (
     'segsites' => \&print_num_snps,
     'snp_coding' => \&snp_coding,
     'snp_coding_long' => \&snp_coding_long,
-    'var_noncoding' => \&snp_noncoding,
+    'snp-noncoding' => \&snp_noncoding,
     'bipart' => \&bi_partition,
 #    'mutrec' => \&_mutation_or_recombination,
 #    'simmk'    => \&_sim_mk,
@@ -85,7 +85,7 @@ sub initialize {
         die "Cannot use distance or kaks options together with any of the following: @popgen_list\n" if &_in_list($opts, \@popgen_list);
         $dna_stats = Bio::Align::DNAStatistics->new();
     } else {
-        $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 1, -site_model => 'all');
+        $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => $opts->{"snp-noncoding"} ? 0:1, -site_model => 'all');
         $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"snp_coding"} || $opts->{"snp_coding_long"};
 #        $stat_obj = PopGenStatistics->new();
         $pop_stats = Bio::PopGen::Statistics->new()
@@ -191,6 +191,24 @@ sub bi_partition {
     }
 }
 
+sub snp_noncoding {
+    my @sites = $pop->get_marker_names();
+#    warn "total variable sites: ", join ",", @sites, "\n\nTotal=>", scalar(@sites), "\n\n";
+    if ( ! scalar @sites ) {
+	die "No polymorphic sites: $aln_file\n";
+    }
+
+    for my $site ( sort {$a <=> $b} @sites ) {
+        my $pop_marker = $pop->get_Marker($site);
+	my @alleles = $pop_marker->get_Alleles(); #print $name, "=>\t", Dumper(\@alleles); next;
+        next if &_has_gap($site);  # skip gapped sites
+        if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  # consider only 2-state polymorphic sites
+        my %freqs = $pop_marker->get_Allele_Frequencies; #print Dumper(\%freqs); next;
+	my @nts = sort { $freqs{$a} <= $freqs{$b} } keys %freqs;
+	say join "\t", ($aln_file, $site, $nts[0], $freqs{$nts[0]}, $nts[1], $freqs{$nts[1]});
+    }
+}
+
 sub snp_coding {
     my @sites = $pop_cds->get_marker_names();
 #    warn "total variable sites: ", join ",", @sites, "\n\nTotal=>", scalar(@sites), "\n\n";
@@ -206,7 +224,14 @@ sub snp_coding {
         my %freqs = $pop_marker->get_Allele_Frequencies; # print $out_aa, "=>", Dumper(\%freqs); next;
         my ($minor, $major, $syn) = &_syn_nonsyn(\%freqs);
 	my $snp_site = 3 * $site + &_snp_position($minor->{codon}, $major->{codon});
-        say join "\t", ("codon_".$site, $aln_file, $site, $snp_site, $syn, $minor->{codon}, $minor->{aa}, $minor->{freq}, $major->{codon}, $major->{aa}, $major->{freq});
+	
+	foreach my $ind ($pop_cds->get_Individuals) {
+            my @genotypes = $ind->get_Genotypes(-marker => $site);
+            my $id = $ind->unique_id();
+            my $geno = shift @genotypes;
+            my ($allele) = $geno->get_Alleles();
+	    say join "\t", ($aln_file, $site, $id, $snp_site, $syn, $allele);
+	}
     }
 }
 
