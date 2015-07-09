@@ -168,6 +168,8 @@ sub count_four_gametes {
 	    my ($base_j_a, $base_j_b) = @{ $states{$valid_sites[$j]} };
 	    print join "\t", ($i, 
 			      $j, 
+			      $valid_sites[$i],
+			      $valid_sites[$j],
 			      $haps{$i . "-" . $j}->{$base_i_a . $base_j_a} || 0, 
 			      $haps{$i . "-" . $j}->{$base_i_a . $base_j_b} || 0, 
 			      $haps{$i . "-" . $j}->{$base_i_b . $base_j_a} || 0, 
