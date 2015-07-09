@@ -41,6 +41,7 @@ my $RELEASE = '1.0';
 
 my %opt_dispatch = (
     'bisites' => \&bisites,
+    'bihaps' => \&count_four_gametes,
     'distance' => \&print_distance,
     'heterozygosity' => \&print_heterozygosity,
     'mismatch' => \&print_mismatch_distr,
@@ -86,7 +87,7 @@ sub initialize {
         die "Cannot use distance or kaks options together with any of the following: @popgen_list\n" if &_in_list($opts, \@popgen_list);
         $dna_stats = Bio::Align::DNAStatistics->new();
     } else {
-        $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => $opts->{"snp-noncoding"} || $opts->{'bisites'} ? 0:1, -site_model => 'all');
+        $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => $opts->{"snp-noncoding"} || $opts->{'bisites'} || $opts->{'bihaps'} ? 0:1, -site_model => 'all');
         $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"snp_coding"} || $opts->{"snp_coding_long"};
 #        $stat_obj = PopGenStatistics->new();
         $pop_stats = Bio::PopGen::Statistics->new()
@@ -139,16 +140,57 @@ sub print_mismatch_distr {
     }
 }
 
-sub pairwise_mutual_info {
-    my @sites = $pop->get_marker_names();
-    for my $site ( sort {$a <=> $b} @sites ) {
+sub count_four_gametes {
+    my @valid_sites = &_two_allele_nogap_sites($pop);
+    my $ref_seqs = &_base_at_snp_sites($pop, \@valid_sites);
+    my %myseqs = %$ref_seqs;
+    my (%states, %haps);
+
+    foreach my $site (@valid_sites) {
         my $pop_marker = $pop->get_Marker($site);
+        my %freqs = $pop_marker->get_Allele_Frequencies; #print Dumper(\%freqs); next;
+	my @nts = sort keys %freqs;
+	$states{$site} = \@nts;
+    }
+
+    for (my $i = 0; $i < $#valid_sites; $i++) {
+	for (my $j = $i+1; $j <= $#valid_sites; $j++) {
+	    foreach my $id ( keys %myseqs) {
+		my $hap = $myseqs{$id}->{$valid_sites[$i]}  . $myseqs{$id}->{$valid_sites[$j]};
+		$haps{$i . "-" . $j}->{$hap}++; 
+	    }
+	}
+    }
+
+    for (my $i = 0; $i < $#valid_sites; $i++) {
+	my ($base_i_a, $base_i_b) = @{ $states{$valid_sites[$i]} };
+	for (my $j = $i+1; $j <= $#valid_sites; $j++) {
+	    my ($base_j_a, $base_j_b) = @{ $states{$valid_sites[$j]} };
+	    print join "\t", ($i, 
+			      $j, 
+			      $haps{$i . "-" . $j}->{$base_i_a . $base_j_a} || 0, 
+			      $haps{$i . "-" . $j}->{$base_i_a . $base_j_b} || 0, 
+			      $haps{$i . "-" . $j}->{$base_i_b . $base_j_a} || 0, 
+			      $haps{$i . "-" . $j}->{$base_i_b . $base_j_b} || 0);
+	    print "\n";
+	}
+    }
+}
+
+sub _two_allele_nogap_sites {
+    my $mypop = shift;
+    my @valids;
+    my @sites = $mypop->get_marker_names();
+    die "No polymorphic sites: $aln_file\n" if ! scalar @sites;
+    for my $site ( sort {$a <=> $b} @sites ) {
+        my $pop_marker = $mypop->get_Marker($site);
 	my @alleles = $pop_marker->get_Alleles(); 
         next if &_has_gap($site);  # skip gapped sites
 	next if @alleles == 1;
         if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  
-        my %freqs = $pop_marker->get_Allele_Frequencies; # print $site, "\t", Dumper(\%freqs); 
+	push @valids, $site;
     }
+    return @valids;
 }
 
 sub print_diversity {
@@ -193,35 +235,36 @@ sub bi_partition {
 }
 
 sub bisites {
-    my @sites = $pop->get_marker_names();
-#    warn "total variable sites: ", join ",", @sites, "\n\nTotal=>", scalar(@sites), "\n\n";
-    if ( ! scalar @sites ) {
-	die "No polymorphic sites: $aln_file\n";
-    }
-    my @valid_sites;
-    for my $site ( sort {$a <=> $b} @sites ) {
-        my $pop_marker = $pop->get_Marker($site);
-	my @alleles = $pop_marker->get_Alleles(); #print $name, "=>\t", Dumper(\@alleles); next;
-        next if &_has_gap($site);  # skip gapped sites
-        if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  # consi
-	push @valid_sites, $site;
-    }
-
+    my @valid_sites = &_two_allele_nogap_sites($pop);
     say STDERR "bi-allelic, non-gapped sites:\t", scalar @valid_sites, "\t", join ",", @valid_sites;
-
-    foreach my $ind ($pop->get_Individuals) {
-	print ">", $ind->unique_id(), "\n";
+    my $ref_seqs = &_base_at_snp_sites($pop, \@valid_sites);
+    my %myseqs = %$ref_seqs;
+    foreach my $id (keys %myseqs) {
+	print ">", $id, "\n";
 	my $varseq = "";
 	for my $site ( sort {$a <=> $b} @valid_sites ) {
-	    my @genotypes = $ind->get_Genotypes(-marker => $site);
-	    my $geno = shift @genotypes;
-	    my ($allele) = $geno->get_Alleles();
-	    $varseq .= $allele;
+	    $varseq .= $myseqs{$id}->{$site};
 	}
 	print $varseq, "\n";
     }
 }
 
+sub _base_at_snp_sites { 
+    my $mypop = shift;
+    my $ref_site = shift;
+    my @mysites = @$ref_site;
+    my %bases;
+    foreach my $ind ($mypop->get_Individuals) {
+	my $id = $ind->unique_id();
+	for my $site ( sort {$a <=> $b} @mysites ) {
+	    my @genotypes = $ind->get_Genotypes(-marker => $site);
+	    my $geno = shift @genotypes;
+	    my ($allele) = $geno->get_Alleles();
+	    $bases{$id}->{$site} = $allele;
+	}
+    }
+    return \%bases;
+}
 
 sub snp_noncoding {
     my @sites = $pop->get_marker_names();
