@@ -30,6 +30,7 @@ GetOptions(
     "pick|p=s",
     "refseq|r=s",
     "slice|s=s",
+    "split-cdhit=s",
     "uniq|u",
     "varsites|v",    
     "window|w:30",

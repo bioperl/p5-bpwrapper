@@ -37,6 +37,7 @@ my %opt_dispatch = (
     "pick" => \&pick_seqs,
     "refseq" => \&change_ref,
     "slice" => \&aln_slice,
+    "split-cdhit" => \&split_cdhit,
     "uniq" => \&get_unique,
     "varsites" => \&variable_sites,
     "window" => \&avg_id_by_win,
@@ -127,6 +128,57 @@ sub write_out_paml {
 }
 
 ###################### subroutine ######################
+
+sub split_cdhit {
+    my $cls_file = $opts{'split-cdhit'};
+    open IN, "<" . $cls_file || die "cdhit clstr file not found: $cls_file\n";
+    my %clusters;
+    my $cl_id;
+    my @mem;
+    while (<IN>) {
+	my $line = $_;
+	chomp $line;
+	if ($line =~ /^>(\S+)\s+(\d+)/) {
+	    $cl_id = $1 . "_" . $2;
+	    my @mem = ();
+	    $clusters{$cl_id} = \@mem;
+	} else {
+	    my $ref = $clusters{$cl_id};
+	    my @mems = @$ref;
+	    my @els = split /\s+/, $line;
+	    my $seq_id = $els[2];
+	    $seq_id =~ s/>//;
+	    $seq_id =~ s/\.\.\.$//;
+	    push @mems, $seq_id;
+	    $clusters{$cl_id} = \@mems;
+	}
+    }
+#    print Dumper(\%clusters);
+    my %seqs;
+    foreach my $seq ($aln->each_seq()) {
+        my $id = $seq->display_id();
+	$seqs{$id} = $seq;
+    }
+
+    foreach my $id (keys %clusters) {
+	my $out = Bio::AlignIO->new( -file => ">" . $file . "-". $id . ".aln", -format => 'clustalw');
+	my $new_aln = Bio::SimpleAlign->new();
+	my @seqids = @{ $clusters{$id} };
+	foreach my $seq_id (@seqids) {
+	    $new_aln->add_seq($seqs{$seq_id});
+	} 
+	$new_aln->set_displayname_flat();
+#	$new_aln = &_remove_common_gaps($new_aln);
+	$out->write_aln($new_aln);
+    }
+    exit;
+}
+
+sub _remove_common_gaps {
+
+
+
+}
 
 sub trim_ends {
     my (@seqs, @gaps);

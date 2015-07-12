@@ -41,6 +41,7 @@ my $RELEASE = '1.0';
 
 my %opt_dispatch = (
     'bisites' => \&bisites,
+    'bisites-for-r' => \&bisites_for_r,
     'bihaps' => \&count_four_gametes,
     'distance' => \&print_distance,
     'heterozygosity' => \&print_heterozygosity,
@@ -87,7 +88,7 @@ sub initialize {
         die "Cannot use distance or kaks options together with any of the following: @popgen_list\n" if &_in_list($opts, \@popgen_list);
         $dna_stats = Bio::Align::DNAStatistics->new();
     } else {
-        $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => $opts->{"snp-noncoding"} || $opts->{'bisites'} || $opts->{'bihaps'} ? 0:1, -site_model => 'all');
+        $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => $opts->{"snp-noncoding"} || $opts->{'bisites'} || $opts->{'bihaps'} || $opts->{'bisites-for-r'}? 0:1, -site_model => 'all');
         $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"snp_coding"} || $opts->{"snp_coding_long"};
 #        $stat_obj = PopGenStatistics->new();
         $pop_stats = Bio::PopGen::Statistics->new()
@@ -233,6 +234,20 @@ sub bi_partition {
 	$newick_string =~ s/\)\(/\),\(/;
 	print $newick_string, "\n";
 #	print $site, "=>\t", Dumper(\%seen_allele);
+    }
+}
+
+sub bisites_for_r {
+    my @valid_sites = &_two_allele_nogap_sites($pop);
+    say STDERR "bi-allelic, non-gapped sites:\t", scalar @valid_sites, "\t", join ",", @valid_sites;
+    my $ref_seqs = &_base_at_snp_sites($pop, \@valid_sites);
+    my %myseqs = %$ref_seqs;
+    foreach my $id (keys %myseqs) {
+	print $id;
+	for my $site ( sort {$a <=> $b} @valid_sites ) {
+	    print "\t", $myseqs{$id}->{$site} . $myseqs{$id}->{$site};
+	}
+	print "\n";
     }
 }
 

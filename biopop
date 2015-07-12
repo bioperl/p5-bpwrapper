@@ -20,6 +20,7 @@ GetOptions(
 #    "dist-method|D=s" => \$flags{"dist-method"},
     "bihaps",
     "bisites",
+    "bisites-for-r",
     "heterozygosity|H",
     "input|i=s" => \$flags{"input"},
     "mismatch|m",
