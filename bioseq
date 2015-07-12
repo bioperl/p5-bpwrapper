@@ -37,7 +37,8 @@ GetOptions(
     "linearize|L",
     "reloop|R=i", # recircularize a genome at "loop_at"
     "version|V",
-    "removestop|X", # for PAML/codeml    
+    "removestop|X", # for PAML/codeml
+    "split-cdhit=s",     
  #   "longest-orf|C",
  #   "extract|e",
  #   "dotplot|D=s",

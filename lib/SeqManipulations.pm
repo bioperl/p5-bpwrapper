@@ -49,6 +49,7 @@ my %opt_dispatch = (
     'linearize' => \&linearize,
     'reloop' => \&reloop_at,
     'removestop' => \&remove_stop,
+    'split-cdhit' => \&split_cdhit,
 #   'dotplot' => \&draw_dotplot,
 #    'extract' => \&reading_frame_ops,
 #	'longest-orf' => \&reading_frame_ops,
@@ -115,6 +116,48 @@ sub write_out {
 
 
 ################### subroutine ########################
+
+sub split_cdhit {
+    my $cls_file = $opts{'split-cdhit'};
+    open IN, "<" . $cls_file || die "cdhit clstr file not found: $cls_file\n";
+    my %clusters;
+    my $cl_id;
+    my @mem;
+    while (<IN>) {
+	my $line = $_;
+	chomp $line;
+	if ($line =~ /^>(\S+)\s+(\d+)/) {
+	    $cl_id = $1 . "_" . $2;
+	    my @mem = ();
+	    $clusters{$cl_id} = \@mem;
+	} else {
+	    my $ref = $clusters{$cl_id};
+	    my @mems = @$ref;
+	    my @els = split /\s+/, $line;
+	    my $seq_id = $els[2];
+	    $seq_id =~ s/>//;
+	    $seq_id =~ s/\.\.\.$//;
+	    push @mems, $seq_id;
+	    $clusters{$cl_id} = \@mems;
+	}
+    }
+#    print Dumper(\%clusters);
+    my %seqs;
+    while ($seq = $in->next_seq()) {
+        my $id = $seq->display_id();
+	$seqs{$id} = $seq;
+    }
+
+    foreach my $id (keys %clusters) {
+	my $out = Bio::SeqIO->new( -file => ">" . $filename . "-". $id . ".fas", -format => 'fasta');
+	my @seqids = @{ $clusters{$id} };
+	foreach my $seq_id (@seqids) {
+	    $out->write_seq($seqs{$seq_id});
+	} 
+    }
+    exit;
+}
+
 
 sub print_composition {
     while ($seq = $in->next_seq()) {
