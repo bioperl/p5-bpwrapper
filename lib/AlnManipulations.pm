@@ -143,9 +143,10 @@ sub phylip_non_interleaved {
     die "No computable sequences: less than 2 seq.\n" unless $ct >= 2;
     print "\t", $ct, "\t", $aln->length(), "\n";
     foreach (@seq) {
-	   printf "%-20s", $_->display_id();
+	   printf "%-50s", $_->display_id();
 	   print $_->seq(), "\n"
     }
+    exit;
 }
 
 ###################### subroutine ######################
