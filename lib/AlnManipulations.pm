@@ -58,6 +58,8 @@ my %opt_dispatch = (
     "uppercase" => \&upper_case,
     "gapstates" => \&gap_states,
     "trimends" => \&trim_ends,
+    "bin-inform" => \&binary_informative,
+    "phy-nonint" => \&phylip_non_interleaved
    );
 
 ##################### initializer & option handlers ###################
@@ -123,6 +125,25 @@ sub write_out_paml {
     print $ct, "\t", $aln->length(), "\n";
     foreach (@seq) {
 	   print $_->display_id(), "\n";
+	   print $_->seq(), "\n"
+    }
+}
+
+sub phylip_non_interleaved {
+    my @seq;
+    my $ct=0;
+
+    foreach my $seq ($aln->each_seq()) {
+        my $id = $seq->display_id();
+        if ($seq->seq() =~ /^-+$/) { print STDERR "all gaps: $file\t$id\n"; next }
+        $ct++;
+        push @seq, $seq
+    }
+
+    die "No computable sequences: less than 2 seq.\n" unless $ct >= 2;
+    print "\t", $ct, "\t", $aln->length(), "\n";
+    foreach (@seq) {
+	   printf "%-20s", $_->display_id();
 	   print $_->seq(), "\n"
     }
 }
@@ -418,7 +439,62 @@ sub aln_slice {    # get alignment slice
 
 sub get_unique {
     $aln->verbose(1);
-    $aln = $aln->uniq_seq()
+    $aln = $aln->uniq_seq();
+}
+
+sub _has_gap {
+    my $ref = shift;
+    foreach (@$ref) {
+	return 1 if $_ eq '-';
+    }
+    return 0;
+}
+
+sub _has_singleton {
+    my $ref = shift;
+    foreach my $key (keys %$ref) {
+	return 1 if $ref->{$key} == 1;
+    }
+    return 0;
+}
+
+sub binary_informative {
+    my $new_aln = Bio::SimpleAlign->new();
+    my $len=$aln->length();
+    my (@seq_ids, @inf_sites, %bin_chars);
+    
+    # Go through each column and save variable sites
+    my $ref_bases = &_get_a_site_v2(); #print Dumper($ref_bases); exit;
+    foreach (sort keys %$ref_bases) { push @seq_ids, $_ } 
+    for (my $i=1; $i<=$len; $i++) {
+	my (%seen, @bases);
+	foreach my $id (@seq_ids) { push @bases, $ref_bases->{$id}->{$i}; }
+	%seen = %{&_seen_bases(\@bases)};
+	next if &_has_gap( [ values %seen ] );
+	next if keys %seen != 2;
+	next if &_has_singleton(\%seen);
+	my ($base1, $base2) = sort keys %seen;
+	$bin_chars{$i}{$base1} = 0;
+	$bin_chars{$i}{$base2} = 1;
+	push @inf_sites, $i; 
+    }
+    
+    die "informative sites not found\n" unless @inf_sites;
+    foreach (@inf_sites) { warn $_, "\n" }
+    
+    # Recreate the object for output
+    foreach my $id (@seq_ids) {
+        my $seq_str; 
+        foreach my $i (@inf_sites) { 
+            $seq_str .= $bin_chars{$i}->{$ref_bases->{$id}->{$i}}
+        }
+        my $loc_seq = Bio::LocatableSeq->new(-seq => $seq_str, -id => $id, -start => 1);
+        my $end = $loc_seq->end;
+        $loc_seq->end($end);
+        $new_aln->add_seq($loc_seq)
+    }
+    
+    $aln = $new_aln
 }
 
 sub variable_sites {
@@ -855,6 +931,16 @@ sub _get_a_site {
 	   }
     }
     return (\@chars, \%seq_ids)
+}
+
+sub _seen_bases {
+    my %count;
+    my $ref   = shift;
+    my @array = @$ref;
+    my $constant = 1;
+
+    $count{$_}++ foreach @array;
+    return \%count;
 }
 
 sub _is_constant {

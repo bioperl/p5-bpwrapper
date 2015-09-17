@@ -52,8 +52,9 @@ GetOptions(
     "gapstates",
     "random-slice=i",
     "trimends",
-#    "bipart", # print bipartitions
+    "bin-inform", # extract binary & informative sites (for clique): discard constant, 3/4-states, non-informative 
     "version|V",
+    "phy-nonint" # non-interleaved phylip (for e.g.,clique)
   #  "dnadist|D=s", # Needs fixing
   #  "inform|Z",
 ) or pod2usage(2);
