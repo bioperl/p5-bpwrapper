@@ -54,6 +54,7 @@ GetOptions(
     "trimends",
     "bin-inform", # extract binary & informative sites (for clique): discard constant, 3/4-states, non-informative 
     "version|V",
+    "binary", # 0/1 for binary sites (for phylip lagacy programs)
     "phy-nonint" # non-interleaved phylip (for e.g.,clique)
   #  "dnadist|D=s", # Needs fixing
   #  "inform|Z",
@@ -70,7 +71,7 @@ pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
 initialize(\%opts);
 
 for my $option (keys %opts) {
-    next if ($option eq 'input') || ($option eq 'output') || ($option eq 'noflatname'); # Don't process these options: they are for AlignIO
+    next if ($option eq 'input') || ($option eq 'output') || ($option eq 'noflatname') || ($option eq 'binary'); # Don't process these options: they are for AlignIO
 
     if (can_handle($option)) { handle_opt($option) } # If there is a function to handle the current option, execute it
     else { warn "Missing handler for: $option\n" }

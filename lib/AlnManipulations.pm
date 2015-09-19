@@ -21,7 +21,7 @@ use Bio::Align::Utilities qw(:all);
 if ($ENV{'DEBUG'}) { use Data::Dumper }
 
 # Package global variables
-my ($in, $out, $aln, %opts, $file, $in_format, $out_format, @alns);
+my ($in, $out, $aln, %opts, $file, $in_format, $out_format, @alns, $binary);
 my $RELEASE = '1.0';
 
 ## For new options, just add an entry into this table with the same key as in the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.  
@@ -87,6 +87,8 @@ sub initialize {
 	   $in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
 	   $aln = $in->next_aln()
     }
+
+    $binary = $opts{"binary"} ? 1 : 0;
 
     #### Options which *require an output FH* go *after* this ####
     $out_format = $opts{"output"} || $default_format;
@@ -487,7 +489,7 @@ sub binary_informative {
     foreach my $id (@seq_ids) {
         my $seq_str; 
         foreach my $i (@inf_sites) { 
-            $seq_str .= $bin_chars{$i}->{$ref_bases->{$id}->{$i}}
+            $seq_str .= $binary ? $bin_chars{$i}->{$ref_bases->{$id}->{$i}} : $ref_bases->{$id}->{$i}; 
         }
         my $loc_seq = Bio::LocatableSeq->new(-seq => $seq_str, -id => $id, -start => 1);
         my $end = $loc_seq->end;
