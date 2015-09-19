@@ -297,8 +297,20 @@ sub snp_noncoding {
         if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  # consider only 2-state polymorphic sites
         my %freqs = $pop_marker->get_Allele_Frequencies; #print Dumper(\%freqs); next;
 	my @nts = sort { $freqs{$a} <= $freqs{$b} } keys %freqs;
-	say join "\t", ($aln_file, $site, $nts[0], $freqs{$nts[0]}, $nts[1], $freqs{$nts[1]});
+	my $shanon = &_shanon_index(\%freqs);
+	say join "\t", ($aln_file, $site, $nts[0], $freqs{$nts[0]}, $nts[1], $freqs{$nts[1]}, $shanon);
     }
+}
+
+sub _shanon_index {
+    my $ref = shift;
+    my %f = %$ref;
+    my $h = 0;
+    foreach my $base (keys %f) {
+	my $freq = $f{$base};
+	$h += -1 * $freq * log($freq)/log(2);
+    }
+    return $h;
 }
 
 sub snp_coding {
