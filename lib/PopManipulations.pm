@@ -141,8 +141,8 @@ sub print_mismatch_distr {
     }
 }
 
-sub count_four_gametes {
-    my @valid_sites = &_two_allele_nogap_sites($pop);
+sub count_four_gametes { # four gamete test for recombination (and wilson's test of compatibility)
+    my @valid_sites = &_two_allele_nogap_informative_sites($pop);
     my $ref_seqs = &_base_at_snp_sites($pop, \@valid_sites);
     my %myseqs = %$ref_seqs;
     my (%states, %haps);
@@ -167,20 +167,22 @@ sub count_four_gametes {
 	my ($base_i_a, $base_i_b) = @{ $states{$valid_sites[$i]} };
 	for (my $j = $i+1; $j <= $#valid_sites; $j++) {
 	    my ($base_j_a, $base_j_b) = @{ $states{$valid_sites[$j]} };
+	    my $ct1 = $haps{$i . "-" . $j}->{$base_i_a . $base_j_a} || 0;
+	    my $ct2 = $haps{$i . "-" . $j}->{$base_i_a . $base_j_b} || 0;
+	    my $ct3 = $haps{$i . "-" . $j}->{$base_i_b . $base_j_a} || 0; 
+	    my $ct4 = $haps{$i . "-" . $j}->{$base_i_b . $base_j_b} || 0; 
+	    my $comp = ($ct1 && $ct2 && $ct3 && $ct4) ? 0 : 1;
 	    print join "\t", ($i, 
 			      $j, 
 			      $valid_sites[$i],
 			      $valid_sites[$j],
-			      $haps{$i . "-" . $j}->{$base_i_a . $base_j_a} || 0, 
-			      $haps{$i . "-" . $j}->{$base_i_a . $base_j_b} || 0, 
-			      $haps{$i . "-" . $j}->{$base_i_b . $base_j_a} || 0, 
-			      $haps{$i . "-" . $j}->{$base_i_b . $base_j_b} || 0);
+			      $ct1, $ct2, $ct3, $ct4, $comp);
 	    print "\n";
 	}
     }
 }
 
-sub _two_allele_nogap_sites {
+sub _two_allele_nogap_informative_sites {
     my $mypop = shift;
     my @valids;
     my @sites = $mypop->get_marker_names();
@@ -191,9 +193,31 @@ sub _two_allele_nogap_sites {
         next if &_has_gap($site);  # skip gapped sites
 	next if @alleles == 1;
         if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  
+	next if &_not_informative($site);
 	push @valids, $site;
     }
     return @valids;
+}
+
+sub _not_informative {
+    my $site = shift;
+    my %seen_allele;
+    foreach my $ind ($pop->get_Individuals) {
+	my @genotypes = $ind->get_Genotypes(-marker => $site);
+	my $id = $ind->unique_id();
+	my $geno = shift @genotypes;
+	my ($allele) = $geno->get_Alleles();
+	my @ids;
+	@ids = @{$seen_allele{$allele}} if $seen_allele{$allele};
+	push @ids, $id;
+	$seen_allele{$allele} = \@ids;
+    }
+    my $not_informative = 0;
+    foreach my $allele (keys %seen_allele) {
+	my @ids = @{$seen_allele{$allele}};
+	$not_informative = 1 if @ids == 1;
+    }
+    return $not_informative;
 }
 
 sub print_diversity {
