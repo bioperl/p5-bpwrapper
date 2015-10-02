@@ -248,7 +248,8 @@ sub print_subseq {
 
 sub _internal_stop_or_x {
     my $str = shift;
-    return ($str =~ /[A-Z]\*[A-Z\*]/ || $str =~ /X/i) ? 1 : 0; # previously missed double **
+    $str =~ s/\*$//; # remove last stop
+    return ($str =~ /[X\*]/) ? 1 : 0; # previously missed double **
 }
 
 sub reading_frame_ops {
