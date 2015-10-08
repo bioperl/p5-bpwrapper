@@ -383,10 +383,13 @@ sub bin {
 }
 
 sub print_all_lengths{
-	for (@nodes) {
+    for (@nodes) {
         next if $_ == $rootnode;
-		say $_->internal_id, "\t", $_->id || 'NOID', "\t", $_->branch_length
-	}
+	my $p_node = $_->ancestor();
+	my $p_id = $p_node->id ? $p_node->id : $p_node->internal_id;
+	my $c_id = $_->id ? $_->id() : $_->internal_id;
+	say $p_id, "\t",  $c_id, "\t", $_->branch_length;
+    }
 }
 
 sub random_tree{
