@@ -43,6 +43,7 @@ GetOptions(\%opts,
 	   "delete-otus=s",
 	   "sis-pairs", # pairwise OTU togetherness
 	   "swap-otus=s", # output trees with each possible pairs (with the designated one) swapped 
+	   "ead", # edge-length abundance distribution; ODwyer et al. PNAS (2015)
 	   #    "bootclean|b:f",
 	   #    "collapse|c=s@",
 	   #    "getroot|g",
@@ -102,10 +103,22 @@ clean_tree() if $opts{'cleanbr'} || $opts{'cleanboot'};
 delete_otus() if $opts{'delete-otus'};
 sister_pairs() if $opts{'sis-pairs'};
 swap_otus() if $opts{'swap-otus'};
+edge_length_abundance() if $opts{ead};
 say $tree->as_text($out_format) if $print_tree;
 
-
 ###################### subroutine ######################
+
+sub edge_length_abundance {
+    my $ct_tips = 0;
+    foreach my $nd (@nodes) { 
+	$ct_tips ++ if $nd->is_Leaf();
+ 
+    }
+
+    for (my $k=1; $k<=$ct_tips; $k++) {
+
+    }
+}
 
 sub swap_otus {
     my @otus;
@@ -421,7 +434,7 @@ sub remove_brlengths {
 
 sub alldesc {
     my @inodes;
-	my $inode_id = $opts{'allchildOTU'};
+    my $inode_id = $opts{'allchildOTU'};
 
     if ($inode_id eq 'all') { push (@inodes, $_) for _walk_up($rootnode) }
     else { push @inodes, $tree->find_node(-internal_id => $inode_id) }
