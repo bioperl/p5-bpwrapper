@@ -109,14 +109,34 @@ say $tree->as_text($out_format) if $print_tree;
 ###################### subroutine ######################
 
 sub edge_length_abundance {
-    my $ct_tips = 0;
-    foreach my $nd (@nodes) { 
-	$ct_tips ++ if $nd->is_Leaf();
- 
+    my @inodes;
+    my @brs;
+    push (@inodes, $_) for _walk_up($rootnode);
+
+    for my $nd (@inodes) {
+	next if $nd eq $rootnode;
+        my $id = $nd->internal_id;
+	my $ct_otus = 0;
+        if ($nd->is_Leaf) { 
+	    $ct_otus = 1;
+	} else { 
+	    foreach (&_each_leaf($nd)) {
+		$ct_otus++;
+	    }
+	}
+        push @brs, { 'id' => $id, 'num_tips' => $ct_otus, 'br_len' => $nd->branch_length() }
     }
 
+    my $ct_tips = 0;
+    foreach my $nd (@nodes) { 
+	$ct_tips ++ if $nd->is_Leaf();	
+    }
+    
     for (my $k=1; $k<=$ct_tips; $k++) {
-
+	my $total = 0;
+	my @nds = grep { $_->{num_tips} == $k }  @brs;
+	if (@nds) { $total += $_->{br_len} for @nds }
+	printf "%d\t%.6f\n", $k, $total/$tree->total_branch_length(); 
     }
 }
 
@@ -496,6 +516,7 @@ sub _each_leaf {
 	return @leaves
 }
 
+# main routine to walk up from root
 sub _wu {
 	my (@lf, @nd);
 	my $curnode       = $_[0];
@@ -503,8 +524,19 @@ sub _wu {
 	my $visitref      = $_[1];
 	my %visited       = %$visitref;
 	my $node_list_ref = $_[2];
+#	my $ref_ct_otu    = $_[3];
+#	my $ref_tatal_br_len = $_[4];
 
-	for (@decs) { if ($_->is_Leaf) { push @lf, $_ } else { push @nd, $_ } }
+	for (@decs) { 
+#	    $ref_total_br_len += $_->branch_length;
+	    if ($_->is_Leaf) { 
+		push @lf, $_; 
+#		$$ref_ct_otu++; 
+	    } else { 
+		push @nd, $_ 
+	    } 
+	}
+
 	for (@lf) { if (!exists($visited{$_})) { $visited{$_} = 1; push @$node_list_ref, $_ } }
 	for (@nd) {
 		next if exists($visited{$_});
