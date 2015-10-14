@@ -44,6 +44,7 @@ GetOptions(\%opts,
 	   "sis-pairs", # pairwise OTU togetherness
 	   "swap-otus=s", # output trees with each possible pairs (with the designated one) swapped 
 	   "ead", # edge-length abundance distribution; ODwyer et al. PNAS (2015)
+	   "tree-shape", # for apTreeshape
 	   #    "bootclean|b:f",
 	   #    "collapse|c=s@",
 	   #    "getroot|g",
@@ -103,10 +104,42 @@ clean_tree() if $opts{'cleanbr'} || $opts{'cleanboot'};
 delete_otus() if $opts{'delete-otus'};
 sister_pairs() if $opts{'sis-pairs'};
 swap_otus() if $opts{'swap-otus'};
-edge_length_abundance() if $opts{ead};
+edge_length_abundance() if $opts{'ead'};
+print_tree_shape() if $opts{'tree-shape'};
 say $tree->as_text($out_format) if $print_tree;
 
 ###################### subroutine ######################
+
+sub print_tree_shape {
+    my @matrix;
+    my (%leaf, %inode);
+    my $ct_leaf = 0;
+    my $ct_inode = 0;
+    for my $nd (@nodes) {
+	if ($nd->is_Leaf()) {
+	    $leaf{$nd->id} = ++$ct_leaf;
+	} else { 
+	    $inode{$nd->internal_id} = ++$ct_inode;
+	}
+    }
+
+    for my $nd (@nodes) {
+	next if $nd->is_Leaf();
+	my @dscs = $nd->each_Descendent;
+	die unless @dscs == 2;
+	my $id1 = $dscs[0]->is_Leaf ? -1 * $leaf{$dscs[0]->id} : $inode{$dscs[0]->internal_id}; 
+	my $id2 = $dscs[1]->is_Leaf ? -1 * $leaf{$dscs[1]->id} : $inode{$dscs[1]->internal_id}; 
+	if ($nd eq $rootnode) { # root at first
+	    unshift @matrix, [ ($id1, $id2) ];
+	} else { 
+	    push @matrix, [ ($id1, $id2) ]
+	}
+    }
+    for (my $i = $#matrix; $i >=0; $i--) {
+	print $matrix[$i]->[0], "\t", $matrix[$i]->[1], "\n";
+    }
+#    print Dumper(\%leaf, \%inode);
+}
 
 sub edge_length_abundance {
     my @inodes;
