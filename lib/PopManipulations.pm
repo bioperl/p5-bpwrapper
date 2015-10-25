@@ -141,7 +141,7 @@ sub print_mismatch_distr {
     }
 }
 
-sub count_four_gametes { # four gamete test for recombination (and wilson's test of compatibility)
+sub count_four_gametes { # four gamete test for recombination (and wilson's test of compatibility; add epistasis)
     my @valid_sites = &_two_allele_nogap_informative_sites($pop);
     my $ref_seqs = &_base_at_snp_sites($pop, \@valid_sites);
     my %myseqs = %$ref_seqs;
@@ -171,12 +171,16 @@ sub count_four_gametes { # four gamete test for recombination (and wilson's test
 	    my $ct2 = $haps{$i . "-" . $j}->{$base_i_a . $base_j_b} || 0;
 	    my $ct3 = $haps{$i . "-" . $j}->{$base_i_b . $base_j_a} || 0; 
 	    my $ct4 = $haps{$i . "-" . $j}->{$base_i_b . $base_j_b} || 0; 
-	    my $comp = ($ct1 && $ct2 && $ct3 && $ct4) ? 0 : 1;
+#	    my $comp = ($ct1 && $ct2 && $ct3 && $ct4) ? 0 : 1;
+	    my $ct_zero = 0;
+	    foreach ($ct1, $ct2, $ct3, $ct4) {$ct_zero++ if !$_}
 	    print join "\t", ($i, 
 			      $j, 
 			      $valid_sites[$i],
 			      $valid_sites[$j],
-			      $ct1, $ct2, $ct3, $ct4, $comp);
+			      $ct1, $ct2, $ct3, $ct4, 
+			      $ct_zero == 1 ? 1 : 0,  # competible if $ct_zero == 1
+			      $ct_zero == 2 ? 1 : 0); # epistatic if $ct_zero == 2
 	    print "\n";
 	}
     }
