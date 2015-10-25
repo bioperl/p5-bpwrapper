@@ -179,7 +179,7 @@ sub count_four_gametes { # four gamete test for recombination (and wilson's test
 			      $valid_sites[$i],
 			      $valid_sites[$j],
 			      $ct1, $ct2, $ct3, $ct4, 
-			      $ct_zero == 1 ? 1 : 0,  # competible if $ct_zero == 1
+			      $ct_zero == 0 ? 0 : 1,  # competible if $ct_zero > 0
 			      $ct_zero == 2 ? 1 : 0); # epistatic if $ct_zero == 2
 	    print "\n";
 	}
