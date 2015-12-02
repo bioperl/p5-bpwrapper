@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use FindBin;                      # Find the location of aln-manipulations
+use rlib '../lib';
 use lib "$FindBin::RealBin/lib";          # to use it as a lib path
 require "AlnManipulations.pm";    # to get this library!
 use 5.010;
@@ -21,7 +22,7 @@ GetOptions(
     "bootstrap|b",
     "codon-view|c:20",    # Optional value, default 20
     "delete|d=s",
-    "nogaps|g", 
+    "nogaps|g",
     "input|i=s",
     "length|l",
     "match|m",
@@ -32,10 +33,10 @@ GetOptions(
     "slice|s=s",
     "split-cdhit=s",
     "uniq|u",
-    "varsites|v",    
+    "varsites|v",
     "window|w:30",
     "concat|A",
-    "conblocks|B:6",    
+    "conblocks|B:6",
     "consensus|C:50",
     "dna2pep|D",
     "erasecol|E=s",
@@ -43,7 +44,7 @@ GetOptions(
     "aln-index|I=s",
     "listids|L",
     "permute-states|M",
-    "pep2dna|P=s",    
+    "pep2dna|P=s",
     "resample|R:i",    # Optional value, default is floor of num_sequences/2
     "shuffle-sites|S",
     "select-third|T",
@@ -52,7 +53,7 @@ GetOptions(
     "gapstates",
     "random-slice=i",
     "trimends",
-    "bin-inform", # extract binary & informative sites (for clique): discard constant, 3/4-states, non-informative 
+    "bin-inform", # extract binary & informative sites (for clique): discard constant, 3/4-states, non-informative
     "version|V",
     "binary", # 0/1 for binary sites (for phylip lagacy programs)
     "phy-nonint" # non-interleaved phylip (for e.g.,clique)
@@ -96,7 +97,7 @@ __END__
  # Alignment descriptors:
  bioaln -l aln_file                  # [l]ength of an alignment
  bioaln -n aln_file                  # [n]umber of aligned sequences
- bioaln -L aln_file                  # [L]ist all sequence IDs 
+ bioaln -L aln_file                  # [L]ist all sequence IDs
  bioaln -a input.aln                 # [a]verage percent identity
  bioaln -w '30' aln_file             # average identifies for sliding [w]indows of 30
  bioaln -I 'B31,100' aln_file        # get aln column [I]ndex of seq 'B31' residue 100
@@ -198,7 +199,7 @@ OUTPUT:
  Seq6   ATG AAT AAA AAA ATA TAT AGC ATA GAA GAA TTA ATA GAC AAA ATA AGT
 
 =head2 --delete, -d
- 
+
 Delete sequences based on their id. Option takes a comma-separated list of ids.
 
 Usage: bioaln -d 'seq_id_1, seq_id_2, ... , seq_id_n' <alignment_file>
@@ -215,13 +216,13 @@ Input file format (see Bio::AlignIO for supported formats). By default, this is 
 
 Usage: bioaln -i 'format'
 
-=head2 --length, -l. 
+=head2 --length, -l.
 
 Print alignment length. Wrap Bio::SimpleAlign->length().
 
 Usage: bioaln -l <alignment_file>
 
-=head2 --match, -m. 
+=head2 --match, -m.
 
 Go through all columns and change residues identical to the reference sequence to be the match character, '.' Wrap Bio::SimpleAlign->match().
 
@@ -267,7 +268,7 @@ Pick sequences based on their id. Option takes a comma-separated list of ids.
 Usage: bioaln -p 'seq_id_1, seq_id_2, ... , seq_id_n' <alignment_file>
 
 =head2 --refseq, -r
- 
+
 Change the reference sequence to be seq_id. Wrap Bio::SimpleAlign->set_new_reference().
 
 Usage: bioaln -r 'seq_id' <alignment_file>
@@ -286,7 +287,7 @@ Usage: bioaln -s 'min,max' <alignment_file>
 
 NOTE: --slice'-,x' (where x is '-' or a position) does NOT work. Use --slice='-,x' instead.
 
-=head2 --uniq, -u. 
+=head2 --uniq, -u.
 
 Extract the alignment of unique sequences. Wrap Bio::SimpleAlign->uniq_seq().
 
@@ -332,7 +333,7 @@ Extracts variable sites. B<Used in conjunction with -g:> do not show sites with 
 Usage: bioaln -v <alignment_file>
 
 =head2 --window, -w
- 
+
 Calculate pairwise average sequence difference by windows (overlapping windows with fixed step of 1). Default value for window_size is 30.
 
 Usage: bioaln -w 'window_size'[default is 30] <alignment_file>
@@ -341,14 +342,14 @@ Usage: bioaln -w 'window_size'[default is 30] <alignment_file>
 
 Concatenate multiple alignments sharing the same set of unique IDs. This is normally used for concatenating individual gene alignments of the same set of samples to a single one for making a "supertree". Wrap Bio::Align::Utilities->cat().
 
-Usage: bioaln -A gene1.aln gene2.aln gene3.aln gene4.aln, 
+Usage: bioaln -A gene1.aln gene2.aln gene3.aln gene4.aln,
 
 Or: using wildcard to specify files:
 
 Usage: bioaln -A gene*.aln
 
 =head2 --conblocks, -B
- 
+
 Extract perfectly conserved blocks (PCBs, gap excluded) from an alignment, each to a new clustalw file. Default minimum length of PCB is 6 sites.
 
 Usage: bioaln -B <alignment_file>
@@ -432,7 +433,7 @@ Turn a CDS alignment to a corresponding protein alignment. Wrap Bio::Align::Util
 Usage: bioaln -D <cds_alignment>
 
 =head2 --erasecol, -E
- 
+
 Remove columns with gap in designated sequence.
 
 Usage: bioaln -E 'seq_id' <alignment_file>
@@ -460,7 +461,7 @@ OUTPUT:
                 ******** ** * *** *************** **** *** *****
 
 =head2 --noflatname, -F
- 
+
 By default, sequence names do not contain 'begin-end'. This option turns ON 'begin-end' naming. Wrap Bio::SimpleAlign->set_displayname_flat().
 
 Usage: bioaln -F <alignment_file>

@@ -3,6 +3,7 @@
 
 min_bp_version=1.006
 
+
 if [[ $0 == ${BASH_SOURCE[0]} ]] ; then
     echo "This script should be *sourced* rather than run directly through bash"
     exit 1
@@ -20,6 +21,11 @@ bmin_bp_version=${min_bp_vrsion:1.006}
 #----------------------------
 testDir=`dirname ${BASH_SOURCE[0]}`
 if ! cd $testDir; then echo "Stop: check if $testDir exist" >&2; exit 1; fi;
+
+binDir=$testDir/bin
+BIOALN=${binDir}/bioaln
+BIOTREE=${binDir}/biotree
+BIOSEQ=${binDir}/bioseq
 
 #-----------------------------
 # Test existence of BioPerl
