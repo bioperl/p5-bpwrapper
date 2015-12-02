@@ -1,35 +1,35 @@
 CLUSTAL W (1.81) multiple sequence alignment
 
 
-118a                   -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-297                    tattagttctcggaaaagaataaaacatattgtggtaattagatcgtgaaaatgcaaaac
-29805                  -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-64b                    -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-72a                    -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-94a                    -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-B31                    -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-BOL26                  -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-CA-11.2A               -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-JD1                    -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-N40                    -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-WI91-23                -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-ZS7                    -a--a-t-c-cgga-aag-ataa-acatattgtggt-att-g-tcgt--aaatgcaaaac
-                        *  * * * **** *** **** ************ *** * ****  ***********
+118a                   tgt-ataaaaa-attaa----ag-ca--aga-cta---tttcaaatg-gagttat-aatt
+297                    tgtaataaaaagattaaataaagtcagtagaactagtttttcaaatgtgagttataaatt
+29805                  tgt-ataaaaa-attga----ag-ca--aga-cta---tttcaaatg-gagtcat-aatt
+64b                    tgt-ataaaaa-attga----ag-ca--aga-cta---tttcaaatg-gagtcat-aatt
+72a                    tgt-ataaaaa-attaa----ag-ca--aga-cta---tttcaaatg-gagttat-aatt
+94a                    tgt-ataaaaa-attaa----ag-ca--aga-cta---tttcaaatg-gagttat-aatt
+B31                    tgt-ataaaaa-attga----ag-ca--aga-cta---tttcaaatg-gagtcat-aatt
+BOL26                  tgt-ataaaaa-attaa----ag-ca--aga-cta---tttcaaatg-gagttat-aatt
+CA-11.2A               tgt-ataaaaa-attaa----ag-ca--aga-cta---tttcaaatg-gagttat-aatt
+JD1                    tgt-ataaaaa-attga----ag-ca--aga-cta---tttcaaatg-gagtcat-aatt
+N40                    tgt-ataaaaa-attga----ag-ca--aga-cta---tttcaaatg-gagtcat-aatt
+WI91-23                tgt-ataaaaa-attga----ag-ca--aga-cta---tttcaaatg-gagtcat-aatt
+ZS7                    tgt-ataaaaa-attaa----ag-ca--aga-cta---tttcaaatg-gagttat-aatt
+                       *** ******* *** *    ** **  *** ***   ********* **** ** ****
 
 
-118a                   -tatc-ctgtata-tttctta-gaata-taa-g-ataa-attatgta-t---a-g--tg-
-297                    ttatcgctgtatagtttcttacgaataataaaggataatattatgtaataaaatggttgt
-29805                  -tatc-ctgtatg-tttctta-gaata-caa-g-ataa-attatgta-t---a-g--tg-
-64b                    -tatc-ctgtatg-tttctta-gaata-caa-g-ataa-attatgta-t---a-g--tg-
-72a                    -tatc-ctgtata-tttctta-gaata-taa-g-ataa-attatgta-t---a-g--tg-
-94a                    -tatc-ctgtata-tttctta-gaata-taa-g-ataa-attatgta-t---a-g--tg-
-B31                    -tatc-ctgtatg-tttctta-gaata-caa-g-ataa-attatgta-t---a-g--tg-
-BOL26                  -tatc-ctgtata-tttctta-gaata-taa-g-ataa-attatgta-t---a-g--tg-
-CA-11.2A               -tatc-ctgtata-tttctta-gaata-taa-g-ataa-attatgta-t---a-g--tg-
-JD1                    -tatc-ctgtatg-tttctta-gaata-caa-g-ataa-attatgta-t---a-g--tg-
-N40                    -tatc-ctgtatg-tttctta-gaata-caa-g-ataa-attatgta-t---a-g--tg-
-WI91-23                -tatc-ctgtatg-tttctta-gaata-caa-g-ataa-attatgta-t---a-g--tg-
-ZS7                    -tatc-ctgtata-tttctta-gaata-taa-g-ataa-attatgta-t---a-g--tg-
-                        **** ******  ******* *****  ** * **** ******** *   * *  ** 
+118a                   tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+297                    ttttccattaagagtggacagtacgtaacatgtaaaacgtttttagtcgaggtattaaaa
+29805                  tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+64b                    tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+72a                    tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+94a                    tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+B31                    tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+BOL26                  tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+CA-11.2A               tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+JD1                    tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+N40                    tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+WI91-23                tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+ZS7                    tttt-catt-aga--gg-cagt-c-taaca-gtaaa-cgttttt-gtc-agg-at-aa--
+                       **** **** ***  ** **** * ***** ***** ******* *** *** ** **  
 
 

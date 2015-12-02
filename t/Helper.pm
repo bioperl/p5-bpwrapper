@@ -33,7 +33,17 @@ sub run_bio_program($$$$;$)
 						  $check_filename);
     my $full_bio_progname = File::Spec->catfile($dirname, '..', $bio_program);
 
-    my $cmd = "$EXECUTABLE_NAME $full_bio_progname $run_opts $full_data_filename";
+    my $ext_file = sub {
+        my ($ext) = @_;
+        my $new_fn = $full_check_filename;
+        $new_fn =~ s/\.right\z/.$ext/;
+        return $new_fn;
+    };
+
+    my $err_filename = $ext_file->('err');
+
+    my $cmd = "$EXECUTABLE_NAME $full_bio_progname $run_opts $full_data_filename " .
+	"2>$err_filename";
     print $cmd, "\n"  if $debug;
     my $output = `$cmd`;
     print "$output\n" if $debug;
@@ -43,13 +53,6 @@ sub run_bio_program($$$$;$)
 	Test::More::is($rc, $test_rc, "command ${bio_program} executed giving exit code $test_rc");
     }
     return $rc if $rc;
-
-    my $ext_file = sub {
-        my ($ext) = @_;
-        my $new_fn = $full_check_filename;
-        $new_fn =~ s/\.right\z/.$ext/;
-        return $new_fn;
-    };
 
     open(RIGHT_FH, "<$full_check_filename") ||
 	die "Cannot open $full_check_filename for reading - $OS_ERROR";
