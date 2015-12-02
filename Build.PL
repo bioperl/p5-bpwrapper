@@ -17,7 +17,11 @@ my $release_status = ($Bio::Wrapper::Version::VERSION =~ /_/) ?
 my $builder = Module::Build->new(
     module_name         => 'Bio::Wrapper', # ??
     add_to_cleanup      => [ 'Bio-Wrapper-*', 'tmp*', 't/check-data/*.got',
-                             '*IGS:11.fas', 't/check-data/*.err'],
+                             '*IGS:11.fas', 't/*IGS:11.fas',
+			     'test-files/test-bioaln.cds.slice*.aln',
+			     'test-bioseq.nuc.sed', 't/test-bioseq.nuc.sed',
+			     'test-bioaln.cds.slice*.aln',
+			     't/check-data/*.err'],
     create_makefile_pl  => 'passthrough',
     dist_abstract       =>
     'wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign',

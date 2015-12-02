@@ -22,19 +22,25 @@ for my $letter (qw(c g l n r A B C G L X)) {
 		    "opt-${letter}.right", {note=>$notes{$letter}});
 }
 
-# note( "Testing bioseq option-value options on test-bioseq.nuc" );
-# for my $tup (['d', 'JD1,118a'],
-# 	     ['o', 'fasta'],
-# 	     ['p', 'JD1,118a,N40'],
-# 	     ['w', '60'],
-# 	     ['r', 'B31'],
-# 	     ['C', '90'],
-# 	     ['E', 'B31'],
-# 	     ['I', 'B31,1'])
-# {
-#     run_bio_program('bioseq', 'test-bioaln.nuc', "-$tup->[0] $tup->[1]",
-# 		    "opt-$tup->[0].right");
-# }
+note( "Testing bioseq option-value options on test-bioseq.nuc" );
+%notes = (
+    d => 'delete by order',
+    p => 'pick 1 sequence by order',
+    s => 'get subsequences',
+    t => 'translate dna',
+    R => 'reloop a sequence',
+);
+
+for my $tup (['d', 'order:2'],
+	     ['p', 'order:2'],
+	     ['s', '10,20'],
+	     ['t', '1'],
+	     ['R', '3'],
+    )
+{
+    run_bio_program('bioseq', 'test-bioseq.nuc', "-$tup->[0] $tup->[1]",
+		    "opt-$tup->[0].right", {note=>$notes{$tup->[0]}});
+}
 
 # note( "Testing other bioaln option-value options" );
 # my $nuc = test_file_name('test-bioaln-pep2dna.nuc');
