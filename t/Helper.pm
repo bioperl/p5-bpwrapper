@@ -31,7 +31,7 @@ sub run_bio_program($$$$;$)
 
     my $full_check_filename = File::Spec->catfile($dirname, 'check-data',
 						  $check_filename);
-    my $full_bio_progname = File::Spec->catfile($dirname, '..', $bio_program);
+    my $full_bio_progname = File::Spec->catfile($dirname, '..', 'bin', $bio_program);
 
     my $ext_file = sub {
         my ($ext) = @_;
