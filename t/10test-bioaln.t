@@ -23,10 +23,20 @@ for my $tup (['d', 'JD1,118a'],
 		    "opt-$tup->[0].right");
 }
 
+note( "Testing other bioaln option-value options" );
+my $nuc = test_file_name('test-bioaln-pep2dna.nuc');
+my $aln = test_file_name('test-bioaln-pep2dna.aln');
+for my $triple (['i', 'fasta', 'test-bioaln-pep2dna.nuc'],
+		['s', '80,100', 'test-bioaln.aln'],
+		['P', $nuc, 'test-bioaln-pep2dna.aln'])
+{
+    run_bio_program('bioaln', $triple->[2], "-$triple->[0] $triple->[1]",
+		    "opt-$triple->[0].right");
+}
+
+
+
 # Need to convert:
 # M S U
 # ['R', '3'])
-# ['i', 'fasta'],
-# ['s', '80,100'],
-# -P'test-files/test-bioaln-pep2dna.nuc'
 done_testing();

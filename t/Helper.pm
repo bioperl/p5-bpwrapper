@@ -12,25 +12,31 @@ use File::Basename qw(dirname basename); use File::Spec;
 require Exporter;
 our (@ISA, @EXPORT);
 @ISA = qw(Exporter);
-@EXPORT = qw(run_bio_program);
+@EXPORT = qw(run_bio_program test_file_name);
 
 my $debug = $^W;
 
+my $dirname = dirname(__FILE__);
+
+sub test_file_name($)
+{
+    File::Spec->catfile($dirname, '..', 'test-files', shift)
+}
+
 # Runs bio program in a subshell. 0 is returned if everything went okay.
-# nonzero if something went wrong.
+# nonzero if something went wrong. We check the results against
+# $check_filename. Filenames are expanded to the proper locations
+# in directories.
 sub run_bio_program($$$$;$)
 {
     my ($bio_program, $data_filename, $run_opts, $check_filename,
 	$other_opts) = @_;
     $other_opts = {} unless defined $other_opts;
     $other_opts->{do_test} = 1 unless exists $other_opts->{do_test};
-    Test::More::note( "running $bio_program $run_opts $data_filename" );
-    my $dirname = dirname(__FILE__);
-    my $full_data_filename = File::Spec->catfile($dirname, '..', 'test-files',
-						 $data_filename);
+    my $full_data_filename = test_file_name($data_filename);
 
     my $full_check_filename = File::Spec->catfile($dirname, 'check-data',
-						  $check_filename);
+						  "${bio_program}-${check_filename}");
     my $full_bio_progname = File::Spec->catfile($dirname, '..', 'bin', $bio_program);
 
     my $ext_file = sub {
@@ -44,12 +50,14 @@ sub run_bio_program($$$$;$)
 
     my $cmd = "$EXECUTABLE_NAME $full_bio_progname $run_opts $full_data_filename " .
 	"2>$err_filename";
-    print $cmd, "\n"  if $debug;
+    print $cmd, "\n" if $debug;
     my $output = `$cmd`;
     print "$output\n" if $debug;
     my $rc = $CHILD_ERROR >> 8;
     my $test_rc = $other_opts->{exitcode} || 0;
     if ($other_opts->{do_test}) {
+	Test::More::note("testing " . $other_opts->{note}) if $other_opts->{note};
+	Test::More::note( "running $bio_program $run_opts $data_filename" );
 	Test::More::is($rc, $test_rc, "command ${bio_program} executed giving exit code $test_rc");
     }
     return $rc if $rc;
@@ -67,6 +75,7 @@ sub run_bio_program($$$$;$)
     my $equal_output = $right_string eq $output;
     Test::More::ok($right_string eq $output, 'Output comparison')
 	if $other_opts->{do_test};
+    unlink $err_filename if -z $err_filename;
     if ($equal_output) {
         unlink $got_filename;
 	return 0;
@@ -81,7 +90,7 @@ sub run_bio_program($$$$;$)
 	    # Windows doesn't do diff.
 	    diag("Got:\n", $output, "Need:\n", $right_string);
 	} else {
-	    my $output = `diff -au $check_filename $got_filename 2>&1`;
+	    my $output = `diff -au $full_check_filename $got_filename 2>&1`;
 	    my $rc = $? >> 8;
 	    # GNU diff returns 0 if files are equal, 1 if different and 2
 	    # if something went wrong. We also should take care of the
