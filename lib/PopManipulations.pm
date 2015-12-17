@@ -50,8 +50,8 @@ my %opt_dispatch = (
     'pi' => \&print_diversity,
     'stats'    => \&print_stats,
     'segsites' => \&print_num_snps,
-    'snp_coding' => \&snp_coding,
-    'snp_coding_long' => \&snp_coding_long,
+    'snp-coding' => \&snp_coding,
+    'snp-coding-long' => \&snp_coding_long,
     'snp-noncoding' => \&snp_noncoding,
     'bipart' => \&bi_partition,
 #    'mutrec' => \&_mutation_or_recombination,
@@ -89,7 +89,7 @@ sub initialize {
         $dna_stats = Bio::Align::DNAStatistics->new();
     } else {
         $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => $opts->{"snp-noncoding"} || $opts->{'bisites'} || $opts->{'bihaps'} || $opts->{'bisites-for-r'}? 0:1, -site_model => 'all');
-        $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"snp_coding"} || $opts->{"snp_coding_long"};
+        $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"snp-coding"} || $opts->{"snp-coding-long"};
 #        $stat_obj = PopGenStatistics->new();
         $pop_stats = Bio::PopGen::Statistics->new()
     }
@@ -338,7 +338,7 @@ sub _shanon_index {
 	my $freq = $f{$base};
 	$h += -1 * $freq * log($freq)/log(2);
     }
-    return $h;
+    return sprintf "%.6f", $h;
 }
 
 sub snp_coding {
@@ -356,14 +356,16 @@ sub snp_coding {
         my %freqs = $pop_marker->get_Allele_Frequencies; # print $out_aa, "=>", Dumper(\%freqs); next;
         my ($minor, $major, $syn) = &_syn_nonsyn(\%freqs);
 	my $snp_site = 3 * $site + &_snp_position($minor->{codon}, $major->{codon});
+	my $shanon = &_shanon_index(\%freqs);
+	say join "\t", ($aln_file, $site, $snp_site, $syn, $minor->{codon}, $minor->{aa}, $minor->{freq}, $major->{codon}, $major->{aa}, $major->{freq}, $shanon);
 	
-	foreach my $ind ($pop_cds->get_Individuals) {
-            my @genotypes = $ind->get_Genotypes(-marker => $site);
-            my $id = $ind->unique_id();
-            my $geno = shift @genotypes;
-            my ($allele) = $geno->get_Alleles();
-	    say join "\t", ($aln_file, $site, $id, $snp_site, $syn, $allele);
-	}
+#	foreach my $ind ($pop_cds->get_Individuals) {
+#            my @genotypes = $ind->get_Genotypes(-marker => $site);
+#            my $id = $ind->unique_id();
+#            my $geno = shift @genotypes;
+#            my ($allele) = $geno->get_Alleles();
+#	    say join "\t", ($aln_file, $site, $id, $snp_site, $syn, $allele);
+#	}
     }
 }
 
