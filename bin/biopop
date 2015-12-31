@@ -30,8 +30,8 @@ GetOptions(
     "pi|p",
     "stats|s=s@",    # Comma-separated, or multiply specified, list
     "snp",
-    "snp_coding",
-    "snp_coding_long",
+    "snp-coding",
+    "snp-coding-long",
     "snp-noncoding",
     "version|V",
     "segsites|S",

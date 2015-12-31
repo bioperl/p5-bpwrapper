@@ -50,8 +50,8 @@ my %opt_dispatch = (
     'pi' => \&print_diversity,
     'stats'    => \&print_stats,
     'segsites' => \&print_num_snps,
-    'snp_coding' => \&snp_coding,
-    'snp_coding_long' => \&snp_coding_long,
+    'snp-coding' => \&snp_coding,
+    'snp-coding-long' => \&snp_coding_long,
     'snp-noncoding' => \&snp_noncoding,
     'bipart' => \&bi_partition,
 #    'mutrec' => \&_mutation_or_recombination,
@@ -77,7 +77,7 @@ sub initialize {
     if ($aln_file eq "STDIN") { $in = Bio::AlignIO->new(-format => $in_format, -fh => \*STDIN) }  # We're getting input from STDIN
     else                      { $in = Bio::AlignIO->new(-format => $in_format, -file => "<$aln_file") }  # Filename, or '-', was given
 
-    $aln = $in->next_aln; 
+    $aln = $in->next_aln;
 
     $sample_size = $flags->{"sample_size"} // undef;
 #    @ingroups     = split /\s+,\s+/, join ',', @{ $opts->{"ingroup"} }     // undef if $opts->{"ingroup"};;
@@ -89,7 +89,7 @@ sub initialize {
         $dna_stats = Bio::Align::DNAStatistics->new();
     } else {
         $pop = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => $opts->{"snp-noncoding"} || $opts->{'bisites'} || $opts->{'bihaps'} || $opts->{'bisites-for-r'}? 0:1, -site_model => 'all');
-        $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"snp_coding"} || $opts->{"snp_coding_long"};
+        $pop_cds = Bio::PopGen::Utilities->aln_to_population(-alignment => $aln, -include_monomorphic => 0, -site_model => 'codon') if $opts->{"snp-coding"} || $opts->{"snp-coding-long"};
 #        $stat_obj = PopGenStatistics->new();
         $pop_stats = Bio::PopGen::Statistics->new()
     }
@@ -158,7 +158,7 @@ sub count_four_gametes { # four gamete test for recombination (and wilson's test
 	for (my $j = $i+1; $j <= $#valid_sites; $j++) {
 	    foreach my $id ( keys %myseqs) {
 		my $hap = $myseqs{$id}->{$valid_sites[$i]}  . $myseqs{$id}->{$valid_sites[$j]};
-		$haps{$i . "-" . $j}->{$hap}++; 
+		$haps{$i . "-" . $j}->{$hap}++;
 	    }
 	}
     }
@@ -169,16 +169,16 @@ sub count_four_gametes { # four gamete test for recombination (and wilson's test
 	    my ($base_j_a, $base_j_b) = @{ $states{$valid_sites[$j]} };
 	    my $ct1 = $haps{$i . "-" . $j}->{$base_i_a . $base_j_a} || 0;
 	    my $ct2 = $haps{$i . "-" . $j}->{$base_i_a . $base_j_b} || 0;
-	    my $ct3 = $haps{$i . "-" . $j}->{$base_i_b . $base_j_a} || 0; 
-	    my $ct4 = $haps{$i . "-" . $j}->{$base_i_b . $base_j_b} || 0; 
+	    my $ct3 = $haps{$i . "-" . $j}->{$base_i_b . $base_j_a} || 0;
+	    my $ct4 = $haps{$i . "-" . $j}->{$base_i_b . $base_j_b} || 0;
 #	    my $comp = ($ct1 && $ct2 && $ct3 && $ct4) ? 0 : 1;
 	    my $ct_zero = 0;
 	    foreach ($ct1, $ct2, $ct3, $ct4) {$ct_zero++ if !$_}
-	    print join "\t", ($i, 
-			      $j, 
+	    print join "\t", ($i,
+			      $j,
 			      $valid_sites[$i],
 			      $valid_sites[$j],
-			      $ct1, $ct2, $ct3, $ct4, 
+			      $ct1, $ct2, $ct3, $ct4,
 			      $ct_zero == 0 ? 0 : 1,  # competible if $ct_zero > 0
 			      $ct_zero == 2 ? 1 : 0); # epistatic if $ct_zero == 2
 	    print "\n";
@@ -193,10 +193,10 @@ sub _two_allele_nogap_informative_sites {
     die "No polymorphic sites: $aln_file\n" if ! scalar @sites;
     for my $site ( sort {$a <=> $b} @sites ) {
         my $pop_marker = $mypop->get_Marker($site);
-	my @alleles = $pop_marker->get_Alleles(); 
+	my @alleles = $pop_marker->get_Alleles();
         next if &_has_gap($site);  # skip gapped sites
 	next if @alleles == 1;
-        if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  
+        if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }
 	next if &_not_informative($site);
 	push @valids, $site;
     }
@@ -233,7 +233,7 @@ sub bi_partition {
     my %biparts;
     for my $site ( sort {$a <=> $b} @sites ) {
         my $pop_marker = $pop->get_Marker($site);
-	my @alleles = $pop_marker->get_Alleles(); 
+	my @alleles = $pop_marker->get_Alleles();
         next if &_has_gap($site);  # skip gapped sites
 	next if @alleles == 1; # skip constant sites
         next if scalar @alleles > 2; # skip if more than two states
@@ -294,7 +294,7 @@ sub bisites {
     }
 }
 
-sub _base_at_snp_sites { 
+sub _base_at_snp_sites {
     my $mypop = shift;
     my $ref_site = shift;
     my @mysites = @$ref_site;
@@ -338,7 +338,7 @@ sub _shanon_index {
 	my $freq = $f{$base};
 	$h += -1 * $freq * log($freq)/log(2);
     }
-    return $h;
+    return sprintf "%.6f", $h;
 }
 
 sub snp_coding {
@@ -355,15 +355,17 @@ sub snp_coding {
         if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  # consider only 2-state polymorphic sites
         my %freqs = $pop_marker->get_Allele_Frequencies; # print $out_aa, "=>", Dumper(\%freqs); next;
         my ($minor, $major, $syn) = &_syn_nonsyn(\%freqs);
-	my $snp_site = 3 * $site + &_snp_position($minor->{codon}, $major->{codon});
-	
-	foreach my $ind ($pop_cds->get_Individuals) {
-            my @genotypes = $ind->get_Genotypes(-marker => $site);
-            my $id = $ind->unique_id();
-            my $geno = shift @genotypes;
-            my ($allele) = $geno->get_Alleles();
-	    say join "\t", ($aln_file, $site, $id, $snp_site, $syn, $allele);
-	}
+
+	my $shanon = &_shanon_index(\%freqs);
+	say join "\t", ($aln_file, $site, $snp_site, $syn, $minor->{codon}, $minor->{aa}, $minor->{freq}, $major->{codon}, $major->{aa}, $major->{freq}, $shanon);
+
+	# foreach my $ind ($pop_cds->get_Individuals) {
+        #     my @genotypes = $ind->get_Genotypes(-marker => $site);
+        #     my $id = $ind->unique_id();
+        #     my $geno = shift @genotypes;
+        #     my ($allele) = $geno->get_Alleles();
+	#     say join "\t", ($aln_file, $site, $id, $snp_site, $syn, $allele);
+	# }
     }
 }
 
@@ -383,7 +385,7 @@ sub snp_coding_long {
         my %freqs = $pop_marker->get_Allele_Frequencies; # print $out_aa, "=>", Dumper(\%freqs); next;
         my ($minor, $major, $syn) = &_syn_nonsyn(\%freqs);
 	my $snp_site = 3 * $site + &_snp_position($minor->{codon}, $major->{codon});
-	
+
 	foreach my $ind ($pop_cds->get_Individuals) {
             my @genotypes = $ind->get_Genotypes(-marker => $site);
             my $id = $ind->unique_id();
