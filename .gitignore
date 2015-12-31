@@ -1,5 +1,7 @@
+*IGS:11.fas
 *~
 /Build
+/MANIFEST.SKIP.bak
 /MYMETA.json
 /MYMETA.yml
 /_build
@@ -7,4 +9,3 @@
 t/check-data/*.err
 test-files/test-bioaln.aln.slice-*.aln
 test-files/test-bioaln.cds.slice-*.aln
-*IGS:11.fas
