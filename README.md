@@ -29,13 +29,14 @@ in a terminal.
 
 # Install & Test from git:
 
-    git clone https://github.com/bioperl/bp-utils
-	cpan Module::Build
-	perl ./Build.PL
-	./Build installdeps
-	./Build
-	make check  # runs both Perl and Bash test scripts
-	./Build install # may require sudo or root access
+    $ git clone https://github.com/bioperl/bp-utils
+	$ cd bp-utils
+	$ cpan Module::Build  # may need sudo
+	$ perl ./Build.PL
+	$ ./Build installdeps
+	$ ./Build
+	$ make check  # runs both Perl and Bash test scripts
+	$ ./Build install # may require sudo or root access
 
 # Install & Test (assuming a UNIX/Linux-like environment)
 * Go to repository: https://github.com/bioperl/bp-utils
