@@ -1,0 +1,21 @@
+language: perl
+
+sudo: false
+
+env:
+  - PREREQS="Module::Build rlib Test::More Bio::Root::Version"
+
+after_failure:
+  - cat /home/travis/.cpanm/work/*/build.log
+
+install:
+  # Prerequisites
+  - "cpanm $PREREQS"
+
+perl:
+  - "5.20"
+  - "5.18"
+  - "5.16"
+  - "5.14"
+  - "5.12"
+  - "5.10"
