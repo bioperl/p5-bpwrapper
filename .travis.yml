@@ -2,6 +2,11 @@ language: perl
 
 sudo: false
 
+# whitelist
+branches:
+  only:
+    - test-more
+
 env:
   - PREREQS="Module::Build"
 
