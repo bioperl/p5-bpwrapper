@@ -2,20 +2,15 @@ language: perl
 
 sudo: false
 
-# whitelist
-branches:
-  only:
-    - test-more
-
 env:
-  - PREREQS="Module::Build"
+  - PREREQS="Module::Build rlib Test::More Bio::Root::Version"
 
 after_failure:
   - cat /home/travis/.cpanm/work/*/build.log
 
 install:
   # Prerequisites
-  - "cpanm $PREREQS" && perl ./Build.PL && ./Build installdeps
+  - "cpanm $PREREQS"
 
 perl:
   # - "5.20"
