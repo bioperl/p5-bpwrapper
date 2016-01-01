@@ -8,6 +8,8 @@ In reality, though, some methods are new and unique to bp-utils. In the future, 
 # Dependencies
 * Perl 5.10.0 or higher
 * BioPerl 1.6.924 or higher
+* Module::Build
+* Test::More
 
 You can check your version of perl using
 
@@ -26,10 +28,12 @@ in a terminal.
 # Install & Test from git:
 
     git clone https://github.com/bioperl/bp-utils
+	cpan Module::Build
 	perl ./Build.PL
-	make
-	make check
-	make install # may require sudo or root access
+	./Build installdeps
+	./Build
+	make check  # runs both Perl and Bash test scripts
+	./Build install # may require sudo or root access
 
 # Install & Test (assuming a UNIX/Linux-like environment)
 * Go to repository: https://github.com/bioperl/bp-utils
