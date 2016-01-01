@@ -1,103 +1,113 @@
 GIT2CL ?= git2cl
+PERL ?= perl
+BASH ?= bash
 
 #: Build everything
-all:
-	perl Build --makefile_env_macros 1
+all: Build
+	$(PERL) Build --makefile_env_macros 1
+
+Build:
+	$(PERL) Build.PL
 
 #: Build program, e.g. copy to blib
-build:
-	perl Build --makefile_env_macros 1 build
+build: Build
+	$(PERL) Build --makefile_env_macros 1 build
 
 #: Remove automatically generated files
-clean:
-	perl Build --makefile_env_macros 1 clean
+clean: Build
+	$(PERL) Build --makefile_env_macros 1 clean
 
-code:
-	perl Build --makefile_env_macros 1 code
+code: Build
+	$(PERL) Build --makefile_env_macros 1 code
 
-config_data:
-	perl Build --makefile_env_macros 1 config_data
+config_data: BUild
+	$(PERL) Build --makefile_env_macros 1 config_data
 
-diff:
-	perl Build --makefile_env_macros 1 diff
+diff: Build
+	$(PERL) Build --makefile_env_macros 1 diff
 
 #: Create distribution tarball
-dist:
-	perl Build --makefile_env_macros 1 dist
+dist: Build
+	$(PERL) Build --makefile_env_macros 1 dist
 
-distcheck:
-	perl Build --makefile_env_macros 1 distcheck
+distcheck: Build
+	$(PERL) Build --makefile_env_macros 1 distcheck
 
-distclean:
-	perl Build --makefile_env_macros 1 distclean
+distclean: Build
+	$(PERL) Build --makefile_env_macros 1 distclean
 
-distdir:
-	perl Build --makefile_env_macros 1 distdir
+distdir: Build
+	$(PERL) Build --makefile_env_macros 1 distdir
 
-distmeta:
-	perl Build --makefile_env_macros 1 distmeta
+distmeta: Build
+	$(PERL) Build --makefile_env_macros 1 distmeta
 
-distsign:
-	perl Build --makefile_env_macros 1 distsign
+distsign: Build
+	$(PERL) Build --makefile_env_macros 1 distsign
 
-disttest:
-	perl Build --makefile_env_macros 1 disttest
+disttest: Build
+	$(PERL) Build --makefile_env_macros 1 disttest
 
 #: Create documentation (in blib/libdoc) via perlpod
-docs:
-	perl Build --makefile_env_macros 1 docs
+docs: Build
+	$(PERL) Build --makefile_env_macros 1 docs
 
-fakeinstall:
-	perl Build --makefile_env_macros 1 fakeinstall
+fakeinstall: Build
+	$(PERL) Build --makefile_env_macros 1 fakeinstall
 
 #: Show help
-help:
-	perl Build --makefile_env_macros 1 help
+help: Build
+	$(PERL) Build --makefile_env_macros 1 help
 
-html:
-	perl Build --makefile_env_macros 1 html
+html: Build
+	$(PERL) Build --makefile_env_macros 1 html
 
 #: Install this puppy
-install:
-	perl Build --makefile_env_macros 1 install
+install: Build
+	$(PERL) Build --makefile_env_macros 1 install
 
 #: Install other Perl packages that this package needs
-installdeps:
-	perl Build --makefile_env_macros 1 installdeps
+installdeps: Build
+	$(PERL) Build --makefile_env_macros 1 installdeps
 
 #: Make a MANIFEST file
-manifest:
-	perl Build --makefile_env_macros 1 manifest
+manifest: Build
+	$(PERL) Build --makefile_env_macros 1 manifest
 
 #: Generate manual pages
-manpages:
-	perl Build --makefile_env_macros 1 manpages
+manpages: Build
+	$(PERL) Build --makefile_env_macros 1 manpages
 
-ppd:
-	perl Build --makefile_env_macros 1 ppd
+ppd: Build
+	$(PERL) Build --makefile_env_macros 1 ppd
 
-ppmdist:
-	perl Build --makefile_env_macros 1 ppmdist
+ppmdist: Build
+	$(PERL) Build --makefile_env_macros 1 ppmdist
 
-prereq_report:
-	perl Build --makefile_env_macros 1 prereq_report
+prereq_report: Build
+	$(PERL) Build --makefile_env_macros 1 prereq_report
 
-pure_install:
-	perl Build --makefile_env_macros 1 pure_install
+pure_install: Build
+	$(PERL) Build --makefile_env_macros 1 pure_install
 
-skipcheck :
-	perl Build --makefile_env_macros 1 skipcheck
+skipcheck:  Build
+	$(PERL) Build --makefile_env_macros 1 skipcheck
 
 #: Same as "test". "check" is the usual autoconf name
-check: test
+check: test-t test-bash
 
-#: Run all unit tests
-test:
-	perl Build --makefile_env_macros 1 test
+#: Run all Test::More tests
+test-t:
+	$(PERL) Build --makefile_env_macros 1 test
+
+test-bash:
+	$(BASH) Test-bioseq.bash &&  echo "=======================" && \
+	$(BASH) Test-bioaln.bash &&  echo "=======================" && \
+	$(BASH) Test-biotree.bash
 
 #: Check code coverage
 testcover:
-	perl Build --makefile_env_macros 1 testcover
+	$(PERL) Build --makefile_env_macros 1 testcover
 
 #: Remove change log: ChangeLog
 rmChangeLog:
@@ -109,16 +119,16 @@ ChangeLog: rmChangeLog
 
 #: Calling perl debugger (perldb) on each test
 testdb:
-	perl Build --makefile_env_macros 1 testdb
+	$(PERL) Build --makefile_env_macros 1 testdb
 
 testpod:
-	perl Build --makefile_env_macros 1 testpod
+	$(PERL) Build --makefile_env_macros 1 testpod
 
 testpodcoverage:
-	perl Build --makefile_env_macros 1 testpodcoverage
+	$(PERL) Build --makefile_env_macros 1 testpodcoverage
 
 versioninstall:
-	perl Build --makefile_env_macros 1 versioninstall
+	$(PERL) Build --makefile_env_macros 1 versioninstall
 
 .EXPORT: INC PREFIX DESTDIR VERBINST INSTALLDIRS TEST_VERBOSE LIB UNINST INSTALL_BASE POLLUTE
 

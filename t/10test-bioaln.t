@@ -3,36 +3,46 @@ use rlib '.';
 use strict; use warnings;
 use Test::More;
 use Helper;
-note( "Testing bioaln single-letter options on bioaln.cds" );
+note( "Testing bioaln single-letter options on test-bioaln.cds" );
 
 
 my %notes = (
-    d => 'delete sequences',
-    o => 'output a FASTA alignments',
-    p => 'pick sequences',
-    w => 'average identifies for sliding windows of 30',
-    r => 'change reference (or first) sequence',
-    C => 'add a 90% consensus sequence',
-    E => 'Erase sites gapped at B31',
-    I => "get align column index of seq 'B31', residue 1",
-    i => "input is a FASTA alignment",
-    s => "alignment slice from 80-100",
-    P => "Back-align CDS seqence according to protein alignment",
+    a => 'average percent identity',
+    c => 'codon view',
+    g => 'remove gapped sites',
     l => 'length of an alignment',
+    m => 'match view',
     n => 'number of aligned sequences',
+    u => 'remove redundant sequences',
+    v => 'show only variable sites',
     A => 'concatenate aln files',
     B => 'extract conserved blocks',
+    D => 'DNA alignment',
+    F => 'set display name flat',
     L => 'list all sequence IDs',
-    X => 'remove stop codons',
-    g => 'remove gapped sites',
+    T => 'extract third site',
 );
+
 # option b (background needs special care)
 for my $letter (qw(a c g l m n u v A B D F L T)) {
     run_bio_program('bioaln', 'test-bioaln.cds', "-${letter}", "opt-${letter}.right");
 }
 
 
-note( "Testing bioaln option-value options on bioaln.cds" );
+note( "Testing bioaln option-value options on test-bioaln.cds" );
+
+%notes = (
+    d => 'delete sequences JD1, 118a',
+    o => 'output a FASTA alignments',
+    p => 'pick sequences JD1, 118a, N40',
+    w => 'average identifies for sliding windows of 60',
+    r => 'change reference (or first) sequence',
+    C => 'add a 90% consensus sequence',
+    E => 'Erase sites gapped at B31',
+    I => "get align column index of seq 'B31', residue 1",
+);
+
+
 for my $tup (['d', 'JD1,118a'],
 	     ['o', 'fasta'],
 	     ['p', 'JD1,118a,N40'],
@@ -47,6 +57,13 @@ for my $tup (['d', 'JD1,118a'],
 }
 
 note( "Testing other bioaln option-value options" );
+
+%notes = (
+    i => "input is a FASTA alignment",
+    s => "alignment slice from 80-100",
+    P => "Back-align CDS sequence according to protein alignment",
+);
+
 my $nuc = test_file_name('test-bioaln-pep2dna.nuc');
 for my $triple (['i', 'fasta', 'test-bioaln-pep2dna.nuc'],
 		['s', '80,100', 'test-bioaln.aln'],
