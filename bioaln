@@ -50,6 +50,7 @@ GetOptions(
     "remove-third",
     "uppercase|U", # make upper case (for DNAStatistics)
     "gapstates",
+    "gapstates2",
     "random-slice=i",
     "trimends",
     "bin-inform", # extract binary & informative sites (for clique): discard constant, 3/4-states, non-informative 
