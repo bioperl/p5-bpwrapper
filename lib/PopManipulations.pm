@@ -178,7 +178,7 @@ sub count_four_gametes { # four gamete test for recombination (and wilson's test
 			      $j, 
 			      $valid_sites[$i],
 			      $valid_sites[$j],
-			      $ct1, $ct2, $ct3, $ct4, 
+			      $ct1, $ct2, $ct3, $ct4, &_shanon_counts([ ($ct1, $ct2, $ct3, $ct4) ]),
 			      $ct_zero == 0 ? 0 : 1,  # competible if $ct_zero > 0
 			      $ct_zero == 2 ? 1 : 0); # epistatic if $ct_zero == 2
 	    print "\n";
@@ -328,6 +328,23 @@ sub snp_noncoding {
 	my $shanon = &_shanon_index(\%freqs);
 	say join "\t", ($aln_file, $site, $nts[0], $freqs{$nts[0]}, $nts[1], $freqs{$nts[1]}, $shanon);
     }
+}
+
+sub _shanon_counts {
+    my $ref = shift;
+    my @cts = @$ref;
+    my $h = 0;
+    my $sum = 0;
+    foreach my $ct ( @cts) {
+	next unless $ct;
+	$sum += $ct;
+    }
+    foreach my $ct ( @cts) {
+	next unless $ct;
+	my $freq = $ct/$sum;
+	$h += -1 * $freq * log($freq)/log(2);
+    }
+    return sprintf "%.6f", $h;
 }
 
 sub _shanon_index {
