@@ -1,8 +1,8 @@
 #!/usr/bin/env perl
-
 use strict;    # Still on 5.10, so need this for strict
 use warnings;
 use FindBin;                      # Find the location of seq-manipulations
+use rlib '../lib';
 use lib "$FindBin::RealBin/lib";          # to use it as a lib path
 require "PopManipulations.pm";    # to get this library!
 use 5.010;
@@ -64,6 +64,7 @@ for my $option (keys %opts) {
 
 __END__
 
+=encoding utf8
 =head1 NAME
 
 =over
@@ -100,7 +101,7 @@ Program quits if the distance method is invalid
 
 =head2 --heterozygosity, -H
 
-Foreach segregating site(s), the observed heterozygosity is returned.   
+Foreach segregating site(s), the observed heterozygosity is returned.
 
 =head2 --input, -i
 
@@ -116,7 +117,7 @@ Input file format. By default, this is 'clustalw'.
 
 =head2 --pi, -p
 
-Nucleotide Diversity is a measure of genetic variation or differences. It is similar to expected heterozygosity. This method takes in an alignment and outputs an integer. 
+Nucleotide Diversity is a measure of genetic variation or differences. It is similar to expected heterozygosity. This method takes in an alignment and outputs an integer.
 
 =head2 --stats, -s <comma separated list of values>
 
@@ -131,7 +132,7 @@ Identify & print, for each 2-state SNP, codon position, aligned nucleotide posit
 
 =head2 --varsites, -v
 
-This method outputs the number of segregating or SNP sites within your alignment. 
+This method outputs the number of segregating or SNP sites within your alignment.
 
 =head2 --version, -V
 
