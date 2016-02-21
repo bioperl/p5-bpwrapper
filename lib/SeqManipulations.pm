@@ -240,6 +240,7 @@ sub print_subseq {
     while ($seq = $in->next_seq()) {
         my $id = $seq->id();
         my ($start, $end) = split /\s*,\s*/, $opts{"subseq"};
+	$end = $seq->length() if $end eq '-'; # allow shorthand: -s'2,-'
         die "end out of bound: $id\n" if $end > $seq->length();
         my $new = Bio::Seq->new(-id  => $seq->id() . ":$start-$end", -seq => $seq->subseq($start, $end));
         $out->write_seq($new)
