@@ -1,3 +1,3 @@
 package Bio::Wrapper::Version;
-use version; $VERSION = '1.0';
+our $VERSION = '1.00';
 1;

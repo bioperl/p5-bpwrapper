@@ -1,13 +1,15 @@
-
+=encoding utf8
 =head1 NAME
 
-SeqManipulations - Functions for bioseq
+Bio::Wrapper::SeqManipulations - Functions for bioseq
 
 =head1 SYNOPSIS
 
-require B<SeqManipulations>;
+    require Bio::Wrapper::SeqManipulations;
 
 =cut
+
+package Bio::Wrapper::SeqManipulations;
 
 use strict;    # Still on 5.10, so need this for strict
 use warnings;
@@ -20,14 +22,35 @@ use Bio::DB::GenBank;
 use Bio::Tools::SeqStats;
 use Bio::SeqUtils;
 use Scalar::Util;
+use Exporter ();
+
 if ($ENV{'DEBUG'}) { use Data::Dumper }
+
+use vars qw(@ISA @EXPORT @EXPORT_OK);
+
+@ISA         = qw(Exporter);
+
+# FIXME: some of these might be put in
+# a common routine like print_version
+@EXPORT      = qw(initialize can_handle handle_opt write_out
+print_composition filter_seqs retrieve_seqs remove_gaps
+print_lengths print_seq_count make_revcom
+print_subseq restrict_digets anonymize
+shred_seq count_codons print_gb_gene_feats
+count_leading_gaps hydroB linearize reloop_at
+print_version remove_stop parse_orders find_by_order
+pick_by_order del_by_order find_by_id
+pick_by_id del_by_id find_by_re
+pick_by_re del_by_re
+find_by_ambig pick_by_ambig del_by_ambig find_by_length
+del_by_length);
 
 # Package global variables
 my ($in, $out, $seq, %opts, $filename, $in_format, $out_format);
 my $RELEASE = '1.0';
 
 ## For new options, just add an entry into this table with the same key as in
-## the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.  
+## the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.
 my %opt_dispatch = (
     'composition' => \&print_composition,
     'delete' => \&filter_seqs,
@@ -153,7 +176,7 @@ sub split_cdhit {
 	my @seqids = @{ $clusters{$id} };
 	foreach my $seq_id (@seqids) {
 	    $out->write_seq($seqs{$seq_id});
-	} 
+	}
     }
     exit;
 }
@@ -177,14 +200,14 @@ sub print_composition {
 # This sub calls all the del/pick subs above. Any option to filter input sequences by some criterion goes through here, and the appropriate filter subroutine is called.
 sub filter_seqs {
     my $action = shift;
-    my $match  = $opts{$action}; 
+    my $match  = $opts{$action};
 
     # matching to stop at 1st ':' so that ids using ':' as field delimiters are handled properly
     $match =~ /^([^:]+):(\S+)$/ || die "Bad search format. Expecting a pattern of the form: tag:value.\n";
 
-    my ($tag, $value) = ($1, $2); 
+    my ($tag, $value) = ($1, $2);
     my @selected = split(/,/, $value);
-    my $callsub = "find_by_" . "$tag"; 
+    my $callsub = "find_by_" . "$tag";
 
     die "Bad tag or function not implemented. Tag was: $tag\n" if !defined($filter_dispatch{$callsub});
 
@@ -256,11 +279,11 @@ sub _internal_stop_or_x {
 sub reading_frame_ops {
     my $frame = $opts{"translate"};
     while ($seq = $in->next_seq()) {
-        if ($frame == 1) { 
-	    if (&_internal_stop_or_x($seq->translate()->seq())) { 
-		warn "internal stop:\t" . $seq->id . "\tskip.\n" 
+        if ($frame == 1) {
+	    if (&_internal_stop_or_x($seq->translate()->seq())) {
+		warn "internal stop:\t" . $seq->id . "\tskip.\n"
 	    } else {
-		$out->write_seq($seq->translate()) 
+		$out->write_seq($seq->translate())
 	    }
 	}
         elsif ($frame == 3) {
@@ -328,14 +351,14 @@ sub count_codons {
     my $new_seq;
     my $myCodonTable = Bio::Tools::CodonTable->new();
     while ($seq = $in->next_seq()) { $new_seq .= $seq->seq() }
-    my $hash_ref = Bio::Tools::SeqStats->count_codons(Bio::Seq->new(-seq=>$new_seq, -id=>'concat'));   
+    my $hash_ref = Bio::Tools::SeqStats->count_codons(Bio::Seq->new(-seq=>$new_seq, -id=>'concat'));
     my $count;
     $count += $hash_ref->{$_} foreach keys %$hash_ref;
     foreach (sort keys %$hash_ref) {
         print $_, ":\t", $myCodonTable->translate($_), "\t", $hash_ref->{$_}, "\t";
         printf "%.2f", $hash_ref->{$_}/$count*100;
         print "%\n"
-    } 
+    }
 }
 
 sub print_gb_gene_feats { # works only for prokaryote genome
@@ -347,11 +370,11 @@ sub print_gb_gene_feats { # works only for prokaryote genome
 	    next if $location->isa('Bio::Location::Split');
             my $gene_tag = "gene_" . $gene_count++;
 	    my $gene_symbol = 'na';
-            foreach my $tag ($feat->get_all_tags()) { 
+            foreach my $tag ($feat->get_all_tags()) {
 		($gene_tag) = $feat->get_tag_values($tag) if $tag eq 'locus_tag';
 		($gene_symbol) = $feat->get_tag_values($tag) if $tag eq 'gene';
 	    }
-            my $gene = Bio::Seq->new(-id => (join "|", ($gene_tag, $feat->start, $feat->end, $feat->strand, $gene_symbol)), 
+            my $gene = Bio::Seq->new(-id => (join "|", ($gene_tag, $feat->start, $feat->end, $feat->strand, $gene_symbol)),
 				     -seq=>$seq->subseq($feat->start, $feat->end));
             if ($feat->strand() > 0) { $out->write_seq($gene) } else { $out->write_seq($gene->revcom())}
 #            print join "\t",

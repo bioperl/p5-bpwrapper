@@ -1,11 +1,14 @@
 [![Build Status](https://travis-ci.org/rocky/bp-utils.png)](https://travis-ci.org/rocky/bp-utils)
 
 # Description
-bp-utils are command-line utilities that are wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign`, etc). The motivation is to relieve BioPerl users from writing full-blown scripts for routine manipulations of sequences, alignments, trees, and others. For common operations of sequences and alignments, bp-utils make it easy to create workflows with a single BASH script containing a combination of bp-utils calls (and no Perl or BioPerl coding is necessary).
+Here we have command-line utilities that are wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign`, etc). The motivation is to relieve BioPerl users from writing full-blown scripts for routine manipulations of sequences, alignments, trees, and others. For common operations of sequences and alignments, bp-utils make it easy to create workflows with a single BASH script containing a combination of bp-utils calls (and no Perl or BioPerl coding is necessary).
 
-Internally, bp-utils follow a "Wrap, don't Write" design principle. That is, we have full faith in the robustness of the BioPerl development framework. As such, bp-utils methods should ALL be wrappers to BioPerl methdos so that exceptions can be handled properly by BioPerl.
+Internally, the programs follow a "Wrap, don't Write" design principle. That is, we have full faith in the robustness of the BioPerl development framework. As such, bp-utils methods should ALL be wrappers to BioPerl methdos so that exceptions can be handled properly by BioPerl.
 
-In reality, though, some methods are new and unique to bp-utils. In the future, all non-wrapper methods in bp-utils should ideally be re-factored into BioPerl class methods. This way, the bp-utils layer could be as thin as possibe and new methods could be added with minimal coding.
+In reality, though, some methods are new and unique to this package. In the future, all non-wrapper methods in bp-utils should ideally be re-factored into BioPerl class methods. This way, the bp-utils layer could be as thin as possibe and new methods could be added with minimal coding.
+
+See [BioUtils](http://diverge.hunter.cuny.edu/labwiki/Bioutils) for
+more information.
 
 # Dependencies
 * Perl 5.10.0 or higher

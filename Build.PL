@@ -15,7 +15,7 @@ my $release_status = ($Bio::Wrapper::Version::VERSION =~ /_/) ?
     'testing' : 'stable';
 
 my $builder = Module::Build->new(
-    module_name         => 'Bio::Wrapper', # ??
+    module_name         => 'Bio::Wrapper',
     add_to_cleanup      => [ 'Bio-Wrapper-*', 'tmp*', 't/check-data/*.got',
                              '*IGS:11.fas', 't/*IGS:11.fas',
 			     'test-files/test-bioaln.cds.slice*.aln',
@@ -27,8 +27,8 @@ my $builder = Module::Build->new(
     dist_abstract       =>
     'wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign',
     dist_version_from   => 'lib/Bio/Wrapper/Version.pm',
-    # dist_author         => '???',
-    # license             => '???gpl',
+    dist_author         => ['Y. Hernandez', 'P. Pagan',  'G. Ramrattan', 'W.-G. Qiu'],
+    license             => 'perl_5',
     needs_compiler      => 0,
     release_status      => $release_status,
 
@@ -51,7 +51,21 @@ my $builder = Module::Build->new(
         'perl'                              => '5.001000',
         'Bio::Root::Version'                => '1.6.924',
         'rlib'                              => '0.02',
-        'version'                           => 0,
+    },
+
+    provides => {
+	'Bio::Wrapper::AlnManipulations' => {
+	    file    => 'lib/Bio/Wrapper/AlnManipulations.pm',
+	},
+	'Bio::Wrapper::PopManipulations' => {
+	    file    => 'lib/Bio/Wrapper/PopManipulations.pm',
+	},
+	'Bio::Wrapper::SeqManipulations' => {
+	    file    => 'lib/Bio/Wrapper/SeqManipulations.pm',
+	},
+	'Bio::Wrapper::SeqManipulations' => {
+	    file    => 'lib/Bio/Wrapper/Version.pm',
+	},
     },
 
     sign                => ($ENV{PERL_MB_NOSIGN} ? 0 : 1),
