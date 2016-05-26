@@ -16,7 +16,7 @@ my $release_status = ($Bio::BPWrapper::VERSION =~ /_/) ?
 
 my $builder = Module::Build->new(
     module_name         => 'Bio::BPWrapper',
-    add_to_cleanup      => [ 'Bio-BPWrapper-*', 'tmp*', 't/check-data/*.got',
+    add_to_cleanup      => [ 'Bio-BPWrapper-*', 't/check-data/*.got',
                              '*IGS:11.fas', 't/*IGS:11.fas',
 			     'test-files/test-bioaln.cds.slice*.aln',
 			     'test-bioseq.nuc.sed', 't/test-bioseq.nuc.sed',
