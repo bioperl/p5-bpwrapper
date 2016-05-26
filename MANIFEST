@@ -105,3 +105,6 @@ test-files/test-bioseq.pep
 test-files/test-biotree.dnd
 test-setup.sh
 TODO.md
+Makefile.PL
+META.yml
+META.json

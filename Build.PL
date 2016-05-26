@@ -27,7 +27,7 @@ my $builder = Module::Build->new(
     dist_abstract       =>
     'wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign',
     dist_version_from   => 'lib/Bio/BPWrapper/Version.pm',
-    dist_author         => ['Y. Hernandez', 'P. Pagan',  'G. Ramrattan', 'W.-G. Qiu'],
+    dist_author         => ['Y. Hernandez', 'P. Pagan',  'G. Ramrattan', 'W.-G. Qiu', 'R. Bernstein'],
     license             => 'perl_5',
     needs_compiler      => 0,
     release_status      => $release_status,
@@ -54,6 +54,9 @@ my $builder = Module::Build->new(
     },
 
     provides => {
+	'Bio::BPWrapper' => {
+	    file    => 'lib/Bio/Wrapper/AlnManipulations.pm',
+	},
 	'Bio::BPWrapper::AlnManipulations' => {
 	    file    => 'lib/Bio/Wrapper/AlnManipulations.pm',
 	},
