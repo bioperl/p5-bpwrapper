@@ -1,4 +1,4 @@
-
+=encoding utf8
 =head1 NAME
 
 PopManipulations - Functions for biopop
@@ -178,7 +178,7 @@ sub count_four_gametes { # four gamete test for recombination (and wilson's test
 			      $j,
 			      $valid_sites[$i],
 			      $valid_sites[$j],
-			      $ct1, $ct2, $ct3, $ct4,
+			      $ct1, $ct2, $ct3, $ct4, &_shanon_counts([ ($ct1, $ct2, $ct3, $ct4) ]),
 			      $ct_zero == 0 ? 0 : 1,  # competible if $ct_zero > 0
 			      $ct_zero == 2 ? 1 : 0); # epistatic if $ct_zero == 2
 	    print "\n";
@@ -330,6 +330,23 @@ sub snp_noncoding {
     }
 }
 
+sub _shanon_counts {
+    my $ref = shift;
+    my @cts = @$ref;
+    my $h = 0;
+    my $sum = 0;
+    foreach my $ct ( @cts) {
+	next unless $ct;
+	$sum += $ct;
+    }
+    foreach my $ct ( @cts) {
+	next unless $ct;
+	my $freq = $ct/$sum;
+	$h += -1 * $freq * log($freq)/log(2);
+    }
+    return sprintf "%.6f", $h;
+}
+
 sub _shanon_index {
     my $ref = shift;
     my %f = %$ref;
@@ -355,17 +372,17 @@ sub snp_coding {
         if (scalar @alleles > 2) { warn $site, ": more than 2 alleles.", join (",", @alleles), "\n"; next }  # consider only 2-state polymorphic sites
         my %freqs = $pop_marker->get_Allele_Frequencies; # print $out_aa, "=>", Dumper(\%freqs); next;
         my ($minor, $major, $syn) = &_syn_nonsyn(\%freqs);
-
+	my $snp_site = 3 * $site + &_snp_position($minor->{codon}, $major->{codon});
 	my $shanon = &_shanon_index(\%freqs);
 	say join "\t", ($aln_file, $site, $snp_site, $syn, $minor->{codon}, $minor->{aa}, $minor->{freq}, $major->{codon}, $major->{aa}, $major->{freq}, $shanon);
-
-	# foreach my $ind ($pop_cds->get_Individuals) {
-        #     my @genotypes = $ind->get_Genotypes(-marker => $site);
-        #     my $id = $ind->unique_id();
-        #     my $geno = shift @genotypes;
-        #     my ($allele) = $geno->get_Alleles();
-	#     say join "\t", ($aln_file, $site, $id, $snp_site, $syn, $allele);
-	# }
+	
+#	foreach my $ind ($pop_cds->get_Individuals) {
+#            my @genotypes = $ind->get_Genotypes(-marker => $site);
+#            my $id = $ind->unique_id();
+#            my $geno = shift @genotypes;
+#            my ($allele) = $geno->get_Alleles();
+#	    say join "\t", ($aln_file, $site, $id, $snp_site, $syn, $allele);
+#	}
     }
 }
 

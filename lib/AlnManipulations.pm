@@ -57,6 +57,7 @@ my %opt_dispatch = (
     "random-slice" => \&random_slice,
     "uppercase" => \&upper_case,
     "gapstates" => \&gap_states,
+    "gapstates2" => \&gap_states_matrix,
     "trimends" => \&trim_ends,
     "bin-inform" => \&binary_informative,
     "phy-nonint" => \&phylip_non_interleaved
@@ -322,6 +323,70 @@ sub gap_states {
 #    print Dumper(\@uniq_gaps);
     exit;
 }
+
+sub gap_states_matrix {
+    my (@seq_ids, @gaps);
+    foreach my $seq ($aln->each_seq()) {
+        my $id = $seq->display_id();
+	push @seq_ids, $id;
+        my @nts = split //, $seq->seq();
+	my $gap_start = 0;
+	my $new;
+	for (my $i=0; $i< $aln->length(); $i++) {
+	    if ($nts[$i] eq '-') {
+		if ($gap_start) { # gap -> gap
+		    $new->{end}++;
+		} else { # nt -> gap
+		    $gap_start = 1;
+		    $new = { 'start' => $i+1, 'end' => $i+1, 'seq_name' => $id }
+		}
+	    } else {
+		if ($gap_start) { # gap -> nt
+		    $gap_start = 0; 
+		    push @gaps, $new;
+		} else { # nt -> nt
+		    next;
+		}
+	    }
+	}
+	push @gaps, $new if $gap_start;
+    }
+    my (%gap_freqs, @uniq_gaps, %gap_presence);
+    foreach my $gap (@gaps) {
+	my $id = $gap->{start} . "-" . $gap->{end};
+	$gap->{id} = $id;
+	$gap_freqs{$id}++;
+	$gap_presence{$id}->{$gap->{seq_name}} = 1;
+    }
+
+    foreach my $id (keys %gap_freqs) {
+	my ($start, $end) = split /-/, $id;
+	push @uniq_gaps, {
+	    'start' => $start,
+	    'end' => $end,
+	    'is_edge' => ($start == 1 || $end == $aln->length) ? 1 : 0,
+	    'in_frame' => ($end - $start + 1) % 3 ? 0 : 1,
+	    'counts' => $gap_freqs{$id},
+	    'id' => $id
+	};
+    }
+
+    my @gaps_sorted = sort {$a->{start} <=> $b->{start} || $a->{end} <=> $b->{end}} @uniq_gaps;
+    foreach (@gaps_sorted) { print "\t", $_->{id}}
+    print "\n";
+    foreach my $sid (sort @seq_ids) {
+	print $sid;
+	foreach my $u_gap (@gaps_sorted) {
+	    print "\t", $gap_presence{$u_gap->{id}}->{$sid} || 0;
+	}
+	print "\n";
+    }
+
+#    foreach my $gap (@uniq_gaps) { say join "\t", ($file, $gap->{start}, $gap->{end}, $gap->{is_edge}, $gap->{in_frame}, $gap->{counts}, $aln->length()) }
+#    print Dumper(\@uniq_gaps);
+    exit;
+}
+
 
 sub print_avp_id {
     say $aln->average_percentage_identity();

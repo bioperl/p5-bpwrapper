@@ -240,6 +240,7 @@ sub print_subseq {
     while ($seq = $in->next_seq()) {
         my $id = $seq->id();
         my ($start, $end) = split /\s*,\s*/, $opts{"subseq"};
+	$end = $seq->length() if $end eq '-'; # allow shorthand: -s'2,-'
         die "end out of bound: $id\n" if $end > $seq->length();
         my $new = Bio::Seq->new(-id  => $seq->id() . ":$start-$end", -seq => $seq->subseq($start, $end));
         $out->write_seq($new)
@@ -345,8 +346,12 @@ sub print_gb_gene_feats { # works only for prokaryote genome
 	    my $location = $feat->location();
 	    next if $location->isa('Bio::Location::Split');
             my $gene_tag = "gene_" . $gene_count++;
-            foreach my $tag ($feat->get_all_tags()) { ($gene_tag) = $feat->get_tag_values($tag) if $tag eq 'locus_tag' }
-            my $gene = Bio::Seq->new(-id => (join "|", ($gene_tag, $feat->start, $feat->end, $feat->strand)), 
+	    my $gene_symbol = 'na';
+            foreach my $tag ($feat->get_all_tags()) { 
+		($gene_tag) = $feat->get_tag_values($tag) if $tag eq 'locus_tag';
+		($gene_symbol) = $feat->get_tag_values($tag) if $tag eq 'gene';
+	    }
+            my $gene = Bio::Seq->new(-id => (join "|", ($gene_tag, $feat->start, $feat->end, $feat->strand, $gene_symbol)), 
 				     -seq=>$seq->subseq($feat->start, $feat->end));
             if ($feat->strand() > 0) { $out->write_seq($gene) } else { $out->write_seq($gene->revcom())}
 #            print join "\t",

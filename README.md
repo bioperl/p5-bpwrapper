@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/rocky/bp-utils.png)](https://travis-ci.org/rocky/bp-utils)
+
 # Description
 bp-utils are command-line utilities that are wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign`, etc). The motivation is to relieve BioPerl users from writing full-blown scripts for routine manipulations of sequences, alignments, trees, and others. For common operations of sequences and alignments, bp-utils make it easy to create workflows with a single BASH script containing a combination of bp-utils calls (and no Perl or BioPerl coding is necessary).
 
@@ -27,13 +29,14 @@ in a terminal.
 
 # Install & Test from git:
 
-    git clone https://github.com/bioperl/bp-utils
-	cpan Module::Build
-	perl ./Build.PL
-	./Build installdeps
-	./Build
-	make check  # runs both Perl and Bash test scripts
-	./Build install # may require sudo or root access
+    $ git clone https://github.com/bioperl/bp-utils
+	$ cd bp-utils
+	$ cpan Module::Build  # may need sudo
+	$ perl ./Build.PL
+	$ ./Build installdeps
+	$ ./Build
+	$ make check  # runs both Perl and Bash test scripts
+	$ ./Build install # may require sudo or root access
 
 # Install & Test (assuming a UNIX/Linux-like environment)
 * Go to repository: https://github.com/bioperl/bp-utils
