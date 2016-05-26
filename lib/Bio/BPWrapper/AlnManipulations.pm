@@ -1,14 +1,14 @@
 =head1 NAME
 
-Bio::Wrapper::AlnManipulations - Functions for bioaln
+Bio::BPWrapper::AlnManipulations - Functions for bioaln
 
 =head1 SYNOPSIS
 
-    require Bio::Wrapper::AlnManipulations;
+    require Bio::BPWrapper::AlnManipulations;
 
 =cut
 
-package Bio::Wrapper::AlnManipulations;
+package Bio::BPWrapper::AlnManipulations;
 
 use strict;
 use warnings;

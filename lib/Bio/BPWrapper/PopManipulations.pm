@@ -5,11 +5,11 @@ Bio::Wrapper::PopManipulations - Functions for biopop
 
 =head1 SYNOPSIS
 
-    require Bio::Wrapper::PopManipulations;
+    require Bio::BPWrapper::PopManipulations;
 
 =cut
 
-package Bio::Wrapper::PopManipulations;
+package Bio::BPWrapper::PopManipulations;
 
 # MK method is broken: change to comma-delimited way of specifying in group and out groups.
 use strict;    # Still on 5.10, so need this for strict

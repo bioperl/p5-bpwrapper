@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use FindBin;                      # Find the location of seq-manipulations
 use rlib '../lib';
-require Bio::Wrapper::PopManipulations;
+require Bio::BPWrapper::PopManipulations;
 use 5.010;
 use Getopt::Long qw(:config gnu_getopt);
 use Pod::Usage;

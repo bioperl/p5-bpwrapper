@@ -1,15 +1,15 @@
 =encoding utf8
 =head1 NAME
 
-Bio::Wrapper::SeqManipulations - Functions for bioseq
+Bio::BPWrapper::SeqManipulations - Functions for bioseq
 
 =head1 SYNOPSIS
 
-    require Bio::Wrapper::SeqManipulations;
+    require Bio::BPWrapper::SeqManipulations;
 
 =cut
 
-package Bio::Wrapper::SeqManipulations;
+package Bio::BPWrapper::SeqManipulations;
 
 use strict;    # Still on 5.10, so need this for strict
 use warnings;

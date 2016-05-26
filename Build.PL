@@ -9,14 +9,14 @@ use File::Spec;
 
 my $lib = File::Spec->catfile(dirname(__FILE__), 'lib');
 unshift @INC, $lib;
-require Bio::Wrapper::Version;
+require Bio::BPWrapper::Version;
 
-my $release_status = ($Bio::Wrapper::Version::VERSION =~ /_/) ?
+my $release_status = ($Bio::BPWrapper::Version::VERSION =~ /_/) ?
     'testing' : 'stable';
 
 my $builder = Module::Build->new(
-    module_name         => 'Bio::Wrapper',
-    add_to_cleanup      => [ 'Bio-Wrapper-*', 'tmp*', 't/check-data/*.got',
+    module_name         => 'Bio::BPWrapper',
+    add_to_cleanup      => [ 'Bio-BPWrapper-*', 'tmp*', 't/check-data/*.got',
                              '*IGS:11.fas', 't/*IGS:11.fas',
 			     'test-files/test-bioaln.cds.slice*.aln',
 			     'test-bioseq.nuc.sed', 't/test-bioseq.nuc.sed',
@@ -26,7 +26,7 @@ my $builder = Module::Build->new(
     create_makefile_pl  => 'passthrough',
     dist_abstract       =>
     'wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign',
-    dist_version_from   => 'lib/Bio/Wrapper/Version.pm',
+    dist_version_from   => 'lib/Bio/BPWrapper/Version.pm',
     dist_author         => ['Y. Hernandez', 'P. Pagan',  'G. Ramrattan', 'W.-G. Qiu'],
     license             => 'perl_5',
     needs_compiler      => 0,
@@ -54,16 +54,16 @@ my $builder = Module::Build->new(
     },
 
     provides => {
-	'Bio::Wrapper::AlnManipulations' => {
+	'Bio::BPWrapper::AlnManipulations' => {
 	    file    => 'lib/Bio/Wrapper/AlnManipulations.pm',
 	},
-	'Bio::Wrapper::PopManipulations' => {
+	'Bio::BPWrapper::PopManipulations' => {
 	    file    => 'lib/Bio/Wrapper/PopManipulations.pm',
 	},
-	'Bio::Wrapper::SeqManipulations' => {
+	'Bio::BPWrapper::SeqManipulations' => {
 	    file    => 'lib/Bio/Wrapper/SeqManipulations.pm',
 	},
-	'Bio::Wrapper::SeqManipulations' => {
+	'Bio::BPWrapper::SeqManipulations' => {
 	    file    => 'lib/Bio/Wrapper/Version.pm',
 	},
     },
