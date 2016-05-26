@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/rocky/bp-utils.png)](https://travis-ci.org/rocky/p5-bpwrapper)
+[![Build Status](https://travis-ci.org/rocky/p5-bpwrapper.png)](https://travis-ci.org/rocky/p5-bpwrapper)
 
 # Description
 Here we have command-line utilities that are wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign`, etc). The motivation is to relieve BioPerl users from writing full-blown scripts for routine manipulations of sequences, alignments, trees, and others. For common operations of sequences and alignments, bp-utils make it easy to create workflows with a single BASH script containing a combination of bp-utils calls (and no Perl or BioPerl coding is necessary).
