@@ -9,9 +9,9 @@ use File::Spec;
 
 my $lib = File::Spec->catfile(dirname(__FILE__), 'lib');
 unshift @INC, $lib;
-require Bio::BPWrapper::Version;
+require Bio::BPWrapper;
 
-my $release_status = ($Bio::BPWrapper::Version::VERSION =~ /_/) ?
+my $release_status = ($Bio::BPWrapper::VERSION =~ /_/) ?
     'testing' : 'stable';
 
 my $builder = Module::Build->new(
@@ -26,7 +26,7 @@ my $builder = Module::Build->new(
     create_makefile_pl  => 'passthrough',
     dist_abstract       =>
     'wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign',
-    dist_version_from   => 'lib/Bio/BPWrapper/Version.pm',
+    dist_version_from   => 'lib/Bio/BPWrapper.pm',
     dist_author         => ['Y. Hernandez', 'P. Pagan',  'G. Ramrattan', 'W.-G. Qiu', 'R. Bernstein'],
     license             => 'perl_5',
     needs_compiler      => 0,

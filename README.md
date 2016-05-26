@@ -75,20 +75,3 @@ in a terminal.
 * Add to the POD Usage. Note that POD usages are ordered by short names alphabatically
 * Add a subroutine to the script itself. Note that subroutines are ordered according to POD usage (alphatically by short names)
 * Add a test command to the testing file (add a test file if necessary)
-
-# Release Notes
-* Release 1.0. (Feb 10, 2015): Contains two utilities with tests: bioseq & bioaln. To be released: biopop & biotree
-* Release 1.?. (???): Package for CPAN, use more Test::More in testing
-
-# To Do List
-* bioaln: --gapstates implemented, but needs to add to POD & test
-* biotree: deroot a tree
-* biotree: --multi2bi; need to add to POD & test
-* biotree: --bi2multi
-* biotree: --cleanbr remove branch length; need to add to POD & test
-* biotree: --cleanboot remove boot/node labels; need to add to POD & test
-* biotree: --remove an OTU
-* bioaln: -- add --informative
-* biopop: bipart added; needs to add POD & test
-* biotree: bipart (sister_pairs) added; needs to add POD & test
-* biotree: swap-otus added; needs to add POD & test

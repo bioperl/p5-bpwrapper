@@ -16,7 +16,7 @@ Test-biotree.bash
 lib/Bio/BPWrapper/AlnManipulations.pm
 lib/Bio/BPWrapper/PopManipulations.pm
 lib/Bio/BPWrapper/SeqManipulations.pm
-lib/Bio/BPWrapper/Version.pm
+lib/Bio/BPWrapper.pm
 t/10test-bioaln.t
 t/10test-bioseq.t
 t/10test-biotree.t
