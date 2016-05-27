@@ -5,7 +5,7 @@ Here we have command-line utilities that are wrappers of popular BioPerl classes
 
 Internally, the programs follow a "Wrap, don't Write" design principle. That is, we have full faith in the robustness of the BioPerl development framework. As such, bp-utils methods should ALL be wrappers to BioPerl methdos so that exceptions can be handled properly by BioPerl.
 
-In reality, though, some methods are new and unique to this package. In the future, all non-wrapper methods in bp-utils should ideally be re-factored into BioPerl class methods. This way, the bp-utils layer could be as thin as possibe and new methods could be added with minimal coding.
+However, some methods are new and unique to this package. In the future, all non-wrapper methods in bp-utils should ideally be re-factored into BioPerl class methods. This way, the bp-utils layer could be as thin as possibe and new methods could be added with minimal coding.
 
 See [BioUtils](http://diverge.hunter.cuny.edu/labwiki/Bioutils) for
 more information.
@@ -66,12 +66,3 @@ in a terminal.
 * Girish Ramrattan
 * Weigang Qiu, City University of New York, Hunter College (Correspondence: weigang@genectr.hunter.cuny.edu)
 * If you find the tools useful, please cite: Hernandez Y., P. Pagan,  G. Ramrattan, & W.-G. Qiu. (2015). Bp-utils (Release 1.0): BioPerl-based command-line utilities for manipulating sequences, alignments, and phylogenetic trees. URL: https://github.com/bioperl/bp-utils.
-
-# Checklist for adding a method (for developers):
-* We encourage BioPerl developers to add command-line interface to their BioPerl methods by using bp-utils.
-* To do so, please contact Weigang Qiu, City University of New York, Hunter College  (weigang@genectr.hunter.cuny.edu)
-* For each new mehtod, first pick a long option (--option) and (optionally) a one-letter short (-x) option
-* Add one line to the POD Synopsis
-* Add to the POD Usage. Note that POD usages are ordered by short names alphabatically
-* Add a subroutine to the script itself. Note that subroutines are ordered according to POD usage (alphatically by short names)
-* Add a test command to the testing file (add a test file if necessary)
