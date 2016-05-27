@@ -1,10 +1,9 @@
 #!/usr/bin/env perl
-use strict;    # Still on 5.10, so need this for strict
+use strict;
 use warnings;
 use FindBin;                      # Find the location of seq-manipulations
 use rlib '../lib';
-use lib "$FindBin::RealBin/lib";          # to use it as a lib path
-require "PopManipulations.pm";    # to get this library!
+require Bio::BPWrapper::PopManipulations;
 use 5.010;
 use Getopt::Long qw(:config gnu_getopt);
 use Pod::Usage;
@@ -46,8 +45,6 @@ GetOptions(
 pod2usage(1) if $opts{"help"};
 pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
 &print_version() if $opts{"version"};
-
-
 
 ######################## Main #####################
 

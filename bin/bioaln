@@ -2,10 +2,8 @@
 
 use strict;
 use warnings;
-use FindBin;                      # Find the location of aln-manipulations
 use rlib '../lib';
-use lib "$FindBin::RealBin/lib";          # to use it as a lib path
-require "AlnManipulations.pm";    # to get this library!
+use Bio::BPWrapper::AlnManipulations;
 use 5.010;
 use Getopt::Long qw(:config gnu_getopt);
 use Pod::Usage;
@@ -569,7 +567,7 @@ Usage: bioseq -V
 
 =head1 REQUIRES
 
-Perl 5.100, Modern::Perl, BioPerl
+Perl 5.10 or greater, BioPerl
 
 =head1 FEEDBACK
 

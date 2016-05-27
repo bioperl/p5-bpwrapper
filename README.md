@@ -1,11 +1,14 @@
-[![Build Status](https://travis-ci.org/rocky/bp-utils.png)](https://travis-ci.org/rocky/bp-utils)
+[![Build Status](https://travis-ci.org/rocky/p5-bpwrapper.png)](https://travis-ci.org/rocky/p5-bpwrapper)
 
 # Description
-bp-utils are command-line utilities that are wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign`, etc). The motivation is to relieve BioPerl users from writing full-blown scripts for routine manipulations of sequences, alignments, trees, and others. For common operations of sequences and alignments, bp-utils make it easy to create workflows with a single BASH script containing a combination of bp-utils calls (and no Perl or BioPerl coding is necessary).
+Here we have command-line utilities that are wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign`, etc). The motivation is to relieve BioPerl users from writing full-blown scripts for routine manipulations of sequences, alignments, trees, and others. For common operations of sequences and alignments, bp-utils make it easy to create workflows with a single BASH script containing a combination of bp-utils calls (and no Perl or BioPerl coding is necessary).
 
-Internally, bp-utils follow a "Wrap, don't Write" design principle. That is, we have full faith in the robustness of the BioPerl development framework. As such, bp-utils methods should ALL be wrappers to BioPerl methdos so that exceptions can be handled properly by BioPerl.
+Internally, the programs follow a "Wrap, don't Write" design principle. That is, we have full faith in the robustness of the BioPerl development framework. As such, bp-utils methods should ALL be wrappers to BioPerl methdos so that exceptions can be handled properly by BioPerl.
 
-In reality, though, some methods are new and unique to bp-utils. In the future, all non-wrapper methods in bp-utils should ideally be re-factored into BioPerl class methods. This way, the bp-utils layer could be as thin as possibe and new methods could be added with minimal coding.
+In reality, though, some methods are new and unique to this package. In the future, all non-wrapper methods in bp-utils should ideally be re-factored into BioPerl class methods. This way, the bp-utils layer could be as thin as possibe and new methods could be added with minimal coding.
+
+See [BioUtils](http://diverge.hunter.cuny.edu/labwiki/Bioutils) for
+more information.
 
 # Dependencies
 * Perl 5.10.0 or higher
@@ -72,20 +75,3 @@ in a terminal.
 * Add to the POD Usage. Note that POD usages are ordered by short names alphabatically
 * Add a subroutine to the script itself. Note that subroutines are ordered according to POD usage (alphatically by short names)
 * Add a test command to the testing file (add a test file if necessary)
-
-# Release Notes
-* Release 1.0. (Feb 10, 2015): Contains two utilities with tests: bioseq & bioaln. To be released: biopop & biotree
-* Release 1.?. (???): Package for CPAN, use more Test::More in testing
-
-# To Do List
-* bioaln: --gapstates implemented, but needs to add to POD & test
-* biotree: deroot a tree
-* biotree: --multi2bi; need to add to POD & test
-* biotree: --bi2multi
-* biotree: --cleanbr remove branch length; need to add to POD & test
-* biotree: --cleanboot remove boot/node labels; need to add to POD & test
-* biotree: --remove an OTU
-* bioaln: -- add --informative
-* biopop: bipart added; needs to add POD & test
-* biotree: bipart (sister_pairs) added; needs to add POD & test
-* biotree: swap-otus added; needs to add POD & test

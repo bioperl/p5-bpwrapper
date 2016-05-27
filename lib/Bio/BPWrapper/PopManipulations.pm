@@ -1,13 +1,15 @@
 =encoding utf8
 =head1 NAME
 
-PopManipulations - Functions for biopop
+Bio::Wrapper::PopManipulations - Functions for biopop
 
 =head1 SYNOPSIS
 
-use B<PopMan::Subs>;
+    require Bio::BPWrapper::PopManipulations;
 
 =cut
+
+package Bio::BPWrapper::PopManipulations;
 
 # MK method is broken: change to comma-delimited way of specifying in group and out groups.
 use strict;    # Still on 5.10, so need this for strict
@@ -29,6 +31,20 @@ use List::Util qw(shuffle sum);
 #use Statistics::Basic qw(:all);
 use Bio::Tools::CodonTable;
 use Data::Dumper;
+use Exporter ();
+
+use vars qw(@ISA @EXPORT @EXPORT_OK);
+
+@ISA         = qw(Exporter);
+
+# FIXME: some of these might be put in
+# a common routine like print_version
+@EXPORT      = qw(initialize can_handle handle_opt
+print_distance print_heterozygosity print_mismatch_distr
+count_four_gametes print_diversity bi_partition
+bisites_for_r bisites snp_noncoding snp_coding
+snp_coding_log print_num_snps print_version
+);
 
 # Package global variables
 my ($opts,     $flags,       $aln_file, $aln,         $in,
@@ -375,7 +391,7 @@ sub snp_coding {
 	my $snp_site = 3 * $site + &_snp_position($minor->{codon}, $major->{codon});
 	my $shanon = &_shanon_index(\%freqs);
 	say join "\t", ($aln_file, $site, $snp_site, $syn, $minor->{codon}, $minor->{aa}, $minor->{freq}, $major->{codon}, $major->{aa}, $major->{freq}, $shanon);
-	
+
 #	foreach my $ind ($pop_cds->get_Individuals) {
 #            my @genotypes = $ind->get_Genotypes(-marker => $site);
 #            my $id = $ind->unique_id();
