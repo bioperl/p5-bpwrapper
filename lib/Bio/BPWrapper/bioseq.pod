@@ -1,79 +1,4 @@
-#!/usr/bin/env perl
-
-use strict;
-use warnings;
-use rlib '../lib';
-use Bio::BPWrapper::SeqManipulations;
-use 5.010;
-use Getopt::Long qw(:config gnu_getopt);
-use Pod::Usage;
-
-####################### Option parsing ######################
-my %opts;
-GetOptions(
-    \%opts,
-    "help|h",
-    "man",
-    "composition|c",
-    "delete|d=s",
-    "fetch|f=s", # Retrieve sequence by accession number
-    "nogaps|g",
-    "input|i=s",
-    "length|l",
-    "numseq|n",
-    "output|o=s",
-    "pick|p=s",
-    "revcom|r",
-    "subseq|s=s",
-    "translate|t=i", #Needs error checking
-    "restrict|x=s",
-    "anonymize|A:10",    # default 10 char (for phylip) (prefix + num_digits)
-    "break|B",
-    "count-codons|C",
-    "feat2fas|F",
-    "leadgaps|G",
-    "hydroB|H",
-    "linearize|L",
-    "reloop|R=i", # recircularize a genome at "loop_at"
-    "version|V",
-    "removestop|X", # for PAML/codeml
-    "split-cdhit=s",
- #   "longest-orf|C",
- #   "extract|e",
- #   "dotplot|D=s",
- #   "rename|N=s",
- #   "slidingwindow|S=i",
- #   "prefix=s",
- #   "split|S=i",
-) or pod2usage(2);
-
-pod2usage(1) if $opts{"help"};
-pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
-&print_version() if $opts{"version"};
-
-
-######################## Main #####################
-
-# This sets all internal variables, and loads Bio::Seq objects
-initialize(\%opts);
-
-for my $option (keys %opts) {
-    # Don't process these options: they are for SeqIO
-    next if $option eq 'input' || $option eq 'output';
-
-    # If there is a function to handle the current option, execute it
-    if (can_handle($option)) { handle_opt($option); exit }
-    else { warn "Missing handler for: $option\n" }
-}
-
-# Let seq-manipulations act as a converter when no other options are given.
-write_out();
-
-################# POD Documentation ##################
-
-__END__
-
-=head1 NAME
+=head1 Name bioseq
 
 =over
 
@@ -81,44 +6,44 @@ __END__
 
 =back
 
-=head1 SYNOPSIS
+=head1 Synopsis
 
- # FASTA descriptors:
- bioseq -l fasta_file             # [l]engths of sequences
- bioseq -n fasta_file             # [n]umber of sequences
- bioseq -c fasta_file             # base or aa [c]omposition of sequences
+    # FASTA descriptors:
+    bioseq -l fasta_file             # [l]engths of sequences
+    bioseq -n fasta_file             # [n]umber of sequences
+    bioseq -c fasta_file             # base or aa [c]omposition of sequences
 
- # FASTA filters (FASTA in FASTA out) - one or more sequences:
- bioseq -r fasta_file             # [r]everse-complement sequences
- bioseq -p'order:3' fasta_file    # [p]ick the 3rd sequences
- bioseq -p're:B31' fasta_file     # [p]ick sequences with regex
- bioseq -d'order:3' fasta_file    # [d]elete the 3rd sequences
- bioseq -d're:B31' fasta_file     # [d]elete sequences with regex
- bioseq -t1 dna_fasta             # [t]ranslate in 1st reading frame
- bioseq -t3 dna_fasta             # [t]ranslate in 3 reading frames
- bioseq -t6 dna_fasta             # [t]ranslate in 6 reading frames
- bioseq -g fasta_file             # remove [g]aps
- bioseq -A fasta_file             # [A]nonymize sequence IDs
+    # FASTA filters (FASTA in FASTA out) - one or more sequences:
+    bioseq -r fasta_file             # [r]everse-complement sequences
+    bioseq -p'order:3' fasta_file    # [p]ick the 3rd sequences
+    bioseq -p're:B31' fasta_file     # [p]ick sequences with regex
+    bioseq -d'order:3' fasta_file    # [d]elete the 3rd sequences
+    bioseq -d're:B31' fasta_file     # [d]elete sequences with regex
+    bioseq -t1 dna_fasta             # [t]ranslate in 1st reading frame
+    bioseq -t3 dna_fasta             # [t]ranslate in 3 reading frames
+    bioseq -t6 dna_fasta             # [t]ranslate in 6 reading frames
+    bioseq -g fasta_file             # remove [g]aps
+    bioseq -A fasta_file             # [A]nonymize sequence IDs
 
- # FASTA filters (FASTA in FASTA out) - single sequence:
- bioseq -s'1,10' fasta_file       # [s]ubsequence from positions 1-10
- bioseq -R'10' bac_genome_fasta   # [R]e-circularize a genome t position 10
+    # FASTA filters (FASTA in FASTA out) - single sequence:
+    bioseq -s'1,10' fasta_file       # [s]ubsequence from positions 1-10
+    bioseq -R'10' bac_genome_fasta   # [R]e-circularize a genome t position 10
 
- # Retrieve sequence from database
- bioseq -f 'X83553' -o 'genbank'  # [f]etch a genbank file by accession
- bioseq -f 'X83553' -o 'fasta'    # [f]etch a genbank file in FASTA
+    # Retrieve sequence from database
+    bioseq -f 'X83553' -o 'genbank'  # [f]etch a genbank file by accession
+    bioseq -f 'X83553' -o 'fasta'    # [f]etch a genbank file in FASTA
 
- # Less common usages (options in CAPs)
- bioseq -L fasta_file             # [L]inearize FASTA: one sequence per line
- bioseq -B fasta_file             # [B]reak into single-seq files
- bioseq -C cds_fasta              # [C]odon counts (for coding sequences)
- bioseq -H pep_fasta              # [H]ydrophobicity score (for protein seq)
- bioseq -i'genbank' -F file.gb    # extract genbank [F]eatures to FASTA
- bioseq -x 'EcoRI' dna_fasta      # Fragments from restriction digest
+    # Less common usages (options in CAPs)
+    bioseq -L fasta_file             # [L]inearize FASTA: one sequence per line
+    bioseq -B fasta_file             # [B]reak into single-seq files
+    bioseq -C cds_fasta              # [C]odon counts (for coding sequences)
+    bioseq -H pep_fasta              # [H]ydrophobicity score (for protein seq)
+    bioseq -i'genbank' -F file.gb    # extract genbank [F]eatures to FASTA
+    bioseq -x 'EcoRI' dna_fasta      # Fragments from restriction digest
 
- # Chaining with pipes:
- bioseq -p'id:B31' dna_fasta | bioseq -g | bioseq -t1          # pick a seq, remove gaps, & translate
- bioseq -p'order:2' dna_fasta | bioseq -r | bioseq -s'10,20'   # pick the 2nd seq, rev-com it, & subseq
+    # Chaining with pipes:
+    bioseq -p'id:B31' dna_fasta | bioseq -g | bioseq -t1          # pick a seq, remove gaps, & translate
+    bioseq -p'order:2' dna_fasta | bioseq -r | bioseq -s'10,20'   # pick the 2nd seq, rev-com it, & subseq
 
 =head1 DESCRIPTION
 
@@ -316,5 +241,3 @@ Please email weigang@genectr.hunter.cuny.edu.
  Weigang Qiu <weigang at genectr dot hunter dot cuny dot edu> (Maintainer)
 
 =cut
-
-##################### End ##########################

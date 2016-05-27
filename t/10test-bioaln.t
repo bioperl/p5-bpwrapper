@@ -43,13 +43,13 @@ note( "Testing bioaln option-value options on test-bioaln.cds" );
 );
 
 
-for my $tup (['d', 'JD1,118a'],
-	     ['o', 'fasta'],
-	     ['p', 'JD1,118a,N40'],
-	     ['w', '60'],
-	     ['r', 'B31'],
-	     ['C', '90'],
-	     ['E', 'B31'],
+for my $tup (#[ 'd', 'JD1,118a'],
+#	     ['o', 'fasta'],
+#	     ['p', 'JD1,118a,N40'],
+#	     ['w', '60'],
+#	     ['r', 'B31'],
+#	     ['C', '90'],
+#	     ['E', 'B31'],
 	     ['I', 'B31,1'])
 {
     run_bio_program('bioaln', 'test-bioaln.cds', "-$tup->[0] $tup->[1]",
