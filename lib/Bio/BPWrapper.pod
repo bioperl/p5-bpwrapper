@@ -55,6 +55,6 @@ We welcome and encourage all developers to contribute any BioPerl-based utilitie
 
 =head2 See also:
 
-L<Bio::BPWrapper::AlnManipulations>, L<Bio::BPWrapper::PopManipulations>, L<SeqManipulations>
+L<Bio::BPWrapper::AlnManipulations>, L<Bio::BPWrapper::PopManipulations>, L<Bio::BPWrapper::SeqManipulations>
 
 =cut
