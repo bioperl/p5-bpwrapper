@@ -1,6 +1,6 @@
 Revision history for Bio::wrappers
 
-1.02 2016-05-26:
+1.03 2016-05-26:
 
 - Make behavior the same across more Platforms:
   use a bundled Getopt::Long
