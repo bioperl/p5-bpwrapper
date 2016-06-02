@@ -1,14 +1,16 @@
 =head1 NAME
 
-AlnManipulations - Functions for bioaln
+Bio::BPWrapper::AlnManipulations - Functions for bioaln
 
 =head1 SYNOPSIS
 
-require B<AlnManipulations>;
+    require Bio::BPWrapper::AlnManipulations;
 
 =cut
 
-use strict;    # Still on 5.10, so need this for strict
+package Bio::BPWrapper::AlnManipulations;
+
+use strict;
 use warnings;
 use 5.010;
 use Bio::AlignIO;
@@ -17,14 +19,33 @@ use Bio::LocatableSeq;
 use Data::Dumper;
 use List::Util qw(shuffle);
 use Bio::Align::Utilities qw(:all);
+use Exporter ();
 
 if ($ENV{'DEBUG'}) { use Data::Dumper }
+
+use vars qw(@ISA @EXPORT @EXPORT_OK);
+
+@ISA         = qw(Exporter);
+
+# FIXME: some of these have too generic names like
+# "upper_case" or "concat". Some things like print_version could be
+# put in a common routine.
+@EXPORT      = qw(initialize can_handle handle_opt write_out write_out_paml
+phylip_non_interleaved split_cdhit trim_ends gap_states
+gap_states_matrix print_avp_id bootstrap draw_codon_view del_seqs
+remove_gaps print_length print_match print_num_seq pick_seq
+change_ref aln_slice get_uniq binary_informative variables_sites
+avg_id_by_win concat conserve_blocks get_consensus dns_to_protein
+remove_gapped_cols_in_one_seq colnum_from_residue_pos
+list_ids premute_states protein_to_dna sample_seqs
+shuffle_sites random_slice select_third_sites remove_third_sites
+upper_case print_version );
 
 # Package global variables
 my ($in, $out, $aln, %opts, $file, $in_format, $out_format, @alns, $binary);
 my $RELEASE = '1.0';
 
-## For new options, just add an entry into this table with the same key as in the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.  
+## For new options, just add an entry into this table with the same key as in the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.
 my %opt_dispatch = (
     "avpid" => \&print_avp_id,
     "bootstrap" => \&bootstrap,
@@ -75,10 +96,10 @@ sub initialize {
     my $default_format = "clustalw";
 
     # assume we're getting input from standard input
-    
+
     $in_format = $opts{"input"} || $default_format;
 
-    if ($opts{"concat"}) { 
+    if ($opts{"concat"}) {
 	   while ($file = shift @ARGV) {
 	       $in = Bio::AlignIO->new(-file => $file, -format => $in_format);
 	       while ($aln=$in->next_aln()) { push @alns, $aln }
@@ -191,7 +212,7 @@ sub split_cdhit {
 	my @seqids = @{ $clusters{$id} };
 	foreach my $seq_id (@seqids) {
 	    $new_aln->add_seq($seqs{$seq_id});
-	} 
+	}
 	$new_aln->set_displayname_flat();
 #	$new_aln = &_remove_common_gaps($new_aln);
 	$out->write_aln($new_aln);
@@ -222,7 +243,7 @@ sub trim_ends {
 		}
 	    } else {
 		if ($gap_start) { # gap -> nt
-		    $gap_start = 0; 
+		    $gap_start = 0;
 		    push @gaps, $new;
 		} else { # nt -> nt
 		    next;
@@ -239,7 +260,7 @@ sub trim_ends {
 	push @three_end_gaps, $gap if $gap->{start} == 1;
 	push @five_end_gaps, $gap if $gap->{end} == $aln->length;
     }
-    
+
     return unless @three_end_gaps or @five_end_gaps;
 
     my $longest_three_end = 0;
@@ -256,11 +277,11 @@ sub trim_ends {
 
     foreach my $gap (@five_end_gaps) {
 	if ($gap->{length} > $longest_five_length) {
-	    $longest_five_start = $gap->{start}; 
+	    $longest_five_start = $gap->{start};
 	    $longest_five_length = $gap->{length};
 	}
     }
-    
+
 #    print STDERR $longest_three, "\t", $longest_five, "\n";
     if (@three_end_gaps) {
 	print STDERR Dumper(\@three_end_gaps);
@@ -292,7 +313,7 @@ sub gap_states {
 		}
 	    } else {
 		if ($gap_start) { # gap -> nt
-		    $gap_start = 0; 
+		    $gap_start = 0;
 		    push @gaps, $new;
 		} else { # nt -> nt
 		    next;
@@ -342,7 +363,7 @@ sub gap_states_matrix {
 		}
 	    } else {
 		if ($gap_start) { # gap -> nt
-		    $gap_start = 0; 
+		    $gap_start = 0;
 		    push @gaps, $new;
 		} else { # nt -> nt
 		    next;
@@ -530,10 +551,10 @@ sub binary_informative {
     my $new_aln = Bio::SimpleAlign->new();
     my $len=$aln->length();
     my (@seq_ids, @inf_sites, %bin_chars);
-    
+
     # Go through each column and save variable sites
     my $ref_bases = &_get_a_site_v2(); #print Dumper($ref_bases); exit;
-    foreach (sort keys %$ref_bases) { push @seq_ids, $_ } 
+    foreach (sort keys %$ref_bases) { push @seq_ids, $_ }
     for (my $i=1; $i<=$len; $i++) {
 	my (%seen, @bases);
 	foreach my $id (@seq_ids) { push @bases, $ref_bases->{$id}->{$i}; }
@@ -544,24 +565,24 @@ sub binary_informative {
 	my ($base1, $base2) = sort keys %seen;
 	$bin_chars{$i}{$base1} = 0;
 	$bin_chars{$i}{$base2} = 1;
-	push @inf_sites, $i; 
+	push @inf_sites, $i;
     }
-    
+
     die "informative sites not found\n" unless @inf_sites;
     foreach (@inf_sites) { warn $_, "\n" }
-    
+
     # Recreate the object for output
     foreach my $id (@seq_ids) {
-        my $seq_str; 
-        foreach my $i (@inf_sites) { 
-            $seq_str .= $binary ? $bin_chars{$i}->{$ref_bases->{$id}->{$i}} : $ref_bases->{$id}->{$i}; 
+        my $seq_str;
+        foreach my $i (@inf_sites) {
+            $seq_str .= $binary ? $bin_chars{$i}->{$ref_bases->{$id}->{$i}} : $ref_bases->{$id}->{$i};
         }
         my $loc_seq = Bio::LocatableSeq->new(-seq => $seq_str, -id => $id, -start => 1);
         my $end = $loc_seq->end;
         $loc_seq->end($end);
         $new_aln->add_seq($loc_seq)
     }
-    
+
     $aln = $new_aln
 }
 
@@ -570,13 +591,13 @@ sub variable_sites {
     my $new_aln = Bio::SimpleAlign->new();
     my $len=$aln->length();
     my (%seq_ids, @sites, @var_sites);
-    
+
     # Go through each column and save variable sites
     for (my $i=1; $i<=$len; $i++) {
         my ($ref_bases, $ref_ids) = &_get_a_site($i);
         %seq_ids = %{$ref_ids};
         my $is_constant = &_is_constant(&_paste_nt($ref_bases));
-        if ($is_constant < 1) { push @sites, $ref_bases; push @var_sites, $i } 
+        if ($is_constant < 1) { push @sites, $ref_bases; push @var_sites, $i }
     }
 
     foreach (@var_sites) { warn $_, "\n" }
@@ -593,7 +614,7 @@ sub variable_sites {
         $loc_seq->end($end);
         $new_aln->add_seq($loc_seq)
     }
-    
+
     $aln = $new_aln
 }
 
@@ -649,7 +670,7 @@ sub conserved_blocks {
             }
         }
     }
-    
+
     foreach my $bl (@blocks) {
         my $out = Bio::AlignIO->new(-file=> ">$file" . ".slice-". $bl->{start} . ".aln" , -format=>'clustalw');
         my $block_aln = Bio::SimpleAlign->new();
@@ -666,7 +687,7 @@ sub conserved_blocks {
                 }
             }
 
-            my $loc_seq = Bio::LocatableSeq->new(-seq => $seq_str, -id => $id, -start => $ungapped_start, -end => $ungapped_end);        
+            my $loc_seq = Bio::LocatableSeq->new(-seq => $seq_str, -id => $id, -start => $ungapped_start, -end => $ungapped_end);
             $block_aln->add_seq($loc_seq)
         }
         $out->write_aln($block_aln)

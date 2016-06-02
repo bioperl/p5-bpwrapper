@@ -1,5 +1,15 @@
 Revision history for Bio::wrappers
 
-1.0. 2015-02-10:
+1.03 2016-05-26:
+
+- Make behavior the same across more Platforms:
+  use a bundled Getopt::Long
+- Revis bioseq doc
+
+1.01 2016-05-26:
+
+- First CPAN release.
+
+1.0  2015-02-10:
 
 - First release. contains two utilities with tests: bioseq & bioaln.
