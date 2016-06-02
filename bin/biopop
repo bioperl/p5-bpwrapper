@@ -62,6 +62,7 @@ for my $option (keys %opts) {
 __END__
 
 =encoding utf8
+
 =head1 NAME
 
 =over

@@ -1,4 +1,5 @@
 =encoding utf8
+
 =head1 NAME
 
 Bio::BPWrapper::SeqManipulations - Functions for bioseq

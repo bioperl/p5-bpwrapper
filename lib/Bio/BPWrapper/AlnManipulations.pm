@@ -1,3 +1,5 @@
+=encoding utf8
+
 =head1 NAME
 
 Bio::BPWrapper::AlnManipulations - Functions for bioaln

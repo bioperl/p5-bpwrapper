@@ -72,6 +72,7 @@ write_out();
 ################# POD Documentation ##################
 
 __END__
+
 =head1 NAME
 
 bioseq - FASTA sequence utility based on L<Bio::Perl>
