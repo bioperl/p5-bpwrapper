@@ -48,7 +48,7 @@ my $builder = Module::Build->new(
     },
 
     requires => {
-        'perl'                              => '5.001000',
+        'perl'                              => 'v5.10',
         'Bio::Root::Version'                => '1.6.924',
         'rlib'                              => '0.02',
     },

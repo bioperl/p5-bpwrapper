@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use rlib '../lib';
 use Bio::BPWrapper::SeqManipulations;
-use 5.010;
+use v5.10;
 use Bio::BPWrapper::GetoptLong qw(:config gnu_getopt);
 use Pod::Usage;
 
@@ -74,20 +74,25 @@ write_out();
 __END__
 =head1 NAME
 
-bioseq - FASTA sequence utility based on L<Bio::Perl>.
+bioseq - FASTA sequence utility based on L<Bio::Perl>
 
 =head1 SYNOPSIS
 
-B<bioseq> [C<-h> | C<--help> | --C<v> | C<--version> C<--man>]
+B<bioseq> I<options> [I<file>]
 
-B<bioseq> I<options> I<file>
+B<bioseq> C<-h> | C<--help>
+
+B<bioseq> C<-v> | C<--version>
+
+B<bioseq> C<--man>
+
+
+=head1 DESCRIPTION
 
 B<bioseq> is a command-line utility for common, routine sequence
 manipulations. Most methods are wrappers for L<Bio::Perl> modules:
 L<Bio::Seq>, L<Bio::SeqIO>, L<Bio::SeqUtils>, and
 L<Bio::Tools::SeqStats>.
-
-=head1 DESCRIPTION
 
 By default, B<bioseq> assumes that both the input and the output files
 are in FASTA format, to facilitate the chainning (by UNIX pipes) of
@@ -292,7 +297,7 @@ or more FASTA-format file.
  bioseq -i'genbank' -F file.gb    # extract genbank [F]eatures to FASTA
  bioseq -x 'EcoRI' dna_fasta      # Fragments from restriction digest
 
-=head3  Examples involving Unix pipes:
+=head3  Examples involving Unix pipes
 
  bioseq -p'id:B31' dna_fasta | bioseq -g | bioseq -t1          # pick a seq, remove gaps, & translate
  bioseq -p'order:2' dna_fasta | bioseq -r | bioseq -s'10,20'   # pick the 2nd seq, rev-com it, & subseq

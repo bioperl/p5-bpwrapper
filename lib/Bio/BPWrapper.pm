@@ -3,7 +3,7 @@
 
 package Bio::BPWrapper;
 
-our $VERSION = '1.03';
+our $VERSION = '1.04';
 use strict; use warnings;
 
 use constant PROGRAM => 'Bio::BPWrapper';
@@ -14,6 +14,6 @@ sub show_version() {
 
 unless (caller) {
     print show_version, "\n";
-    print "Pssst... this is a module. See trepan.pl to invoke.\n"
+    print "Pssst... this is a module. Invoke via bioaln, bioseq, biopop, or biotree.\n"
 }
 1;

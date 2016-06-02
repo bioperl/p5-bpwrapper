@@ -19,6 +19,7 @@ lib/Bio/BPWrapper/PopManipulations.pm
 lib/Bio/BPWrapper/SeqManipulations.pm
 lib/Bio/BPWrapper.pm
 lib/Bio/BPWrapper.pod
+t/00test-pod.t
 t/10test-bioaln.t
 t/10test-bioseq.t
 t/10test-biotree.t
