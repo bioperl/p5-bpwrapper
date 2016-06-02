@@ -1,8 +1,7 @@
 =pod
 
 =for comment
-This file is shared by both BPWrapper.pod in the BPWrapper.pm after its __END__
-BPWrapper.pod is useful in the Github wiki:
+This file located in the distribution. But it is also found in a Github wiki:
 https://github.com/rocky/p5-bwrapper/wiki/BPWrapper
 where we can immediately see the results and others can contribute.
 
@@ -31,7 +30,7 @@ There are a few interconnected command-line scripts:
 
 =over
 
-=item bioseq
+=item L<bioseq>
 
 a wrapper of BioPerl class L<Bio::Seq> with additional methods
 
