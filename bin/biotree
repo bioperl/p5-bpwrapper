@@ -1,9 +1,14 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
+use rlib '../lib';
+use v5.10;
+use Bio::BPWrapper;
 use Bio::BPWrapper::TreeManipulations;
 use Bio::BPWrapper::GetoptLong qw(:config gnu_getopt);
 use Pod::Usage;
+
+use constant PROGRAM => File::Basename::basename(__FILE__);
 
 ####################### Option parsing ######################
 pod2usage(1) if scalar(@ARGV) < 1;
@@ -51,9 +56,7 @@ GetOptions(\%opts,
 	   #    "comptrees|X",
 	  ) or pod2usage(2);
 
-pod2usage(1) if $opts{"help"};
-pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
-print_version() if $opts{"version"};
+Bio::BPWrapper::print_version(PROGRAM) if $opts{"version"};
 
 # Create a new BioTree object and initialize that.
 unshift @ARGV, \%opts;

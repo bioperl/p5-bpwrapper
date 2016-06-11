@@ -2,11 +2,12 @@
 
 use strict;
 use warnings;
-use rlib '../lib';
-use Bio::BPWrapper::AlnManipulations;
 use v5.10;
-use Bio::BPWrapper::GetoptLong qw(:config gnu_getopt);
+use rlib '../lib';
 use Pod::Usage;
+use Bio::BPWrapper;
+use Bio::BPWrapper::AlnManipulations;
+use Bio::BPWrapper::GetoptLong qw(:config gnu_getopt);
 
 ################################################################################
 # Option parsing
@@ -60,10 +61,8 @@ GetOptions(
   #  "inform|Z",
 ) or pod2usage(2);
 
-pod2usage(1) if $opts{"help"};
-pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
-&print_version() if $opts{"version"};
-
+use constant PROGRAM => File::Basename::basename(__FILE__);
+Bio::BPWrapper::print_version(PROGRAM) if $opts{"version"};
 
 ######################## Main #####################
 

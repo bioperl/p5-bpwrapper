@@ -30,8 +30,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 @ISA         = qw(Exporter);
 
 # FIXME: some of these have too generic names like
-# "upper_case" or "concat". Some things like print_version could be
-# put in a common routine.
+# "upper_case" or "concat".
 @EXPORT      = qw(initialize can_handle handle_opt write_out write_out_paml
 phylip_non_interleaved split_cdhit trim_ends gap_states
 gap_states_matrix print_avp_id bootstrap draw_codon_view del_seqs
@@ -41,7 +40,7 @@ avg_id_by_win concat conserve_blocks get_consensus dns_to_protein
 remove_gapped_cols_in_one_seq colnum_from_residue_pos
 list_ids premute_states protein_to_dna sample_seqs
 shuffle_sites random_slice select_third_sites remove_third_sites
-upper_case print_version );
+upper_case );
 
 use Bio::BPWrapper;
 # Package global variables
@@ -93,8 +92,9 @@ my %opt_dispatch = (
 ## TODO Formal testing!
 
 sub initialize {
-    my $val = shift;
-    %opts = %{$val};
+    my $opts_ref = shift;
+    Bio::BPWrapper::common_opts($opts_ref);
+    %opts = %{$opts_ref};
 
     # This is the format that aln-manipulations expects by default
     my $default_format = "clustalw";
@@ -905,12 +905,6 @@ sub remove_third_sites {
 sub upper_case {
     $aln->uppercase()
 }
-
-sub print_version {
-    say "bp-utils release version: ", $VERSION;
-    exit
-}
-
 
 ########################## internal subroutine #######################
 

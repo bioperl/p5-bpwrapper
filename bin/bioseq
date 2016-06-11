@@ -2,11 +2,10 @@
 
 use strict;
 use warnings;
+use v5.10;
 use rlib '../lib';
 use Bio::BPWrapper::SeqManipulations;
-use v5.10;
 use Bio::BPWrapper::GetoptLong qw(:config gnu_getopt);
-use Pod::Usage;
 
 ####################### Option parsing ######################
 my %opts;
@@ -47,10 +46,12 @@ GetOptions(
  #   "split|S=i",
 ) or pod2usage(2);
 
+use Pod::Usage;
 pod2usage(1) if $opts{"help"};
 pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
-&print_version() if $opts{"version"};
 
+use constant PROGRAM => File::Basename::basename(__FILE__);
+Bio::BPWrapper::print_version(PROGRAM) if $opts{"version"};
 
 ######################## Main #####################
 

@@ -21,6 +21,7 @@ package Bio::BPWrapper::TreeManipulations;
 use strict;
 use warnings;
 use v5.10;
+use Bio::BPWrapper;
 use Bio::TreeIO;
 use Bio::Tree::Tree;
 use Bio::Tree::Node;
@@ -37,8 +38,9 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
                   write_out);
 
 sub initialize {
-    my $val = shift;
-    %opts = %{$val};
+    my $opts_ref = shift;
+    Bio::BPWrapper::common_opts($opts_ref);
+    %opts = %{$opts_ref};
 
     $in_format = $opts{"input"} // 'newick';  # This doesn't work...or does it?
     $out_format = $opts{"output"} // "newick";

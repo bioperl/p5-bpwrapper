@@ -44,7 +44,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 print_distance print_heterozygosity print_mismatch_distr
 count_four_gametes print_diversity bi_partition
 bisites_for_r bisites snp_noncoding snp_coding
-snp_coding_log print_num_snps print_version
+snp_coding_log print_num_snps
 );
 
 # Package global variables
@@ -54,7 +54,10 @@ my ($opts,     $flags,       $aln_file, $aln,         $in,
     $pop_stats, @var_sites, @exgroups, $ingroup, $outgroup, $pop_cds,
     $myCodonTable
 );
-my $RELEASE = '1.0';
+
+
+use Bio::BPWrapper;
+my $VERSION = $Bio::BPWrapper::VERSION;
 
 my %opt_dispatch = (
     'bisites' => \&bisites,
@@ -86,6 +89,7 @@ $myCodonTable  = Bio::Tools::CodonTable->new( -id => 11 );
 
 sub initialize {
     ($opts, $flags) = @_;
+    Bio::BPWrapper::common_opts($opts);
 
     $aln_file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line, assume we're getting input from standard input
 
@@ -447,11 +451,6 @@ sub snp_coding_long {
 
 sub print_num_snps {
     print $pop_stats->segregating_sites_count($pop), "\n"
-}
-
-sub print_version {
-    say "bp-utils release version: ", $RELEASE;
-    exit
 }
 
 ####################### internal subroutine ###########################
