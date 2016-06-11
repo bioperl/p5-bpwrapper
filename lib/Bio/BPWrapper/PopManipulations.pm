@@ -570,18 +570,3 @@ sub _syn_nonsyn {
 
 
 1;
-
-=head1 REQUIRES
-
-Perl 5.010, BioPerl
-
-=head1 SEE ALSO
-
-  perl(1)
-
-=head1 AUTHORS
-
- Weigang Qiu at genectr.hunter.cuny.edu
- Yözen Hernández yzhernand at gmail dot com
-
-=cut

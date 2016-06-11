@@ -43,9 +43,11 @@ list_ids premute_states protein_to_dna sample_seqs
 shuffle_sites random_slice select_third_sites remove_third_sites
 upper_case print_version );
 
+use Bio::BPWrapper;
 # Package global variables
 my ($in, $out, $aln, %opts, $file, $in_format, $out_format, @alns, $binary);
-my $RELEASE = '1.0';
+
+my $VERSION = $Bio::BPWrapper::VERSION;
 
 ## For new options, just add an entry into this table with the same key as in the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.
 my %opt_dispatch = (
@@ -905,7 +907,7 @@ sub upper_case {
 }
 
 sub print_version {
-    say "bp-utils release version: ", $RELEASE;
+    say "bp-utils release version: ", $VERSION;
     exit
 }
 
