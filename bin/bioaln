@@ -64,19 +64,8 @@ GetOptions(
 use constant PROGRAM => File::Basename::basename(__FILE__);
 Bio::BPWrapper::print_version(PROGRAM) if $opts{"version"};
 
-######################## Main #####################
-
-# This sets all internal variables, and loads AlignIO objects
 initialize(\%opts);
-
-for my $option (keys %opts) {
-    next if ($option eq 'input') || ($option eq 'output') || ($option eq 'noflatname') || ($option eq 'binary'); # Don't process these options: they are for AlignIO
-
-    if (can_handle($option)) { handle_opt($option) } # If there is a function to handle the current option, execute it
-    else { warn "Missing handler for: $option\n" }
-}
-
-write_out();
+write_out(\%opts);
 
 ################# POD Documentation ############
 

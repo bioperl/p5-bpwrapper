@@ -434,6 +434,23 @@ sub snp_coding_long {
     }
 }
 
+=head2 write_out $opts
+
+Does the bulk of calling other tree routines based on $opts set.
+After L<Bio::Wrapper::PopManipulations::initialize> should be called first.
+
+=cut
+
+sub write_out
+{
+    my $opts_ref = shift;
+    my %opts = %{$opts_ref};
+    for my $option (keys %opts) {
+	# If there is a function to handle the current option, execute it
+	if (can_handle($option)) { handle_opt($option); exit }
+	else { warn "Missing handler for: $option\n" }
+    }
+}
 
 #sub print_stats {
 #    @stats = _parse_stats();

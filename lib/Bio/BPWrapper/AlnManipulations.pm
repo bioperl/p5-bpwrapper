@@ -132,7 +132,17 @@ sub handle_opt {
     $opt_dispatch{$option}->($option)
 }
 
-sub write_out {
+sub write_out($) {
+
+    my $opts = shift;
+    for my $option (keys %{$opts}) {
+	next if ($option eq 'input') || ($option eq 'output') || ($option eq 'noflatname') || ($option eq 'binary'); # Don't process these options: they are for AlignIO
+
+	if (can_handle($option)) { handle_opt($option) } # If there is a function to handle the current option, execute it
+	else { warn "Missing handler for: $option\n" }
+    }
+
+
     $aln->set_displayname_flat() unless $opts{"noflatname"};
     if ($out_format eq 'paml') { &write_out_paml($aln) }
     else { $out->write_aln($aln) }

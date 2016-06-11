@@ -47,16 +47,9 @@ GetOptions(
 use constant PROGRAM => File::Basename::basename(__FILE__);
 Bio::BPWrapper::print_version(PROGRAM) if $opts{"version"};
 
-######################## Main #####################
-
 # This sets all internal variables, and loads AlignIO objects
 initialize(\%opts, \%flags);
-
-for my $option (keys %opts) {
-    # If there is a function to handle the current option, execute it
-    if (can_handle($option)) { handle_opt($option); exit }
-    else { warn "Missing handler for: $option\n" }
-}
+write_out(\%opts)
 
 ################# POD Documentation ##################
 
@@ -66,19 +59,23 @@ __END__
 
 =head1 NAME
 
-=over
+biopop - Wrapper script for L<Bio::Perl>'s population genetics modules
 
-=item B<biopop> - Wrapper script for BioPerl's population genetics modules
-
-=back
 
 =head1 SYNOPSIS
 
-B<biopop> [options] <alignment_file>
+B<biopop> I<options> [I<alignment_file>]
+
+B<biopop> C<-h> | C<--help>
+
+B<biopop> C<-v> | C<--version>
+
+B<biopop> C<--man>
 
 =head1 DESCRIPTION
 
-B<biopop> DESCRIPTION GOES HERE
+Wrapper script for L<Bio::Perl>'s population genetics modules: use L<Bio::PopGen::Utilities>;
+L<Bio::PopGen::Statistics>, and L<Bio::PopGen::Population>;
 
 =head1 OPTIONS
 
@@ -153,5 +150,3 @@ Perl 5.010, BioPerl
  Yözen Hernández yzhernand at gmail dot com
 
 =cut
-
-##################### End ##########################
