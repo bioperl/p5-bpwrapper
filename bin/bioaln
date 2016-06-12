@@ -2,12 +2,15 @@
 
 use strict;
 use warnings;
+
 use v5.10;
+use Getopt::Long qw( :config bundling permute no_getopt_compat );
+use Pod::Usage;
 use rlib '../lib';
+
 use Pod::Usage;
 use Bio::BPWrapper;
 use Bio::BPWrapper::AlnManipulations;
-use Bio::BPWrapper::GetoptLong qw(:config gnu_getopt);
 
 ################################################################################
 # Option parsing

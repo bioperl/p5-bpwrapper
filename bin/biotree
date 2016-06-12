@@ -5,7 +5,8 @@ use rlib '../lib';
 use v5.10;
 use Bio::BPWrapper;
 use Bio::BPWrapper::TreeManipulations;
-use Bio::BPWrapper::GetoptLong qw(:config gnu_getopt);
+use Data::Dumper;
+use Getopt::Long qw( :config bundling permute no_getopt_compat );
 use Pod::Usage;
 
 use constant PROGRAM => File::Basename::basename(__FILE__);
