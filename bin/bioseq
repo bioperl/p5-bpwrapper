@@ -75,6 +75,8 @@ write_out();
 
 __END__
 
+=encoding utf8
+
 =head1 NAME
 
 bioseq - FASTA sequence utility based on L<Bio::Perl>
@@ -325,7 +327,7 @@ L<Github project wiki page|http://https://github.com/rocky/p5-BPWrapper>
 =over 4
 
 =item *
-Yozen Hernandez <yzhernand at gmail dot com>
+Yözen Hernández yzhernand at gmail dot com
 
 =item *
 Girish Ramrattan <gramratt at gmail dot com>
