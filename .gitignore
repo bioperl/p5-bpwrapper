@@ -7,11 +7,11 @@
 /_build
 /blib
 /tmp
-t/check-data/*.err
-test-files/test-bioaln.aln.slice-*.aln
-test-files/test-bioaln.cds.slice-*.aln
 Bio-BPWrapper-*.tar.gz
 META.json
 META.yml
 Makefile.PL
+t/check-data/*.err
 test-bioseq.nuc.sed
+test-files/test-bioaln.aln.slice-*.aln
+test-files/test-bioaln.cds.slice-*.aln

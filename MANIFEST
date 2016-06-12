@@ -14,7 +14,6 @@ Test-bioseq.bash
 Test-biotree.bash
 
 lib/Bio/BPWrapper/AlnManipulations.pm
-lib/Bio/BPWrapper/GetoptLong.pm
 lib/Bio/BPWrapper/PopManipulations.pm
 lib/Bio/BPWrapper/SeqManipulations.pm
 lib/Bio/BPWrapper.pm
