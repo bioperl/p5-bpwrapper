@@ -83,12 +83,7 @@ bioaln - Alignment utility based on L<Bio::Perl>
 
 B<bioaln> I<options> [I<file>]
 
-B<bioaln> C<-h> | C<--help>
-
-B<bioaln> C<-v> | C<--version>
-
-B<bioaln> C<--man>
-
+B<bioaln> [C<-h> | C<--help> | --C<v> | C<--version> C<--man>]
 
 =head1 DESCRIPTION
 

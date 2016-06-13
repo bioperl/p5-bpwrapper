@@ -53,6 +53,7 @@
 test-files/test-bioaln.aln.slice-.*\.aln$
 test-files/test-bioaln.cds.slice-.*\.aln$
 t/check-data/.*\.err$
+.*\.err$
 
 # Continuous Integration Files
 .travis.yml
@@ -61,3 +62,6 @@ circle.yml
 # Test data and remnants
 \.fas
 test-bioseq.nuc.sed$
+
+# Program to update programs from wiki
+util/update_pod

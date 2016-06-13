@@ -33,12 +33,13 @@ if ($Config{longdouble}) {
 # option a changes depending on whether Perl was set to
 # to use longdouble or not
 # option b (background needs special care)
-for my $letter (qw(a c g l m n u v A B D F L T)) {
+for my $letter (keys %notes) {
     if ($longdouble{$letter}) {
 	print("skipping option '${letter}' because this perl has longdouble\n");
 	# run_bio_program('bioaln', 'test-bioaln.cds', "-${letter}", "opt-${letter}-longdouble.right");
     }  else {
-	run_bio_program('bioaln', 'test-bioaln.cds', "-${letter}", "opt-${letter}.right");
+	run_bio_program('bioaln', 'test-bioaln.cds', "-${letter}", "opt-${letter}.right",
+			{note=>$notes{$letter}});
     }
 }
 
@@ -88,8 +89,18 @@ for my $triple (['i', 'fasta', 'test-bioaln-pep2dna.nuc'],
 }
 
 
+%notes = (
+    b => "bootstrap",
+    M => "permute-states",
+    U => "Make an uppercase alignment",
+);
 
-# Need to convert:
-# M S U
-# ['R', '3'])
+
+for my $letter (keys %notes) {
+    run_bio_program_nocheck('bioaln', 'test-bioaln.cds', "-${letter}",
+			    {note=>$notes{$letter}});
+}
+
+run_bio_program_nocheck('bioaln', 'test-bioaln.cds', "-R 3",
+			    {note=>"resample"});
 done_testing();

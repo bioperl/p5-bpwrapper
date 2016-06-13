@@ -12,7 +12,7 @@ use File::Basename qw(dirname basename); use File::Spec;
 require Exporter;
 our (@ISA, @EXPORT);
 @ISA = qw(Exporter);
-@EXPORT = qw(run_bio_program test_file_name);
+@EXPORT = qw(run_bio_program run_bio_program_nocheck test_file_name);
 
 my $debug = $^W;
 
@@ -103,6 +103,33 @@ sub run_bio_program($$$$;$)
 	    return 1;
 	}
     }
+}
+
+# Runs a bioprogram but skips output checking
+sub run_bio_program_nocheck($$$;$)
+{
+    my ($bio_program, $data_filename, $run_opts, $other_opts) = @_;
+    $other_opts = {} unless defined $other_opts;
+    $other_opts->{do_test} = 1 unless exists $other_opts->{do_test};
+    my $full_data_filename = test_file_name($data_filename);
+
+    my $full_bio_progname = File::Spec->catfile($dirname, '..', 'bin', $bio_program);
+
+    my $err_filename = "$$.err";
+
+    my $cmd = "$EXECUTABLE_NAME $full_bio_progname $run_opts $full_data_filename " .
+	"2>$err_filename";
+    print $cmd, "\n" if $debug;
+    my $output = `$cmd`;
+    print "$output\n" if $debug;
+    my $rc = $CHILD_ERROR >> 8;
+    my $test_rc = $other_opts->{exitcode} || 0;
+    if ($other_opts->{do_test}) {
+	Test::More::note("testing " . $other_opts->{note}) if $other_opts->{note};
+	Test::More::note( "running $bio_program $run_opts $data_filename" );
+	Test::More::is($rc, $test_rc, "command ${bio_program} executed giving exit code $test_rc");
+    }
+    return $rc;
 }
 
 # Demo program

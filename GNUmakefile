@@ -102,7 +102,6 @@ test-t:
 
 test-bash:
 	$(BASH) Test-bioseq.bash &&  echo "=======================" && \
-	$(BASH) Test-bioaln.bash &&  echo "=======================" && \
 	$(BASH) Test-biotree.bash
 
 #: Check code coverage

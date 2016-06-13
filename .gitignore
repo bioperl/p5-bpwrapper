@@ -1,5 +1,6 @@
 *IGS:11.fas
 *~
+*.err
 /Build
 /MANIFEST.SKIP.bak
 /MYMETA.json
