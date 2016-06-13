@@ -14,7 +14,7 @@ my %notes = (
     B => 'prepends ID to leaf/node labels',
     D => 'half-matrix list of distances between leaves',
     L => 'nodes and branch lengths',
-    M => 'build treee of random subset',
+    M => 'build tree of random subset',
     R => 'remove branch lengths from tree',
 );
 # option b (background needs special care)
@@ -62,7 +62,18 @@ for my $tup (['d', 'SV1,N40'],
     }
 }
 
-# Need to convert:
-# M - needs to canonicalize hash ooutput
-# r
+%notes = (
+    M => "random",
+);
+
+
+for my $letter (keys %notes) {
+    run_bio_program_nocheck('biotree', 'test-biotree.dnd', "-${letter}",
+			    {note=>$notes{$letter}});
+}
+
+note( "Skipping biotree -r JD1 - needs investigation" );
+# run_bio_program_nocheck('biotree', 'test-biotree.dnd', "-r JD1",
+#			{note=>"resample"});
+
 done_testing();
