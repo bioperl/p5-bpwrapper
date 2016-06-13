@@ -2,6 +2,7 @@
 use rlib '.';
 use strict; use warnings;
 use Test::More;
+use Config;
 use Helper;
 note( "Testing biotree single-letter options on test-biotree.dnd" );
 
@@ -33,6 +34,12 @@ for my $letter (qw(l n u B D L R)) {
     W => 'walk tree from 156a',
 );
 
+# Output is different when Perl is configured with longdouble defined
+my %longdouble = ();
+if ($Config{longdouble}) {
+    $longdouble{'G'} = 1;
+}
+
 note( "Testing biotree option-value options on test-bioatree.dnd" );
 for my $tup (['d', 'SV1,N40'],
 	     ['o', 'tabtree'],
@@ -44,8 +51,15 @@ for my $tup (['d', 'SV1,N40'],
 	     ['W', '156a'],
 )
 {
-    run_bio_program('biotree', 'test-biotree.dnd', "-$tup->[0] $tup->[1]",
-		    "opt-$tup->[0].right", {note=>$notes{$tup->[0]}});
+    my ($letter, $args) = @$tup;
+    if ($longdouble{$letter}) {
+	print("skipping option '${letter}' because this perl has longdouble\n");
+	run_bio_program('biotree', 'test-biotree.dnd', "-$letter $args",
+			"opt-$letter-longdouble.right", {note=>$notes{$tup->[0]}});
+    } else {
+	run_bio_program('biotree', 'test-biotree.dnd', "-$letter $args",
+			"opt-$letter.right", {note=>$notes{$letter}});
+    }
 }
 
 # Need to convert:

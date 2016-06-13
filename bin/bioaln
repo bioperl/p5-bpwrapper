@@ -73,6 +73,7 @@ write_out(\%opts);
 ################# POD Documentation ############
 
 __END__
+=encoding utf8
 
 =head1 NAME
 
@@ -511,9 +512,7 @@ Make an uppercase alignment.
 
 =head2 --version, -V
 
-Print current release version of bp-utils.
-
-   bioaln -V
+Print current release version of this command and L<Bio::BPWrapper>.
 
 =head1 OTHER EXAMPLES
 
@@ -584,7 +583,11 @@ L<Qui Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 =item *
 
-L<Github project wiki page|http://https://github.com/rocky/p5-BPWrapper>
+L<Github project wiki page|https://github.com/rocky/p5-BPWrapper>
+
+=item *
+
+L<bioseq>: a wrapper of BioPerl class L<Bio::Seq> with additional methods
 
 =back
 
@@ -602,7 +605,7 @@ Girish Ramrattan <gramratt at gmail dot com>
 Che Martin <che dot l dot martin at gmail dot com>
 
 =item  *
-Yoezen Hernandez <yzhernand at gmail dot com>
+Yözen Hernández yzhernand at gmail dot com
 
 =item *
 Levy Vargas <levy dot vargas at gmail dot com>

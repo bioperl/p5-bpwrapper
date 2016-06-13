@@ -74,30 +74,24 @@ write_out();
 ################# POD Documentation ##################
 
 __END__
-
 =encoding utf8
 
 =head1 NAME
 
-bioseq - FASTA sequence utility based on L<Bio::Perl>
+bioseq - FASTA sequence utility based on L<Bio::Perl>.
 
 =head1 SYNOPSIS
 
-B<bioseq> I<options> [I<file>]
+B<bioseq> I<options> I<file>
 
-B<bioseq> C<-h> | C<--help>
-
-B<bioseq> C<-v> | C<--version>
-
-B<bioseq> C<--man>
-
-
-=head1 DESCRIPTION
+B<bioseq> [C<-h> | C<--help> | --C<v> | C<--version> C<--man>]
 
 B<bioseq> is a command-line utility for common, routine sequence
 manipulations. Most methods are wrappers for L<Bio::Perl> modules:
 L<Bio::Seq>, L<Bio::SeqIO>, L<Bio::SeqUtils>, and
 L<Bio::Tools::SeqStats>.
+
+=head1 DESCRIPTION
 
 By default, B<bioseq> assumes that both the input and the output files
 are in FASTA format, to facilitate the chainning (by UNIX pipes) of
@@ -247,9 +241,7 @@ would generate"'BCDEA".
 
 =item --version, -V
 
-Print current release version of this command and Bio::BPWrapper
-
-Usage: bioseq -V
+Print current release version of this command and L<Bio::BPWrapper>.
 
 =item --removestop, -X
 
@@ -318,7 +310,10 @@ L<Qui Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 =item *
 
-L<Github project wiki page|http://https://github.com/rocky/p5-BPWrapper>
+L<Github project wiki page|https://github.com/rocky/p5-BPWrapper>
+
+=item *
+L<bioaln>: a wrapper of L<Bio::SimpleAlign> and additional methods
 
 =back
 
@@ -327,7 +322,7 @@ L<Github project wiki page|http://https://github.com/rocky/p5-BPWrapper>
 =over 4
 
 =item *
-Yözen Hernández yzhernand at gmail dot com
+ Yözen Hernández yzhernand at gmail dot com
 
 =item *
 Girish Ramrattan <gramratt at gmail dot com>

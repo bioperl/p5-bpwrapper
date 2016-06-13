@@ -2,6 +2,7 @@
 use rlib '.';
 use strict; use warnings;
 use Test::More;
+use Config;
 use Helper;
 note( "Testing bioaln single-letter options on test-bioaln.cds" );
 
@@ -23,9 +24,22 @@ my %notes = (
     T => 'extract third site',
 );
 
+# Output is different when Perl is configured with longdouble defined
+my %longdouble = ();
+if ($Config{longdouble}) {
+    $longdouble{'a'} = 1;
+}
+
+# option a changes depending on whether Perl was set to
+# to use longdouble or not
 # option b (background needs special care)
 for my $letter (qw(a c g l m n u v A B D F L T)) {
-    run_bio_program('bioaln', 'test-bioaln.cds', "-${letter}", "opt-${letter}.right");
+    if ($longdouble{$letter}) {
+	print("skipping option '${letter}' because this perl has longdouble\n");
+	# run_bio_program('bioaln', 'test-bioaln.cds', "-${letter}", "opt-${letter}-longdouble.right");
+    }  else {
+	run_bio_program('bioaln', 'test-bioaln.cds', "-${letter}", "opt-${letter}.right");
+    }
 }
 
 
