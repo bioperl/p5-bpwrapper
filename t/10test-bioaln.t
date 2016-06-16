@@ -4,9 +4,9 @@ use strict; use warnings;
 use Test::More;
 use Config;
 use Helper;
-note( "Testing bioaln single-letter options on test-bioaln.cds" );
 
 
+# option background (background needs special care)
 my %notes = (
     'avpid' => 'average percent identity',
     'codon-view' => 'codon view',
@@ -24,14 +24,7 @@ my %notes = (
     'select-third' => 'extract third site',
 );
 
-# option background (background needs special care)
-for my $opt (keys %notes) {
-    run_bio_program('bioaln', 'test-bioaln.cds', "--${opt}", "opt-${opt}.right",
-			{note=>$notes{$opt}});
-}
-
-
-note( "Testing bioaln option-value options on test-bioaln.cds" );
+test_no_arg_opts('bioaln', 'test-bioaln.cds', \%notes);
 
 %notes = (
     'delete' => 'delete sequences JD1, 118a',
@@ -45,18 +38,18 @@ note( "Testing bioaln option-value options on test-bioaln.cds" );
 );
 
 
-for my $tup (['delete', 'JD1,118a'],
-	     ['output', 'fasta'],
-	     ['pick', 'JD1,118a,N40'],
-	     ['window', '60'],
-	     ['refseq', 'B31'],
-	     ['consensus', '90'],
-	     ['erasecol', 'B31'],
-	     ['aln-index', 'B31,1'])
-{
-    run_bio_program('bioaln', 'test-bioaln.cds', "--$tup->[0] $tup->[1]",
-		    "opt-$tup->[0].right", {note=>$notes{$tup->[0]}});
-}
+my $opts = [
+    ['delete', 'JD1,118a'],
+    ['output', 'fasta'],
+    ['pick', 'JD1,118a,N40'],
+    ['window', '60'],
+    ['refseq', 'B31'],
+    ['consensus', '90'],
+    ['erasecol', 'B31'],
+    ['aln-index', 'B31,1']
+    ];
+
+test_one_arg_opts('bioaln', 'test-bioaln.cds', $opts, \%notes);
 
 note( "Testing other bioaln option-value options" );
 

@@ -12,7 +12,8 @@ use File::Basename qw(dirname basename); use File::Spec;
 require Exporter;
 our (@ISA, @EXPORT);
 @ISA = qw(Exporter);
-@EXPORT = qw(run_bio_program run_bio_program_nocheck test_file_name);
+@EXPORT = qw(run_bio_program run_bio_program_nocheck test_file_name
+             test_no_arg_opts test_one_arg_opts);
 
 my $debug = $^W;
 
@@ -131,6 +132,30 @@ sub run_bio_program_nocheck($$$;$)
     }
     return $rc;
 }
+
+sub test_no_arg_opts($$$) {
+    my ($bio_program, $data_filename, $notes) = @_;
+    Test::More::note( "Testing ${bio_program} single-letter options on ${data_filename}" );
+    for my $opt (keys %$notes) {
+	run_bio_program($bio_program, $data_filename, "--${opt}", "opt-${opt}.right",
+			{note=>$notes->{$opt}});
+    }
+}
+
+
+sub test_one_arg_opts($$$$) {
+    my ($bio_program, $data_filename, $opts, $notes) = @_;
+
+    for my $tup (@$opts) {
+	my ($opt, $arg) = @$tup;
+	Test::More::note( "Testing ${bio_program} option-value options on ${data_filename}" );
+
+	run_bio_program($bio_program, $data_filename, "--$opt $arg",
+			"opt-$opt.right", {note=>$notes->{$opt}});
+    }
+}
+
+
 
 # Demo program
 unless(caller) {
