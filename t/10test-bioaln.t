@@ -10,43 +10,43 @@ use Helper;
 my %notes = (
     'avpid' => 'average percent identity',
     'codon-view' => 'codon view',
-    'nogaps' => 'remove gapped sites',
+    'conblocks' => 'extract conserved blocks',
+    'concat' => 'concatenate aln files',
+    'dna2pep' => 'CDS alignment to protein alignment',
     'length' => 'length of an alignment',
+    'listids' => 'list all sequence IDs',
     'match' => 'match view',
+    'noflatname' => 'set display name flat',
+    'nogaps' => 'remove gapped sites',
     'numseq' => 'number of aligned sequences',
+    'select-third' => 'extract third site',
     'uniq' => 'remove redundant sequences',
     'varsites' => 'show only variable sites',
-    'concat' => 'concatenate aln files',
-    'conblocks' => 'extract conserved blocks',
-    'dna2pep' => 'CDS alignment to protein alignment',
-    'noflatname' => 'set display name flat',
-    'listids' => 'list all sequence IDs',
-    'select-third' => 'extract third site',
 );
 
 test_no_arg_opts('bioaln', 'test-bioaln.cds', \%notes);
 
 %notes = (
+    'aln-index' => "get align column index of seq 'B31', residue 1",
+    'concensus' => 'add a 90% consensus sequence',
     'delete' => 'delete sequences JD1, 118a',
+    'erasecol' => 'Erase sites gapped at B31',
     'output' => 'output a FASTA alignments',
     'pick' => 'pick sequences JD1, 118a, N40',
-    'window' => 'average identifies for sliding windows of 60',
     'refseq' => 'change reference (or first) sequence',
-    'concensus' => 'add a 90% consensus sequence',
-    'erasecol' => 'Erase sites gapped at B31',
-    'aln-index' => "get align column index of seq 'B31', residue 1",
+    'window' => 'average identifies for sliding windows of 60',
 );
 
 
 my $opts = [
+    ['aln-index', 'B31,1'],
+    ['consensus', '90'],
     ['delete', 'JD1,118a'],
+    ['erasecol', 'B31'],
     ['output', 'fasta'],
     ['pick', 'JD1,118a,N40'],
-    ['window', '60'],
     ['refseq', 'B31'],
-    ['consensus', '90'],
-    ['erasecol', 'B31'],
-    ['aln-index', 'B31,1']
+    ['window', '60']
     ];
 
 test_one_arg_opts('bioaln', 'test-bioaln.cds', $opts, \%notes);
