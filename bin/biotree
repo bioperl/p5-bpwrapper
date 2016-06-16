@@ -181,6 +181,24 @@ Walks along the tree starting from the specified OTU and prints the total distan
 
 =back
 
+=head3 Common Options
+
+=over 4
+
+=item --help, -h
+
+Print a brief help message and exit.
+
+=item --man
+
+Print the manual page and exit.
+
+=item --version, -V
+
+Print current release version of this command and exit.
+
+=back
+
 =head1 SEE ALSO
 
 =over 4

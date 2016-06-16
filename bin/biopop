@@ -74,10 +74,6 @@ L<Bio::PopGen::Statistics>, and L<Bio::PopGen::Population>;
 
 =over 4
 
-=item --help, -h
-
-Print a brief help message and exits.
-
 =item --distance, -d
 
 Calculates a distance matrix for all pairwise distances of all sequences in the input alignment and prints it out.
@@ -125,9 +121,23 @@ Identify & print, for each 2-state SNP, codon position, aligned nucleotide posit
 
 This method outputs the number of segregating or SNP sites within your alignment.
 
+=back
+
+=head3 Common Options
+
+=over 4
+
+=item --help, -h
+
+Print a brief help message and exit.
+
+=item --man
+
+Print the manual page and exit.
+
 =item --version, -V
 
-Print current release version of this command and L<Bio::BPWrapper>.
+Print current release version of this command and exit.
 
 =back
 
@@ -140,6 +150,9 @@ Print current release version of this command and L<Bio::BPWrapper>.
 
 =item *
 L<Weigang Qiu | mailto:weigang@genectr.hunter.cuny.edu> (Maintainer)
+
+=item *
+Rocky Bernstein
 
 =back
 

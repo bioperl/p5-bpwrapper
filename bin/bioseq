@@ -78,7 +78,7 @@ __END__
 
 =head1 NAME
 
-bioseq - FASTA sequence utility based on L<Bio::Perl>.
+bioseq - FASTA sequence utility based on L<Bio::Perl>
 
 =head1 SYNOPSIS
 
@@ -91,29 +91,19 @@ manipulations. Most methods are wrappers for L<Bio::Perl> modules:
 L<Bio::Seq>, L<Bio::SeqIO>, L<Bio::SeqUtils>, and
 L<Bio::Tools::SeqStats>.
 
-=head1 DESCRIPTION
-
 By default, B<bioseq> assumes that both the input and the output files
 are in FASTA format, to facilitate the chainning (by UNIX pipes) of
 multiple B<bioseq> runs.
 
 Methods that are currently I<not> wrappers should ideally be factored
-into individual Bio::Perl modules, which are better tested and handle
-exceptions better than stand-alone codes in the Bio::BPWrapper
+into individual L<Bio::Perl> modules, which are better tested and handle
+exceptions better than stand-alone codes in the L<Bio::BPWrapper>
 package. As a design principle, command-line scripts here should
 consist of I<only> wrapper calls.
 
 =head2 Options
 
 =over 4
-
-=item --help, -h
-
-Print a brief help message and exit.
-
-=item --man (but not "-m")
-
-Print the manual page and exit.
 
 =item --composition, -c <input_file>
 
@@ -239,15 +229,33 @@ would generate"'BCDEA".
 
  bioseq -R 'number' <input_file>
 
-=item --version, -V
-
-Print current release version of this command and L<Bio::BPWrapper>.
-
 =item --removestop, -X
 
 Remove stop codons (e.g., PAML input)
 
    bioseq -X <input_file>
+
+=back
+
+=head3 Common Options
+
+=over 4
+
+=item --help, -h
+
+Print a brief help message and exit.
+
+=item --man
+
+Print the manual page and exit.
+
+=item --version, -V
+
+Print current release version of this command and exit.
+
+=item --man (but not "-m")
+
+Print the manual page and exit.
 
 =back
 
