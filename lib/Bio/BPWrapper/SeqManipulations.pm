@@ -31,15 +31,13 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 
 @ISA         = qw(Exporter);
 
-# FIXME: some of these might be put in
-# a common routine like print_version
 @EXPORT      = qw(initialize can_handle handle_opt write_out
 print_composition filter_seqs retrieve_seqs remove_gaps
 print_lengths print_seq_count make_revcom
 print_subseq restrict_digets anonymize
 shred_seq count_codons print_gb_gene_feats
 count_leading_gaps hydroB linearize reloop_at
-print_version remove_stop parse_orders find_by_order
+remove_stop parse_orders find_by_order
 pick_by_order del_by_order find_by_id
 pick_by_id del_by_id find_by_re
 pick_by_re del_by_re
@@ -48,7 +46,8 @@ del_by_length);
 
 # Package global variables
 my ($in, $out, $seq, %opts, $filename, $in_format, $out_format);
-my $RELEASE = '1.0';
+use Bio::BPWrapper;
+my $VERSION = '1.0';
 
 ## For new options, just add an entry into this table with the same key as in
 ## the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.
@@ -107,8 +106,9 @@ my %filter_dispatch = (
 ## TODO Formal testing!
 
 sub initialize {
-    my $val = shift;
-    %opts = %{$val};
+    my $opts_ref = shift;
+    Bio::BPWrapper::common_opts($opts_ref);
+    %opts = %{$opts_ref};
 
     die "Option 'prefix' requires a value\n" if defined $opts{"prefix"} && $opts{"prefix"} =~ /^$/;
 
@@ -421,7 +421,7 @@ sub reloop_at {
 }
 
 sub print_version {
-    say "bp-utils release version: ", $RELEASE;
+    say "bp-utils release version: ", $VERSION;
     exit
 }
 

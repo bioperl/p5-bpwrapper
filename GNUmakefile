@@ -98,12 +98,11 @@ test check: test-t test-bash
 
 #: Run all Test::More tests
 test-t:
-	$(PERL) Build --makefile_env_macros 1 test
+	$(PERL) Build --makefile_env_macros 1 test && $(MAKE) clean
+
 
 test-bash:
-	$(BASH) Test-bioseq.bash &&  echo "=======================" && \
-	$(BASH) Test-bioaln.bash &&  echo "=======================" && \
-	$(BASH) Test-biotree.bash
+	$(BASH) Test-bioseq.bash && echo "======================="
 
 #: Check code coverage
 testcover:

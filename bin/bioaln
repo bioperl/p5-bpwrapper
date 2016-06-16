@@ -2,11 +2,15 @@
 
 use strict;
 use warnings;
-use rlib '../lib';
-use Bio::BPWrapper::AlnManipulations;
+
 use v5.10;
-use Bio::BPWrapper::GetoptLong qw(:config gnu_getopt);
+use Getopt::Long qw( :config bundling permute no_getopt_compat );
 use Pod::Usage;
+use rlib '../lib';
+
+use Pod::Usage;
+use Bio::BPWrapper;
+use Bio::BPWrapper::AlnManipulations;
 
 ################################################################################
 # Option parsing
@@ -60,28 +64,16 @@ GetOptions(
   #  "inform|Z",
 ) or pod2usage(2);
 
-pod2usage(1) if $opts{"help"};
-pod2usage(-exitstatus => 0, -verbose => 2) if $opts{"man"};
-&print_version() if $opts{"version"};
+use constant PROGRAM => File::Basename::basename(__FILE__);
+Bio::BPWrapper::print_version(PROGRAM) if $opts{"version"};
 
-
-######################## Main #####################
-
-# This sets all internal variables, and loads AlignIO objects
 initialize(\%opts);
-
-for my $option (keys %opts) {
-    next if ($option eq 'input') || ($option eq 'output') || ($option eq 'noflatname') || ($option eq 'binary'); # Don't process these options: they are for AlignIO
-
-    if (can_handle($option)) { handle_opt($option) } # If there is a function to handle the current option, execute it
-    else { warn "Missing handler for: $option\n" }
-}
-
-write_out();
+write_out(\%opts);
 
 ################# POD Documentation ############
 
 __END__
+=encoding utf8
 
 =head1 NAME
 
@@ -91,12 +83,7 @@ bioaln - Alignment utility based on L<Bio::Perl>
 
 B<bioaln> I<options> [I<file>]
 
-B<bioaln> C<-h> | C<--help>
-
-B<bioaln> C<-v> | C<--version>
-
-B<bioaln> C<--man>
-
+B<bioaln> [C<-h> | C<--help> | --C<v> | C<--version> C<--man>]
 
 =head1 DESCRIPTION
 
@@ -520,9 +507,7 @@ Make an uppercase alignment.
 
 =head2 --version, -V
 
-Print current release version of bp-utils.
-
-   bioaln -V
+Print current release version of this command and L<Bio::BPWrapper>.
 
 =head1 OTHER EXAMPLES
 
@@ -593,7 +578,11 @@ L<Qui Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 =item *
 
-L<Github project wiki page|http://https://github.com/rocky/p5-BPWrapper>
+L<Github project wiki page|https://github.com/rocky/p5-BPWrapper>
+
+=item *
+
+L<bioseq>: a wrapper of BioPerl class L<Bio::Seq> with additional methods
 
 =back
 
@@ -611,7 +600,7 @@ Girish Ramrattan <gramratt at gmail dot com>
 Che Martin <che dot l dot martin at gmail dot com>
 
 =item  *
-Yoezen Hernandez <yzhernand at gmail dot com>
+Yözen Hernández yzhernand at gmail dot com
 
 =item *
 Levy Vargas <levy dot vargas at gmail dot com>

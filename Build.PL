@@ -40,7 +40,7 @@ my $builder = Module::Build->new(
     },
 
     configure_requires  => {
-        'Module::Build' => '0.4211',
+        'Module::Build' => '0.4214',
 
     },
     build_requires => {

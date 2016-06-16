@@ -9,14 +9,13 @@ LICENSE
 MANIFEST			This list of files
 README.md
 
-Test-bioaln.bash
 Test-bioseq.bash
 Test-biotree.bash
 
 lib/Bio/BPWrapper/AlnManipulations.pm
-lib/Bio/BPWrapper/GetoptLong.pm
 lib/Bio/BPWrapper/PopManipulations.pm
 lib/Bio/BPWrapper/SeqManipulations.pm
+lib/Bio/BPWrapper/TreeManipulations.pm
 lib/Bio/BPWrapper.pm
 lib/Bio/BPWrapper.pod
 t/00test-pod.t
@@ -35,7 +34,9 @@ t/check-data/bioaln-opt-F.right
 t/check-data/bioaln-opt-I.right
 t/check-data/bioaln-opt-L.right
 t/check-data/bioaln-opt-P.right
+t/check-data/bioaln-opt-R.right
 t/check-data/bioaln-opt-T.right
+t/check-data/bioaln-opt-a-longdouble.right
 t/check-data/bioaln-opt-a.right
 t/check-data/bioaln-opt-c.right
 t/check-data/bioaln-opt-d.right
@@ -70,6 +71,7 @@ t/check-data/bioseq-opt-t.right
 t/check-data/biotree-opt-A.right
 t/check-data/biotree-opt-B.right
 t/check-data/biotree-opt-D.right
+t/check-data/biotree-opt-G-longdouble.right
 t/check-data/biotree-opt-G.right
 t/check-data/biotree-opt-L.right
 t/check-data/biotree-opt-P.right

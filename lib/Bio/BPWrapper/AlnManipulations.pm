@@ -30,8 +30,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 @ISA         = qw(Exporter);
 
 # FIXME: some of these have too generic names like
-# "upper_case" or "concat". Some things like print_version could be
-# put in a common routine.
+# "upper_case" or "concat".
 @EXPORT      = qw(initialize can_handle handle_opt write_out write_out_paml
 phylip_non_interleaved split_cdhit trim_ends gap_states
 gap_states_matrix print_avp_id bootstrap draw_codon_view del_seqs
@@ -41,11 +40,13 @@ avg_id_by_win concat conserve_blocks get_consensus dns_to_protein
 remove_gapped_cols_in_one_seq colnum_from_residue_pos
 list_ids premute_states protein_to_dna sample_seqs
 shuffle_sites random_slice select_third_sites remove_third_sites
-upper_case print_version );
+upper_case );
 
+use Bio::BPWrapper;
 # Package global variables
 my ($in, $out, $aln, %opts, $file, $in_format, $out_format, @alns, $binary);
-my $RELEASE = '1.0';
+
+my $VERSION = $Bio::BPWrapper::VERSION;
 
 ## For new options, just add an entry into this table with the same key as in the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.
 my %opt_dispatch = (
@@ -91,8 +92,9 @@ my %opt_dispatch = (
 ## TODO Formal testing!
 
 sub initialize {
-    my $val = shift;
-    %opts = %{$val};
+    my $opts_ref = shift;
+    Bio::BPWrapper::common_opts($opts_ref);
+    %opts = %{$opts_ref};
 
     # This is the format that aln-manipulations expects by default
     my $default_format = "clustalw";
@@ -130,7 +132,17 @@ sub handle_opt {
     $opt_dispatch{$option}->($option)
 }
 
-sub write_out {
+sub write_out($) {
+
+    my $opts = shift;
+    for my $option (keys %{$opts}) {
+	next if ($option eq 'input') || ($option eq 'output') || ($option eq 'noflatname') || ($option eq 'binary'); # Don't process these options: they are for AlignIO
+
+	if (can_handle($option)) { handle_opt($option) } # If there is a function to handle the current option, execute it
+	else { warn "Missing handler for: $option\n" }
+    }
+
+
     $aln->set_displayname_flat() unless $opts{"noflatname"};
     if ($out_format eq 'paml') { &write_out_paml($aln) }
     else { $out->write_aln($aln) }
@@ -903,12 +915,6 @@ sub remove_third_sites {
 sub upper_case {
     $aln->uppercase()
 }
-
-sub print_version {
-    say "bp-utils release version: ", $RELEASE;
-    exit
-}
-
 
 ########################## internal subroutine #######################
 
