@@ -1,13 +1,16 @@
 =encoding utf8
+
 =head1 NAME
 
-PopManipulations - Functions for biopop
+Bio::Wrapper::PopManipulations - Functions for biopop
 
 =head1 SYNOPSIS
 
-use B<PopMan::Subs>;
+    require Bio::BPWrapper::PopManipulations;
 
 =cut
+
+package Bio::BPWrapper::PopManipulations;
 
 # MK method is broken: change to comma-delimited way of specifying in group and out groups.
 use strict;    # Still on 5.10, so need this for strict
@@ -29,6 +32,20 @@ use List::Util qw(shuffle sum);
 #use Statistics::Basic qw(:all);
 use Bio::Tools::CodonTable;
 use Data::Dumper;
+use Exporter ();
+
+use vars qw(@ISA @EXPORT @EXPORT_OK);
+
+@ISA         = qw(Exporter);
+
+# FIXME: some of these might be put in
+# a common routine like print_version
+@EXPORT      = qw(initialize can_handle handle_opt
+print_distance print_heterozygosity print_mismatch_distr
+count_four_gametes print_diversity bi_partition
+bisites_for_r bisites snp_noncoding snp_coding
+snp_coding_log print_num_snps
+);
 
 # Package global variables
 my ($opts,     $flags,       $aln_file, $aln,         $in,
@@ -37,7 +54,10 @@ my ($opts,     $flags,       $aln_file, $aln,         $in,
     $pop_stats, @var_sites, @exgroups, $ingroup, $outgroup, $pop_cds,
     $myCodonTable
 );
-my $RELEASE = '1.0';
+
+
+use Bio::BPWrapper;
+my $VERSION = $Bio::BPWrapper::VERSION;
 
 my %opt_dispatch = (
     'bisites' => \&bisites,
@@ -69,6 +89,7 @@ $myCodonTable  = Bio::Tools::CodonTable->new( -id => 11 );
 
 sub initialize {
     ($opts, $flags) = @_;
+    Bio::BPWrapper::common_opts($opts);
 
     $aln_file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line, assume we're getting input from standard input
 
@@ -375,7 +396,7 @@ sub snp_coding {
 	my $snp_site = 3 * $site + &_snp_position($minor->{codon}, $major->{codon});
 	my $shanon = &_shanon_index(\%freqs);
 	say join "\t", ($aln_file, $site, $snp_site, $syn, $minor->{codon}, $minor->{aa}, $minor->{freq}, $major->{codon}, $major->{aa}, $major->{freq}, $shanon);
-	
+
 #	foreach my $ind ($pop_cds->get_Individuals) {
 #            my @genotypes = $ind->get_Genotypes(-marker => $site);
 #            my $id = $ind->unique_id();
@@ -413,6 +434,23 @@ sub snp_coding_long {
     }
 }
 
+=head2 write_out $opts
+
+Does the bulk of calling other tree routines based on $opts set.
+After L<Bio::Wrapper::PopManipulations::initialize> should be called first.
+
+=cut
+
+sub write_out
+{
+    my $opts_ref = shift;
+    my %opts = %{$opts_ref};
+    for my $option (keys %opts) {
+	# If there is a function to handle the current option, execute it
+	if (can_handle($option)) { handle_opt($option); exit }
+	else { warn "Missing handler for: $option\n" }
+    }
+}
 
 #sub print_stats {
 #    @stats = _parse_stats();
@@ -430,11 +468,6 @@ sub snp_coding_long {
 
 sub print_num_snps {
     print $pop_stats->segregating_sites_count($pop), "\n"
-}
-
-sub print_version {
-    say "bp-utils release version: ", $RELEASE;
-    exit
 }
 
 ####################### internal subroutine ###########################
@@ -553,18 +586,3 @@ sub _syn_nonsyn {
 
 
 1;
-
-=head1 REQUIRES
-
-Perl 5.010, BioPerl
-
-=head1 SEE ALSO
-
-  perl(1)
-
-=head1 AUTHORS
-
- Weigang Qiu at genectr.hunter.cuny.edu
- Yözen Hernández yzhernand at gmail dot com
-
-=cut

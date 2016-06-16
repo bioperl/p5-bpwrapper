@@ -30,7 +30,7 @@ diff: Build
 dist: Build
 	$(PERL) Build --makefile_env_macros 1 dist
 
-distcheck: Build
+distcheck: Build clean
 	$(PERL) Build --makefile_env_macros 1 distcheck
 
 distclean: Build
@@ -94,16 +94,15 @@ skipcheck:  Build
 	$(PERL) Build --makefile_env_macros 1 skipcheck
 
 #: Same as "test". "check" is the usual autoconf name
-check: test-t test-bash
+test check: test-t test-bash
 
 #: Run all Test::More tests
 test-t:
-	$(PERL) Build --makefile_env_macros 1 test
+	$(PERL) Build --makefile_env_macros 1 test && $(MAKE) clean
+
 
 test-bash:
-	$(BASH) Test-bioseq.bash &&  echo "=======================" && \
-	$(BASH) Test-bioaln.bash &&  echo "=======================" && \
-	$(BASH) Test-biotree.bash
+	$(BASH) Test-bioseq.bash && echo "======================="
 
 #: Check code coverage
 testcover:

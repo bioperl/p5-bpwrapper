@@ -5,17 +5,20 @@ bin/biotree
 Build.PL
 Changes
 GNUmakefile
+LICENSE
 MANIFEST			This list of files
 README.md
 
-Test-bioaln.bash
 Test-bioseq.bash
 Test-biotree.bash
 
-lib/AlnManipulations.pm
-lib/Bio/Wrapper/Version.pm
-lib/PopManipulations.pm
-lib/SeqManipulations.pm
+lib/Bio/BPWrapper/AlnManipulations.pm
+lib/Bio/BPWrapper/PopManipulations.pm
+lib/Bio/BPWrapper/SeqManipulations.pm
+lib/Bio/BPWrapper/TreeManipulations.pm
+lib/Bio/BPWrapper.pm
+lib/Bio/BPWrapper.pod
+t/00test-pod.t
 t/10test-bioaln.t
 t/10test-bioseq.t
 t/10test-biotree.t
@@ -31,7 +34,9 @@ t/check-data/bioaln-opt-F.right
 t/check-data/bioaln-opt-I.right
 t/check-data/bioaln-opt-L.right
 t/check-data/bioaln-opt-P.right
+t/check-data/bioaln-opt-R.right
 t/check-data/bioaln-opt-T.right
+t/check-data/bioaln-opt-a-longdouble.right
 t/check-data/bioaln-opt-a.right
 t/check-data/bioaln-opt-c.right
 t/check-data/bioaln-opt-d.right
@@ -66,6 +71,7 @@ t/check-data/bioseq-opt-t.right
 t/check-data/biotree-opt-A.right
 t/check-data/biotree-opt-B.right
 t/check-data/biotree-opt-D.right
+t/check-data/biotree-opt-G-longdouble.right
 t/check-data/biotree-opt-G.right
 t/check-data/biotree-opt-L.right
 t/check-data/biotree-opt-P.right
@@ -104,3 +110,6 @@ test-files/test-bioseq.pep
 test-files/test-biotree.dnd
 test-setup.sh
 TODO.md
+Makefile.PL
+META.json
+META.yml

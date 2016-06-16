@@ -2,6 +2,7 @@
 use rlib '.';
 use strict; use warnings;
 use Test::More;
+use Config;
 use Helper;
 note( "Testing biotree single-letter options on test-biotree.dnd" );
 
@@ -13,7 +14,7 @@ my %notes = (
     B => 'prepends ID to leaf/node labels',
     D => 'half-matrix list of distances between leaves',
     L => 'nodes and branch lengths',
-    M => 'build treee of random subset',
+    M => 'build tree of random subset',
     R => 'remove branch lengths from tree',
 );
 # option b (background needs special care)
@@ -33,6 +34,12 @@ for my $letter (qw(l n u B D L R)) {
     W => 'walk tree from 156a',
 );
 
+# Output is different when Perl is configured with longdouble defined
+my %longdouble = ();
+if ($Config{longdouble}) {
+    $longdouble{'G'} = 1;
+}
+
 note( "Testing biotree option-value options on test-bioatree.dnd" );
 for my $tup (['d', 'SV1,N40'],
 	     ['o', 'tabtree'],
@@ -44,11 +51,29 @@ for my $tup (['d', 'SV1,N40'],
 	     ['W', '156a'],
 )
 {
-    run_bio_program('biotree', 'test-biotree.dnd', "-$tup->[0] $tup->[1]",
-		    "opt-$tup->[0].right", {note=>$notes{$tup->[0]}});
+    my ($letter, $args) = @$tup;
+    if ($longdouble{$letter}) {
+	print("skipping option '${letter}' because this perl has longdouble\n");
+	run_bio_program('biotree', 'test-biotree.dnd', "-$letter $args",
+			"opt-$letter-longdouble.right", {note=>$notes{$tup->[0]}});
+    } else {
+	run_bio_program('biotree', 'test-biotree.dnd', "-$letter $args",
+			"opt-$letter.right", {note=>$notes{$letter}});
+    }
 }
 
-# Need to convert:
-# M - needs to canonicalize hash ooutput
-# r
+%notes = (
+    M => "random",
+);
+
+
+for my $letter (keys %notes) {
+    run_bio_program_nocheck('biotree', 'test-biotree.dnd', "-${letter}",
+			    {note=>$notes{$letter}});
+}
+
+note( "Skipping biotree -r JD1 - needs investigation" );
+# run_bio_program_nocheck('biotree', 'test-biotree.dnd', "-r JD1",
+#			{note=>"resample"});
+
 done_testing();

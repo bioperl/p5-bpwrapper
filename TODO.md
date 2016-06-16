@@ -1,4 +1,3 @@
-# To Do List
 * bioaln: --gapstates implemented, but needs to add to POD & test
 * biotree: deroot a tree
 * biotree: --multi2bi; need to add to POD & test
