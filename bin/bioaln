@@ -49,9 +49,9 @@ GetOptions(
     "pep2dna|P=s",
     "resample|R:i",    # Optional value, default is floor of num_sequences/2
     "shuffle-sites|S",
-    "select-third|T",
+    "select-third",
     "remove-third",
-    "uppercase|U", # make upper case (for DNAStatistics)
+    "uppercase", # make upper case (for DNAStatistics)
     "gapstates",
     "gapstates2",
     "random-slice=i",

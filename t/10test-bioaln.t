@@ -8,39 +8,28 @@ note( "Testing bioaln single-letter options on test-bioaln.cds" );
 
 
 my %notes = (
-    a => 'average percent identity',
-    c => 'codon view',
-    g => 'remove gapped sites',
-    l => 'length of an alignment',
-    m => 'match view',
-    n => 'number of aligned sequences',
-    u => 'remove redundant sequences',
-    v => 'show only variable sites',
-    A => 'concatenate aln files',
-    B => 'extract conserved blocks',
-    D => 'DNA alignment',
-    F => 'set display name flat',
-    L => 'list all sequence IDs',
-    T => 'extract third site',
+    'avpid' => 'average percent identity',
+    'codon-view' => 'codon view',
+    'nogaps' => 'remove gapped sites',
+    'length' => 'length of an alignment',
+    'match' => 'match view',
+    'numseq' => 'number of aligned sequences',
+    'uniq' => 'remove redundant sequences',
+    'varsites' => 'show only variable sites',
+    'concat' => 'concatenate aln files',
+    'conblocks' => 'extract conserved blocks',
+    'dna2pep' => 'CDS alignment to protein alignment',
+    'noflatname' => 'set display name flat',
+    'listids' => 'list all sequence IDs',
+    'select-third' => 'extract third site',
 );
-
-# Output is different when Perl is configured with longdouble defined
-my %longdouble = ();
-if ($Config{longdouble}) {
-    $longdouble{'a'} = 1;
-}
 
 # option a changes depending on whether Perl was set to
 # to use longdouble or not
 # option b (background needs special care)
-for my $letter (keys %notes) {
-    if ($longdouble{$letter}) {
-	print("skipping option '${letter}' because this perl has longdouble\n");
-	# run_bio_program('bioaln', 'test-bioaln.cds', "-${letter}", "opt-${letter}-longdouble.right");
-    }  else {
-	run_bio_program('bioaln', 'test-bioaln.cds', "-${letter}", "opt-${letter}.right",
-			{note=>$notes{$letter}});
-    }
+for my $opt (keys %notes) {
+    run_bio_program('bioaln', 'test-bioaln.cds', "--${opt}", "opt-${opt}.right",
+			{note=>$notes{$opt}});
 }
 
 
@@ -90,15 +79,15 @@ for my $triple (['i', 'fasta', 'test-bioaln-pep2dna.nuc'],
 
 
 %notes = (
-    b => "bootstrap",
-    M => "permute-states",
-    U => "Make an uppercase alignment",
+    'bootstrap' => "bootstrap",
+    'permute-states' => "permute-states",
+    'uppercase' => "Make an uppercase alignment",
 );
 
 
-for my $letter (keys %notes) {
-    run_bio_program_nocheck('bioaln', 'test-bioaln.cds', "-${letter}",
-			    {note=>$notes{$letter}});
+for my $opt (keys %notes) {
+    run_bio_program_nocheck('bioaln', 'test-bioaln.cds', "--${opt}",
+			    {note=>$notes{$opt}});
 }
 
 run_bio_program_nocheck('bioaln', 'test-bioaln.cds', "-R 3",
