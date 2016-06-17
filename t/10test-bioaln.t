@@ -66,6 +66,7 @@ for my $tuple (['input', 'fasta', 'test-bioaln-pep2dna.nuc',
     'bootstrap' => "bootstrap",
     'permute-states' => "permute-states",
     'uppercase' => "Make an uppercase alignment",
+    'resample' => "Resample",
 );
 
 
@@ -74,6 +75,4 @@ for my $opt (keys %notes) {
 			    {note=>$notes{$opt}});
 }
 
-run_bio_program_nocheck('bioaln', 'test-bioaln.cds', "-R 3",
-			    {note=>"resample"});
 done_testing();
