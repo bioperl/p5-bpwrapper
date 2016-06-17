@@ -21,7 +21,7 @@ my $builder = Module::Build->new(
 			     'test-files/test-bioaln.cds.slice*.aln',
 			     'test-bioseq.nuc.sed', 't/test-bioseq.nuc.sed',
 			     'test-bioaln.cds.slice*.aln',
-			     '*.fas',
+			     '*.fas', '*.err',
 			     't/check-data/*.err'],
     create_makefile_pl  => 'passthrough',
     dist_abstract       =>

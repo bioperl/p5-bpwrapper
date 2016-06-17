@@ -15,24 +15,16 @@ my %notes = (
     'removestop' => 'remove stop codons',
 );
 
-# test_no_arg_opts('bioseq', 'test-bioseq.nuc', \%notes);
-
-%notes = (
-    'delete' => 'delete by order',
-    'pick' => 'pick 1 sequence by order',
-    'subseq' => 'get subsequences',
-    'translate' => 'translate DNA',
-    'reloop' => 'reloop a sequence',
-);
+test_no_arg_opts('bioseq', 'test-bioseq.nuc', \%notes);
 
 my $opts = [
-    ['delete', 'order:2'],
-    ['pick', 'order:2'],
-    ['subseq', '10,20'],
-    ['translate', '1'],
-    ['reloop', '3'],
+    ['delete', 'order:2', 'delete by order'],
+    ['pick', 'order:2', 'pick 1 sequence by order'],
+    ['subseq', '10,20', 'get subsequences'],
+    ['translate', '1', 'translate DNA'],
+    ['reloop', '3', 'reloop a sequence'],
     ];
 
-test_one_arg_opts('bioseq', 'test-bioseq.nuc', $opts, \%notes);
+test_one_arg_opts('bioseq', 'test-bioseq.nuc', $opts);
 
 done_testing();

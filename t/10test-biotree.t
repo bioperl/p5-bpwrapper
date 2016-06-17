@@ -18,30 +18,21 @@ my %notes = (
 
 test_no_arg_opts('biotree', 'test-biotree.dnd', \%notes);
 
-%notes = (
-    # reroot => 'reroot tree',
-    'allchildOTU' => "Prints OTU's descended from node 15",
-    'depth' => 'depth to root',
-    'distance' => 'distance between a pair of nodes or leaves',
-    'lca' => 'Least Common Ancestor',
-    'ltt' => 'divide tree into 10 segments and count branches',
-    'output' => 'Output file format tabtree',
-    'subset' => 'subset tree',
-    'walk' => 'walk tree from 156a',
-);
-
 my $opts = [
-    ['allchildOTU', '15'],
-    ['depth', 'N40,B31,SV1'],
-    ['distance', 'SV1,N40'],
-    ['lca', 'SV1,B31,N40'],
-    ['ltt', '10'],
-    ['output', 'tabtree'],
-    ['subset', 'SV1,B31,N40'],
-    ['walk', '156a'],
+    ['allchildOTU', '15',
+     "Prints OTU's descended from node 15"],
+    ['depth', 'N40,B31,SV1', 'depth to root'],
+    ['distance', 'SV1,N40',
+     'distance between a pair of nodes or leaves'],
+    ['lca', 'SV1,B31,N40', 'Least Common Ancestor'],
+    ['ltt', '10',
+     'divide tree into 10 segments and count branches'],
+    ['output', 'tabtree', 'Output file format tabtree'],
+    ['subset', 'SV1,B31,N40', 'subset tree'],
+    ['walk', '156a', 'walk tree from 156a'],
     ];
 
-test_one_arg_opts('biotree', 'test-biotree.dnd', $opts, \%notes);
+test_one_arg_opts('biotree', 'test-biotree.dnd', $opts);
 
 %notes = (
     'random' => "random",

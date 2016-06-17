@@ -143,15 +143,15 @@ sub test_no_arg_opts($$$) {
 }
 
 
-sub test_one_arg_opts($$$$) {
-    my ($bio_program, $data_filename, $opts, $notes) = @_;
+sub test_one_arg_opts($$$) {
+    my ($bio_program, $data_filename, $opts) = @_;
 
     for my $tup (@$opts) {
-	my ($opt, $arg) = @$tup;
+	my ($opt, $arg, $note) = @$tup;
 	Test::More::note( "Testing ${bio_program} option-value options on ${data_filename}" );
 
 	run_bio_program($bio_program, $data_filename, "--$opt $arg",
-			"opt-$opt.right", {note=>$notes->{$opt}});
+			"opt-$opt.right", {note=>$note});
     }
 }
 
