@@ -74,7 +74,7 @@ biotree - FASTA L<Bio::TreeIO> tools
 
 =head1 SYNOPSIS
 
-B<biotree> [options] <tree file>
+B<biotree> [options] [<tree file>]
 
 B<biotree> [C<-h> | C<--help> | --C<v> | C<--version> C<--man>]
 
@@ -168,12 +168,6 @@ Remove branch lengths from tree.
 =item --allchildOTU, -U 'internal_node_id' | 'all'
 
 Prints all OTU's that are descended from the given internal node. If no node is provided, a complete list of all internal nodes and their descendents is returned instead (given in the order of "walking" through the tree from the root node).
-
-=item --version, -V
-
-Print current release version of bp-utils.
-
-Usage: bioseq -V
 
 =item --walk, -W 'otu'
 

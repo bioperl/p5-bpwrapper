@@ -82,7 +82,7 @@ L<Bio::Align::Utilities>
 
 =head1 SYNOPSIS
 
-B<bioaln> I<options> [I<file>]
+B<bioaln> I<options> [I<alignment_file>]
 
 B<bioaln> [C<-h> | C<--help> | --C<v> | C<--version> C<--man>]
 
@@ -116,19 +116,19 @@ Print alignment length. Wrap Bio::SimpleAlign->length().
 
 List all sequence ids.
 
-   bioaln -L <alignment_file>
+   bioaln --listids <alignment_file>
 
 =item --numseq, -n
 
 Get number of sequences in alignment.
 
-   bioaln -n <alignment_file>
+   bioaln --numseq <alignment_file>
 
 =item --window, -w
 
 Calculate pairwise average sequence difference by windows (overlapping windows with fixed step of 1). Default value for window_size is 30.
 
-   bioaln -w 'window_size' I<alignment_file>
+   bioaln --window window_size <alignment_file>
 
 =back
 
@@ -381,9 +381,9 @@ Here is an example in bash:
 
 Extract perfectly conserved blocks (PCBs, gap excluded) from an alignment, each to a new clustalw file. Default minimum length of PCB is 6 sites.
 
-   bioaln -B <alignment_file>
+   bioaln --conblocks <alignment_file>
 
-With C<bioaln -B input.aln> on input:
+With C<bioaln --conblocks input.aln> where C<input.aln> is:
 
  Seq1           ATGAATAAAAAGATATATAGCATAGAAGAATTAGTAGATAAA--ATAAGT
  Seq2           ATGAATAAAAAGATATACAGCATAGAAGAATTAATAGATAAACGATAAGC
@@ -428,29 +428,29 @@ you get:
 
 Concatenate multiple alignments sharing the same set of unique IDs. This is normally used for concatenating individual gene alignments of the same set of samples to a single one for making a "supertree". Wrap Bio::Align::Utilities->cat().
 
-   bioaln -A gene1.aln gene2.aln gene3.aln gene4.aln
+   bioaln --concat gene1.aln gene2.aln gene3.aln gene4.aln
 
 or using wildcard to specify files:
 
-   bioaln -A gene*.aln
+   bioaln --concat gene*.aln
 
 =item --noflatname, -F
 
 By default, sequence names do not contain 'begin-end'. This option turns ON 'begin-end' naming. Wrap Bio::SimpleAlign->set_displayname_flat().
 
-   bioaln -F <alignment_file>
+   bioaln --noflatname <alignment_file>
 
 =item --aln-index, -I
 
 Identify aligned position of a residue. Wrap Bio::SimpleAlign->column_from_residue_number().
 
-   bioaln -I 'seq_id,position' <alignment_file>
+   bioaln --aln-index 'seq_id,position' <alignment_file>
 
 =item --permute-states, -M
 
 Generate an alignment with randomly permuted residues at each site. This operation removes phylogenetic signal among aligned sequences, if there is any in the original alignment. This is the basis of the Permutation Trail Prob (PTP) test of tree-ness of an alignment.
 
-   bioaln -M <alignment_file>
+   bioaln --permute-states <alignment_file>
 
 =item --resample, -R
 
@@ -460,9 +460,9 @@ If n is not given, default is the number of sequences in alignment divided by 2,
 
 This functionality uses an implementation of Reservoir Sampling, based on the algorithm found here: http://blogs.msdn.com/b/spt/archive/2008/02/05/reservoir-sampling.aspx
 
-   bioaln -R 'n' <alignment_file>
+   bioaln --resample 'n' <alignment_file>
 
-For C<bioaln -R4 input.aln> where C<input.aln> contains
+For C<bioaln --resample 4 input.aln> where C<input.aln> contains
 
  Seq1                  MNNKIYSIEELIDKISMPVVAYAGEAKSFLREALEYAKNK
  Seq2                  MNKKTYSIEELIDKISMPVVAYSGEAKSFLREALEHAKNK
@@ -576,8 +576,8 @@ ternal)
 
 =head2 change alignment format
 
- bioaln -i 'fasta' -o 'phylip'       # FASTA => PHYLIP
- bioaln -i 'fasta' -o 'pmal'         # FASTA => PAML
+ bioaln --input 'fasta' --output 'phylip'       # FASTA => PHYLIP
+ bioaln --input 'fasta' --output 'pmal'         # FASTA => PAML
 
 =head2 Chaining with pipes
 
@@ -585,8 +585,9 @@ ternal)
  bioaln -i'fasta' fasta.aln | bioaln -s'10,20' | bioaln -a
 
  # Chaining with bioseq:
- # Turn a coding-sequence alignment into a protein alignemnt (an alternative to -D):
- bioaln -o'fasta' cds.aln | bioseq -t1 | bioaln -i'fasta'
+ # Turn a coding-sequence alignment into a protein alignemnt (an alternative to C<--dna2pep>):
+
+   bioaln --output fasta cds.aln | bioseq --translate 1 | bioaln --input fasta
 
 =head1 SEE ALSO
 

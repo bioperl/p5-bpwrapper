@@ -25,6 +25,10 @@ my $opts = [
     ['reloop', '3', 'reloop a sequence'],
     ];
 
+my $multi_opts = [
+    "-f 'X83553' -o 'genbank"
+
+
 test_one_arg_opts('bioseq', 'test-bioseq.nuc', $opts);
 
 done_testing();
