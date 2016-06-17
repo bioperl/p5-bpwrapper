@@ -3,14 +3,14 @@
 # Description
 
 Here we have command-line utilities for popular
-[BioPerl](https://metacpan.org/pod/Bio::Perl) classes.
+[Bio::Perl](https://metacpan.org/pod/Bio::Perl) classes.
 
 Specifically:
 
-* bioaln: [`Bio::SimpleAlign`](https://metacpan.org/pod/Bio::SimpleAlign) with additional methods
-* biopop: [`Bio::PopGen`](https://metacpan.org/pod/Bio::PopGen) which can be converted from `Bio::SimpleAlign`; and additional methods
-* bioseq:  [`Bio::Seq`](https://metacpan.org/pod/Bio::Seq) with additional methods
-* biotree: [`Bio::Tree`](https://metacpan.org/pod/Bio::Seq) with additional methods
+* [bioaln](https://github.com/rocky/p5-bpwrapper/wiki/bioaln): [`Bio::SimpleAlign`](https://metacpan.org/pod/Bio::SimpleAlign) with additional methods
+* [biopop](https://github.com/rocky/p5-bpwrapper/wiki/biopop): [`Bio::PopGen`](https://metacpan.org/pod/Bio::PopGen) which can be converted from `Bio::SimpleAlign`; and additional methods
+* [bioseq](https://github.com/rocky/p5-bpwrapper/wiki/bioseq):  [`Bio::Seq`](https://metacpan.org/pod/Bio::Seq) with additional methods
+* [biotree](https://github.com/rocky/p5-bpwrapper/wiki/biotree): [`Bio::Tree`](https://metacpan.org/pod/Bio::Seq) with additional methods
 
 The motivation is to allow BioPerl users from writing full-blown
 scripts for routine manipulations of sequences, alignments, trees, and
@@ -49,7 +49,7 @@ package will check and install that.
 
 # Get Help
 
-Each script, [`bioaln`](https://metacpan.org/pod/distribution/Bio-BPWrapper/bin/bioaln), [`biopop`](https://metacpan.org/pod/distribution/Bio-BPWrapper/bin/biopop), [`bioseq`](https://metacpan.org/pod/distribution/Bio-BPWrapper/bin/biopop) and [`biotree`](https://metacpan.org/pod/distribution/Bio-BPWrapper/bin/biotree) give shorter usage help when given command-line option `--help`. Manual-page help is also giving the option `--man`.
+Each script, [`bioaln`](https://github.com/rocky/p5-bpwrapper/wiki/bioaln), [`biopop`](https://metacpan.org/pod/distribution/Bio-BPWrapper/bin/biopop), [`bioseq`](https://github.com/rocky/p5-bpwrapper/wiki/bioseq) and [`biotree`](https://github.com/rocky/p5-bpwrapper/wiki/biotree) give shorter usage help when given command-line option `--help`. Manual-page help is also giving the option `--man`.
 
 Documentation is maintained in [this project's wiki](https://github.com/rocky/p5-bpwrapper/wiki).
 
