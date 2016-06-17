@@ -15,7 +15,7 @@ my %notes = (
     'removestop' => 'remove stop codons',
 );
 
-# test_no_arg_opts('bioseq', 'test-bioseq.nuc', \%notes);
+test_no_arg_opts('bioseq', 'test-bioseq.nuc', \%notes);
 
 my $opts = [
     ['delete', 'order:2', 'delete by order'],
@@ -24,6 +24,8 @@ my $opts = [
     ['translate', '1', 'translate DNA'],
     ['reloop', '3', 'reloop a sequence'],
     ];
+
+test_one_arg_opts('bioseq', 'test-bioseq.nuc', $opts);
 
 my $multi_opts = [
     ["--pick 'order:2,4'",
