@@ -9,9 +9,6 @@ LICENSE
 MANIFEST			This list of files
 README.md
 
-Test-bioseq.bash
-Test-biotree.bash
-
 lib/Bio/BPWrapper/AlnManipulations.pm
 lib/Bio/BPWrapper/PopManipulations.pm
 lib/Bio/BPWrapper/SeqManipulations.pm
@@ -51,11 +48,14 @@ t/check-data/bioaln-opt-slice.right
 t/check-data/bioaln-opt-uniq.right
 t/check-data/bioaln-opt-varsites.right
 t/check-data/bioaln-opt-window.right
+t/check-data/bioseq-feat2fasta.right
+t/check-data/bioseq-genbank2fast.right
+t/check-data/bioseq-hydroB.right
 t/check-data/bioseq-opt-C.right
 t/check-data/bioseq-opt-G.right
 t/check-data/bioseq-opt-anonymize.right
 t/check-data/bioseq-opt-break.right
-t/check-data/bioseq-opt-c.right
+t/check-data/bioseq-opt-composition.right
 t/check-data/bioseq-opt-delete.right
 t/check-data/bioseq-opt-length.right
 t/check-data/bioseq-opt-linearize.right
@@ -67,8 +67,9 @@ t/check-data/bioseq-opt-removestop.right
 t/check-data/bioseq-opt-revcom.right
 t/check-data/bioseq-opt-subseq.right
 t/check-data/bioseq-opt-translate.right
-t/check-data/bioseq-pick-order,2-4.right
+t/check-data/bioseq-pick-order-2,4.right
 t/check-data/bioseq-pick-order-2-4.right
+t/check-data/bioseq-restrict.right
 t/check-data/biotree-opt-allchildOTU.right
 t/check-data/biotree-opt-depth.right
 t/check-data/biotree-opt-distance.right
@@ -85,6 +86,7 @@ t/check-data/biotree-opt-rmbl.right
 t/check-data/biotree-opt-subset.right
 t/check-data/biotree-opt-walk.right
 
+test-files/genbank
 test-files/test-bioaln-cat-1.aln
 test-files/test-bioaln-cat-2.aln
 test-files/test-bioaln-cat-3.aln
@@ -108,7 +110,6 @@ test-files/test-bioseq.nuc
 test-files/test-bioseq.pep
 test-files/test-biotree.dnd
 
-test-setup.sh
 TODO.md
 Makefile.PL
 META.json

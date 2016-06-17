@@ -5,14 +5,15 @@ use Test::More;
 use Helper;
 
 my %notes = (
-    'nogaps' => 'remove gaps',
-    'length' => 'protein sequence length',
-    'numseq' => 'number of sequences',
-    'revcom' => 'reverse compliment sequence',
     'anonymize' => 'anonymize sequence IDs',
     'break' => 'break into single-sequence files',
+    'composition' => 'base composition',
+    'length' => 'protein sequence length',
     'linearize' => 'linearize fast sequence',
+    'nogaps' => 'remove gaps',
+    'numseq' => 'number of sequences',
     'removestop' => 'remove stop codons',
+    'revcom' => 'reverse compliment sequence',
 );
 
 test_no_arg_opts('bioseq', 'test-bioseq.nuc', \%notes);
@@ -28,15 +29,23 @@ my $opts = [
 test_one_arg_opts('bioseq', 'test-bioseq.nuc', $opts);
 
 my $multi_opts = [
-    ["--pick 'order:2,4'",
+    ["--pick 'order:2,4'", 'test-bioseq.nuc',
      'pick-order-2,4.right', 'pick seqs by order delimited by commas'],
-    ["--pick 'order:2,4'",
-     'pick-order-2-4.right', 'pick seqs by order with range']
+    ["--pick 'order:2,4'", 'test-bioseq.nuc',
+     'pick-order-2-4.right', 'pick seqs by order with range'],
+    ["--restrict EcoRI", 'test-bioseq-re.fas',
+     'restrict.right', 'restriction cut'],
+    ["--hydroB", 'test-bioseq.pep',
+     'hydroB.right', 'Hydrophobicity score'],
+    ["--input genbank --output fasta", "test-bioseq.gb",
+     "genbank2fast.right", "Genbank => fasta"],
+    ["--input genbank --feat2fas", "test-bioseq.gb",
+     "feat2fasta.right", "extract gens from a genbank file"]
     ];
 
     for my $tuple (@$multi_opts) {
-	my ($opts, $check, $note) = @$tuple;
-	run_bio_program('bioseq', 'test-bioseq.nuc', $opts, $check, {note => $note});
+	my ($opts, $datafile, $check, $note) = @$tuple;
+	run_bio_program('bioseq', $datafile, $opts, $check, {note => $note});
     }
 
 
