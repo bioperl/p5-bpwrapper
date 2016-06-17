@@ -201,12 +201,12 @@ Break into individual sequences, one sequence per file
 Count codons for coding sequences (e.g., a genome file consisting of
 CDS sequences). A wrapper of C<Bio::Tools::SeqStats->count_codons()>.
 
-=item --feat2fasta | -F
+=item --feat2fas | -F
 
 Extract gene sequences in FASTA from a GenBank file of bacterial
 genome. Won't work for a eukaryote genbank file. For example:
 
-   bioseq --input genbank --feat2fast <genbank_file>
+   bioseq --input genbank --feat2fas <genbank_file>
 
 =item --leadgaps | -G <input_file>
 
@@ -299,13 +299,13 @@ or more FASTA-format file.
  bioseq --break fasta_file        # Break into single-seq files
  bioseq --count-codons cds_fasta  # Codon counts (for coding sequences)
  bioseq --hydroB pep_fasta        # Hydrophobicity score (for protein seq)
- bioseq --input genbank --feat2fasta file.gb  # extract genbank features to FASTA
+ bioseq --input genbank --feat2fas file.gb  # extract genbank features to FASTA
  bioseq --restrict EcoRI dna_fasta            # Fragments from restriction digest
 
 =head3  Examples involving Unix pipes
 
- bioseq --pick id:B31 dna_fasta | bioseq -g | bioseq -t1          # pick a seq, remove gaps, & translate
- bioseq --pick order:2 dna_fasta | bioseq -r | bioseq --subseq 10,20   # pick the 2nd seq, rev-com it, & subseq
+ bioseq --pick id:B31 dna_fasta | bioseq -nogaps | bioseq --translate 1 # pick a seq, remove gaps, & translate
+ bioseq --pick order:2 dna_fasta | bioseq -r | bioseq --subseq 10,20    # pick the 2nd seq, rev-com it, & subseq
 
 
 =head1 SEE ALSO
