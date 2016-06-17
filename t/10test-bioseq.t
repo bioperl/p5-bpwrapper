@@ -15,7 +15,7 @@ my %notes = (
     'removestop' => 'remove stop codons',
 );
 
-test_no_arg_opts('bioseq', 'test-bioseq.nuc', \%notes);
+# test_no_arg_opts('bioseq', 'test-bioseq.nuc', \%notes);
 
 my $opts = [
     ['delete', 'order:2', 'delete by order'],
@@ -26,9 +26,29 @@ my $opts = [
     ];
 
 my $multi_opts = [
-    "-f 'X83553' -o 'genbank"
+    ["--pick 'order:2,4'",
+     'pick-order-2,4.right', 'pick seqs by order delimited by commas'],
+    ["--pick 'order:2,4'",
+     'pick-order-2-4.right', 'pick seqs by order with range']
+    ];
+
+    for my $tuple (@$multi_opts) {
+	my ($opts, $check, $note) = @$tuple;
+	run_bio_program('bioseq', 'test-bioseq.nuc', $opts, $check, {note => $note});
+    }
 
 
-test_one_arg_opts('bioseq', 'test-bioseq.nuc', $opts);
+if ($ENV{'BPWRAPPER_INTERNET_TESTS'}) {
+    my $multi_opts = [
+	["--fetch 'X83553' --output genbank",
+	 'X83553.right', 'fetch Genbank file X8553']
+	];
+
+    for my $tuple (@$multi_opts) {
+	my ($opts, $check, $note) = @$tuple;
+	run_bio_program_nocheck('bioseq', '/dev/null', $opts, {note => $note});
+    }
+}
+
 
 done_testing();
