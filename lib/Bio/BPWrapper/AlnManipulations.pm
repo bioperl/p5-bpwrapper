@@ -87,9 +87,23 @@ my %opt_dispatch = (
     "phy-nonint" => \&phylip_non_interleaved
    );
 
+
+=head1 SUBROUTINES
+
+=cut
+
 ##################### initializer & option handlers ###################
 
 ## TODO Formal testing!
+
+=head2 initialize()
+
+Call with an options hash first.
+
+Sets package variables: C<$in_format>, C<$binary>, C<$out_format> and $<$out>.
+
+
+=cut
 
 sub initialize {
     my $opts_ref = shift;
@@ -422,16 +436,41 @@ sub gap_states_matrix {
     exit;
 }
 
+=head2 print_avpid
+
+Print the average percent identity of an alignment.
+
+Wraps L<C<Bio::SimpleAlign-E<gt>average_percentage_identity()> | Bio::SimpleAlign>.
+
+
+=cut
 
 sub print_avp_id {
     say $aln->average_percentage_identity();
     exit
 }
 
+=head2 boostrap()
+
+Produce a bootstrapped alignment. Wraps
+L<C<Bio::Align::Utilities-E<gt>bootstrap_replicates() |
+Bio::Align::Utilities#bootstrap_replicates>
+
+=cut
+
 sub bootstrap {
     my $replicates = bootstrap_replicates($aln,1);
     $aln = shift @$replicates
 }
+
+=head2 draw_codon_view()
+
+Print a CLUSTALW-like alignment, but separated by codons. Intended for
+use with DNA sequences. Block-final position numbers are printed at
+the end of every alignment block at the point of wrapping, and
+block-initial counts appear over first nucleotide in a block.
+
+=cut
 
 sub draw_codon_view {
 #    my $aln = shift;
@@ -500,6 +539,14 @@ sub draw_codon_view {
     exit 0
 }
 
+=head2 del_seqs
+
+Delete sequences based on their id. Option takes a comma-separated list of ids.
+The list of sequences to delete is in C<$opts{"delete"}> which is set in
+L<#initialize>.
+
+=cut
+
 sub del_seqs {
     _del_or_pick($opts{"delete"}, "remove_seq", 0)
 }
@@ -507,6 +554,13 @@ sub del_seqs {
 sub remove_gaps {
     $aln = $aln->remove_gaps()
 }
+
+=head2 print_length()
+
+Print alignment length. Wraps
+C<Bio::SimpleAlign-E<gt>length()|L<Bio::SimpleAlign#length>>.
+
+=cut
 
 sub print_length {
     say $aln->length();
@@ -517,14 +571,35 @@ sub print_match {
     $aln->match()
 }
 
+=head2 print_num_seq()
+
+Print number of sequences in alignment.
+
+=cut
+
 sub print_num_seq {
     say $aln->num_sequences();
     exit
 }
 
+=head2 pick_seqs()
+
+Pick sequences based on their id. Option takes a comma-separated list of ids.
+The sequences to pick set in C<$opts{"pick"}> which is set in L<#initialize>.
+
+=cut
+
 sub pick_seqs {
     _del_or_pick($opts{"pick"}, "add_seq", 1)
 }
+
+=head2 change_ref()
+
+Change the reference sequence to be what is in C<$opts{"refseq"}>
+which is set in L<#initialize>. Wraps
+C<L<Bio::SimpleAlign#set_new_reference>-E<gt>set_new_reference()>.
+
+=cut
 
 sub change_ref {
     $aln = $aln->set_new_reference($opts{"refseq"})
@@ -631,6 +706,15 @@ sub variable_sites {
 
     $aln = $new_aln
 }
+
+=head2 avg_id_by_win()
+
+Calculate pairwise average sequence difference by windows (overlapping
+windows with fixed step of 1). The window size is set in
+C<$opts{"window"}> which is set in L<#initialize>.
+
+=cut
+
 
 sub avg_id_by_win {
     my $window_sz = $opts{"window"};
@@ -749,6 +833,12 @@ sub colnum_from_residue_pos {
     print $aln->column_from_residue_number($id, $pos), "\n";
     exit
 }
+
+=head2 list_ids()
+
+List all sequence ids.
+
+=cut
 
 sub list_ids {
     my @ids;
