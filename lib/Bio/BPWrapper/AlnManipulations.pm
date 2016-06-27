@@ -440,7 +440,7 @@ sub gap_states_matrix {
 
 Print the average percent identity of an alignment.
 
-Wraps L<C<Bio::SimpleAlign-E<gt>average_percentage_identity()> | Bio::SimpleAlign>.
+Wraps L<Bio::SimpleAlign-E<gt>average_percentage_identity()|https://metacpan.org/pod/Bio::SimpleAlign#average_percentage_identity>.
 
 
 =cut
@@ -452,9 +452,7 @@ sub print_avp_id {
 
 =head2 boostrap()
 
-Produce a bootstrapped alignment. Wraps
-L<C<Bio::Align::Utilities-E<gt>bootstrap_replicates() |
-Bio::Align::Utilities#bootstrap_replicates>
+Produce a bootstrapped alignment. L<Bio::Align::Utilities-E<gt>bootstrap()|https://metacpan.org/pod/Bio::Align::Utilities#bootstrap_replicates>.
 
 =cut
 
@@ -551,14 +549,20 @@ sub del_seqs {
     _del_or_pick($opts{"delete"}, "remove_seq", 0)
 }
 
+=head2 remove_gaps()
+
+Remove gaps (and returns an de-gapped alignment). Wraps
+L<Bio::SimpleAlign-E<gt>remove_gaps()|https://metacpan.org/pod/Bio::SimpleAlign#remove_gaps>.
+
+=cut
+
 sub remove_gaps {
     $aln = $aln->remove_gaps()
 }
 
 =head2 print_length()
 
-Print alignment length. Wraps
-C<Bio::SimpleAlign-E<gt>length()|L<Bio::SimpleAlign#length>>.
+Print alignment length. Wraps L<Bio::SimpleAlign-E<gt>length()|https://metacpan.org/pod/Bio::SimpleAlign#length>.
 
 =cut
 
@@ -566,6 +570,14 @@ sub print_length {
     say $aln->length();
     exit
 }
+
+=head2 print_match()
+
+Go through all columns and change residues identical to the reference
+sequence to be the match character, '.' Wraps
+L<Bio::SimpleAlign-E<gt>match()|https://metacpan.org/pod/Bio::SimpleAlign#match>.
+
+=cut
 
 sub print_match {
     $aln->match()
@@ -597,13 +609,26 @@ sub pick_seqs {
 
 Change the reference sequence to be what is in C<$opts{"refseq"}>
 which is set in L<#initialize>. Wraps
-C<L<Bio::SimpleAlign#set_new_reference>-E<gt>set_new_reference()>.
+L<Bio::SimpleAlign-E<gt>set_new_reference()|https://metacpan.org/pod/Bio::SimpleAlign#set_new_reference>.
 
 =cut
 
 sub change_ref {
     $aln = $aln->set_new_reference($opts{"refseq"})
 }
+
+
+=head2 aln_slice()
+
+Get a slice of the alignment.  The slice is specifiedn
+C<$opts{"slice"}> which is set in L<#initialize>.
+
+Wraps
+L<Bio::SimpleAlign-E<gt>slice()|Bio::SimpleAlign#https://metacpan.org/pod/Bio::SimpleAlign#slice>
+with improvements.
+
+=cut
+
 
 sub aln_slice {    # get alignment slice
     my ($begin, $end) = split(/\s*,\s*/, $opts{"slice"});
@@ -614,6 +639,14 @@ sub aln_slice {    # get alignment slice
     $end   = $aln->length if $end   eq "-";
     $aln = $aln->slice($begin, $end)
 }
+
+=head2
+
+Extract the alignment of unique sequences. Wraps
+L<Bio::SimpleAlign-E<gt>uniq_seq()|https://metacpan.org/pod/Bio::SimpleAlign#uniq_seq>.
+
+=cut
+
 
 sub get_unique {
     $aln->verbose(1);
@@ -675,6 +708,11 @@ sub binary_informative {
     $aln = $new_aln
 }
 
+=head2
+
+Extracts variable sites.
+
+=cut
 sub variable_sites {
     $aln = $aln->remove_gaps();
     my $new_aln = Bio::SimpleAlign->new();
@@ -803,6 +841,14 @@ sub get_consensus {
    );
     $aln->add_seq($consense)
 }
+
+=head2 dna_to_protein()
+
+Align CDS sequences according to their corresponding protein
+alignment. Wraps
+L<Bio::Align::Utilities-E<gt>aa_to_dna_aln()https://metacpan.org/pod/Bio::Align::Utilities#aa_to_dna_aln>.
+
+=cut
 
 sub dna_to_protein {
     $aln = dna_to_aa_aln($aln)
