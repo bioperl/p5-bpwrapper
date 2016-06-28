@@ -3,6 +3,12 @@ use warnings; use strict;
 my @bin_scripts = qw(bioaln  bioseq biopop biotree);
 # my @bin_scripts = qw(bioaln);
 
+# FIXME: redo using github interface.
+
+# Refresh github data
+system "(cd ../../p5-bpwrapper.wiki && git pull)";
+system "cp -vp ../../p5-bpwrapper.wiki/Bio::BPWrapper.pod ../lib/Bio/BPWrapper.pod";
+
 chdir "../bin/" || die $!;
 foreach my $script (@bin_scripts) {
     print "Updating ${script}\n";
