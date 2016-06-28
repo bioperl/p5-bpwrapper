@@ -11,6 +11,7 @@
 Bio-BPWrapper-*.tar.gz
 META.json
 META.yml
+ChangeLog
 Makefile.PL
 t/check-data/*.err
 test-bioseq.nuc.sed

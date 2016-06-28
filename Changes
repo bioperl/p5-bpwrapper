@@ -1,5 +1,13 @@
 Revision history for Bio::BPWrappers
 
+1.05 2016-06-28:
+
+- Try to addess OSX testing problems:
+  test using long options
+- Start package documentation:
+  Bio::BPWrapperAlnManipulations
+- improve/standardize command-line documentation
+
 1.04 2016-06-02:
 
 - revise bioaln documentation

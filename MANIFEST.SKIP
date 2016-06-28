@@ -65,3 +65,6 @@ test-bioseq.nuc.sed$
 
 # Program to update programs from wiki
 util/update_pod
+
+# The Change log - get this from git
+ChangeLog
