@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# Copyright (c) 2016 by Weigang Qui Lab
+# Copyright (c) 2016 by Weigang Qiu Lab
 
 package Bio::BPWrapper;
 
