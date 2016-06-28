@@ -32,19 +32,19 @@ There are a few interconnected command-line scripts:
 
 =item L<bioseq>
 
-a wrapper of BioPerl class L<Bio::Seq> with additional methods
+command-line access to BioPerl class L<Bio::Seq> with additional methods
 
 =item L<bioaln>
 
-a wrapper of L<Bio::SimpleAlign> which inherits I<Bio::Seq> and additional methods)
+command-line access to L<Bio::SimpleAlign> which inherits I<Bio::Seq> and additional methods)
 
 =item L<biopop>
 
-a wrapper of L<Bio::PopGen> which can be converted from L<Bio::SimpleAlign> and additional methods)
+command-line access to L<Bio::PopGen> which can be converted from L<Bio::SimpleAlign> and additional methods)
 
 =item L<biotree>
 
-a wrapper of L<Bio::TreeIO>, L<Bio::Tree::Tree>, and L<Bio::Tree::Node> with additional methods
+command-line access to L<Bio::TreeIO>, L<Bio::Tree::Tree>, and L<Bio::Tree::Node> with additional methods
 
 =back
 
