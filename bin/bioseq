@@ -107,7 +107,7 @@ consist of I<only> wrapper calls.
 
 =item --composition, -c <input_file>
 
-Base or AA composition. A wrapper for L<Bio::Tools::SeqStats#count_monomers>
+Base or AA composition. A wrapper for L<Bio::Tools::SeqStats-E<gt>count_monomers|https://metacpan.org/pod/Bio::Tools::SeqStats#count_monomers>
 
 =item --delete, -d 'tag:value' <input_file>
 
@@ -131,11 +131,11 @@ Remove gaps
 
 =item --input, -i <input_file>
 
-Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'. Wrap Bio::SeqIO.
+Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'. Wraps L<Bio::SeqIO>.
 
 =item --length, -l <input_file>
 
-Print all sequence lengths. Wraps L<Bio::Seq#length>.
+Print all sequence lengths. Wraps L<Bio::Seq-E<gt>length|https://metacpan.org/pod/Bio::Seq#length>.
 
 =item --numseq, -n.
 
@@ -164,25 +164,27 @@ Usage: bioseq -p 'tag:value' <input_file>
 
 =item --revcom | -r <input_file>
 
-Reverse complement. Wraps L<Bio::Seq#revcom>.
+Reverse complement. Wraps L<Bio::Seq-E<gt>revcom()|https://metacpan.org/pod/Bio::Seq#revcom>.
 
 =item --subseq | -s 'beginning_index, ending_index' <input_file>
 
-Select substring (of the 1st sequence). Wraps L<Bio::Seq#subseq>. For example:
+Select substring (of the 1st sequence). Wraps L<Bio::Seq-E<gt>subseq()|https://metacpan.org/pod/Bio::Seq#subseq>. For example:
 
    bioseq --subseq 20,80 <input_file>
 
 =item --translate | -t [1|3|6] <input_file>
 
 Translate in 1, 3, or 6 frames. eg, -t1, -t3, or -t6. Wraps
-L<Bio::Seq#translate>, L<Bio::SeqUtils#translate_3frames>, and
-L<Bio::SeqUtils#translate_6frames>.
+L<Bio::Seq-E<gt>translate()|https://metacpan.org/pod/Bio::Seq#translate>,
+L<Bio::SeqUtils-E<gt>translate_3frames()|https://metacpan.org/pod/Bio::SeqUtils#translate_3frames>,
+and
+L<Bio::SeqUtils-E<gt>translate_6frames()|https://metacpan.org/pod/Bio::SeqUtils#translate_6frames>.
 
 =item --restrict | -x 'RE' <dna_fasta_file>
 
 Predicted fragments from digestion by a specified restriction
-enzyme. An input file with a single sequence is expected. A wrapper of
-L<Bio::Restriction::Analysis#>cut>.
+enzyme. An input file with a single sequence is expected. Wraps
+L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
 
 =item --anonymize | -A 'number' <input_file>
 
@@ -199,7 +201,7 @@ Break into individual sequences, one sequence per file
 =item --count-codons | -C <input_file>
 
 Count codons for coding sequences (e.g., a genome file consisting of
-CDS sequences). A wrapper of C<Bio::Tools::SeqStats->count_codons()>.
+CDS sequences). Wraps L<Bio::Tools::SeqStats-E<gt>count_codons()|https://metacpan.org/pod/Bio::Tools::SeqStats#count_codons>.
 
 =item --feat2fas | -F
 
@@ -214,8 +216,8 @@ Count and return the number of leading gaps in each sequence.
 
 =item --hydroB, -H
 
-Return the mean Kyte-Doolittle hydropathicity for protein sequences. A
-wrapper of L<Bio::Tools::SeqStats#hydrophobicity>.
+Return the mean Kyte-Doolittle hydropathicity for protein sequences. Wraps
+L<Bio::Tools::SeqStats-E<gt>hydropathicity()|https://metacpan.org/pod/Bio::Tools::SeqStats#hydropathicity>.
 
 =item --linearize, -L <input_file>
 

@@ -272,7 +272,7 @@ you get output:
 
 =item --input, -i
 
-Input file format (see L<Bio::AlignIO> for supported formats). By
+Input file format. See L<Bio::AlignIO> for supported formats. By
 default, this is 'clustalw'. Wraps L<Bio::AlignIO-E<gt>new()|https://metacpan.org/pod/Bio::AlignIO#new>.
 
    bioaln --input 'format'
@@ -286,7 +286,9 @@ L<Bio::SimpleAlign-E<gt>remove_gaps()|https://metacpan.org/pod/Bio::SimpleAlign#
 
 =item --output, -o
 
-Output file format (see Bio::AlignIO for supported formats). By default, this is 'clustalw'. Wraps L<Bio::AlignIO-E<gt>new()|https://metacpan.org/pod/Bio::AlignIO#new>.
+Output file format. see L<Bio::AlignIO> for supported formats. By
+default, this is 'clustalw'. Wraps
+L<Bio::AlignIO-E<gt>new()|https://metacpan.org/pod/Bio::AlignIO#new>.
 
    bioaln --output 'format'
 
@@ -366,7 +368,7 @@ you get:
 
 Align CDS sequences according to their corresponding protein
 alignment. Wraps
-L<C<Bio::Align::Utilities-E<gt>aa_to_dna_aln()>|https://metacpan.org/pod/Bio::Align::Utilities#aa_to_dna_aln>.
+L<Bio::Align::Utilities-E<gt>aa_to_dna_aln()https://metacpan.org/pod/Bio::Align::Utilities#aa_to_dna_aln>.
 
    bioaln --pep2dna 'unaligned_cds.fas' <protein_alignment>
 
@@ -653,7 +655,7 @@ Yözen Hernández yzhernand at gmail dot com
 Levy Vargas <levy dot vargas at gmail dot com>
 
 =item  *
-L<Weigang Qiu | mailto:weigang@genectr.hunter.cuny.edu> (Maintainer)
+L<Weigang Qiu|mailto:weigang@genectr.hunter.cuny.edu> (Maintainer)
 
 =item *
 Rocky Bernstein
