@@ -34,25 +34,25 @@ There are a few interconnected command-line scripts:
 
 a wrapper of BioPerl class L<Bio::Seq> with additional methods
 
-=item bioaln
+=item L<bioaln>
 
 a wrapper of L<Bio::SimpleAlign> which inherits I<Bio::Seq> and additional methods)
 
-=item biopop
+=item L<biopop>
 
 a wrapper of L<Bio::PopGen> which can be converted from L<Bio::SimpleAlign> and additional methods)
 
-=item biotree
+=item L<biotree>
 
 a wrapper of L<Bio::TreeIO>, L<Bio::Tree::Tree>, and L<Bio::Tree::Node> with additional methods
 
 =back
 
-These utilities have been in development since Fall 2002 in Dr Weigang Qiu's lab at Hunter College of the City University of New York.
+These utilities have been in development since Fall 2002 in Dr. Weigang Qiu's lab at Hunter College of the City University of New York.
 
 We welcome and encourage all developers to contribute any BioPerl-based utilities to this repository.
 
-=head2 See also:
+=head2 See also
 
 L<Bio::BPWrapper::AlnManipulations>, L<Bio::BPWrapper::PopManipulations>, L<Bio::BPWrapper::SeqManipulations>
 
