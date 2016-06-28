@@ -2,11 +2,14 @@
 
 =head1 NAME
 
-Bio::BPWrapper::AlnManipulations - Functions for bioaln
+Bio::BPWrapper::AlnManipulations - Functions for L<bioaln>
 
 =head1 SYNOPSIS
 
-    require Bio::BPWrapper::AlnManipulations;
+    use Bio::BPWrapper::AlnManipulations;
+    # Set options hash ...
+    initialize(\%opts);
+    write_out(\%opts);
 
 =cut
 
@@ -48,7 +51,10 @@ my ($in, $out, $aln, %opts, $file, $in_format, $out_format, @alns, $binary);
 
 my $VERSION = $Bio::BPWrapper::VERSION;
 
-## For new options, just add an entry into this table with the same key as in the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.
+## For new options, just add an entry into this table with the same
+## key as in the GetOpts function in the main program. Make the key be
+## a reference to the handler subroutine (defined below), and test
+## that it works.
 my %opt_dispatch = (
     "avpid" => \&print_avp_id,
     "bootstrap" => \&bootstrap,
@@ -98,9 +104,11 @@ my %opt_dispatch = (
 
 =head2 initialize()
 
-Call with an options hash first.
+Sets up most of the actions to be performed on an alignment.
 
-Sets package variables: C<$in_format>, C<$binary>, C<$out_format> and $<$out>.
+Call this right after setting up an options hash.
+
+Sets package variables: C<$in_format>, C<$binary>, C<$out_format>, and C<$out>.
 
 
 =cut
@@ -146,23 +154,13 @@ sub handle_opt {
     $opt_dispatch{$option}->($option)
 }
 
-sub write_out($) {
+=head2 write_out_paml()
 
-    my $opts = shift;
-    for my $option (keys %{$opts}) {
-	next if ($option eq 'input') || ($option eq 'output') || ($option eq 'noflatname') || ($option eq 'binary'); # Don't process these options: they are for AlignIO
+Writes output in PAML format.
 
-	if (can_handle($option)) { handle_opt($option) } # If there is a function to handle the current option, execute it
-	else { warn "Missing handler for: $option\n" }
-    }
+=cut
 
-
-    $aln->set_displayname_flat() unless $opts{"noflatname"};
-    if ($out_format eq 'paml') { &write_out_paml($aln) }
-    else { $out->write_aln($aln) }
-}
-
-sub write_out_paml {
+sub write_out_paml() {
     my @seq;
     my $ct=0;
 
@@ -179,6 +177,33 @@ sub write_out_paml {
 	   print $_->display_id(), "\n";
 	   print $_->seq(), "\n"
     }
+}
+
+=head2 write_out()
+
+Performs the bulk of the alignment actions actions set via
+L<C<initialize(\%opts)>|/initialize> and calls
+L<C<$AlignIO-E<gt>write_aln()>|https://metacpan.org/pod/Bio::AlignIO#write_aln>
+or L<C<write_out_paml()>|/write_out_paml>.
+
+Call this after calling C<#initialize(\%opts)>.
+
+=cut
+
+sub write_out($) {
+
+    my $opts = shift;
+    for my $option (keys %{$opts}) {
+	next if ($option eq 'input') || ($option eq 'output') || ($option eq 'noflatname') || ($option eq 'binary'); # Don't process these options: they are for AlignIO
+
+	if (can_handle($option)) { handle_opt($option) } # If there is a function to handle the current option, execute it
+	else { warn "Missing handler for: $option\n" }
+    }
+
+
+    $aln->set_displayname_flat() unless $opts{"noflatname"};
+    if ($out_format eq 'paml') { &write_out_paml($aln) }
+    else { $out->write_aln($aln) }
 }
 
 sub phylip_non_interleaved {
@@ -540,8 +565,8 @@ sub draw_codon_view {
 =head2 del_seqs
 
 Delete sequences based on their id. Option takes a comma-separated list of ids.
-The list of sequences to delete is in C<$opts{"delete"}> which is set in
-L<#initialize>.
+The list of sequences to delete is in C<$opts{"delete"}> which is set via
+L<C<#initilize(\%opts)>|/initialize>
 
 =cut
 
@@ -596,8 +621,9 @@ sub print_num_seq {
 
 =head2 pick_seqs()
 
-Pick sequences based on their id. Option takes a comma-separated list of ids.
-The sequences to pick set in C<$opts{"pick"}> which is set in L<#initialize>.
+Pick sequences based on their id. Option takes a comma-separated list
+of ids.  The sequences to pick set in C<$opts{"pick"}> which is set via
+L<C<#initilize(\%opts)>|/initialize>.
 
 =cut
 
@@ -608,7 +634,7 @@ sub pick_seqs {
 =head2 change_ref()
 
 Change the reference sequence to be what is in C<$opts{"refseq"}>
-which is set in L<#initialize>. Wraps
+which is set via L<C<#initilize(\%opts)>|/initialize>. Wraps
 L<Bio::SimpleAlign-E<gt>set_new_reference()|https://metacpan.org/pod/Bio::SimpleAlign#set_new_reference>.
 
 =cut
@@ -621,10 +647,10 @@ sub change_ref {
 =head2 aln_slice()
 
 Get a slice of the alignment.  The slice is specifiedn
-C<$opts{"slice"}> which is set in L<#initialize>.
+C<$opts{"slice"}> which is set via L<C<#initilize(\%opts)>|/initialize>.
 
 Wraps
-L<Bio::SimpleAlign-E<gt>slice()|Bio::SimpleAlign#https://metacpan.org/pod/Bio::SimpleAlign#slice>
+L<Bio::SimpleAlign-E<gt>slice()|https://metacpan.org/pod/Bio::SimpleAlign#slice>
 with improvements.
 
 =cut
@@ -640,7 +666,7 @@ sub aln_slice {    # get alignment slice
     $aln = $aln->slice($begin, $end)
 }
 
-=head2
+=head2 get_unique()
 
 Extract the alignment of unique sequences. Wraps
 L<Bio::SimpleAlign-E<gt>uniq_seq()|https://metacpan.org/pod/Bio::SimpleAlign#uniq_seq>.
@@ -648,7 +674,7 @@ L<Bio::SimpleAlign-E<gt>uniq_seq()|https://metacpan.org/pod/Bio::SimpleAlign#uni
 =cut
 
 
-sub get_unique {
+sub get_unique() {
     $aln->verbose(1);
     $aln = $aln->uniq_seq();
 }
@@ -708,7 +734,7 @@ sub binary_informative {
     $aln = $new_aln
 }
 
-=head2
+=head2 variable_sites
 
 Extracts variable sites.
 
@@ -749,7 +775,7 @@ sub variable_sites {
 
 Calculate pairwise average sequence difference by windows (overlapping
 windows with fixed step of 1). The window size is set in
-C<$opts{"window"}> which is set in L<#initialize>.
+C<$opts{"window"}> which is set via L<C<#initilize(\%opts)>|/initialize>.
 
 =cut
 
@@ -846,7 +872,7 @@ sub get_consensus {
 
 Align CDS sequences according to their corresponding protein
 alignment. Wraps
-L<Bio::Align::Utilities-E<gt>aa_to_dna_aln()https://metacpan.org/pod/Bio::Align::Utilities#aa_to_dna_aln>.
+L<Bio::Align::Utilities-E<gt>aa_to_dna_aln()|https://metacpan.org/pod/Bio::Align::Utilities#aa_to_dna_aln>.
 
 =cut
 
@@ -1224,3 +1250,50 @@ sub _find_max_id_len {
 }
 
 1;
+__END__
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<bioaln>: command-line tool for using this
+
+=item *
+
+L<Qui Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
+
+=item *
+
+L<Github project wiki page|https://github.com/rocky/p5-BPWrapper>
+
+=back
+
+=head1 CONTRIBUTORS
+
+=over 4
+
+=item *
+William McCaig <wmccaig at gmail dot com>
+
+=item *
+Girish Ramrattan <gramratt at gmail dot com>
+
+=item  *
+Che Martin <che dot l dot martin at gmail dot com>
+
+=item  *
+Yözen Hernández yzhernand at gmail dot com
+
+=item *
+Levy Vargas <levy dot vargas at gmail dot com>
+
+=item  *
+L<Weigang Qiu|mailto:weigang@genectr.hunter.cuny.edu> (Maintainer)
+
+=item *
+Rocky Bernstein
+
+=back
+
+=cut
