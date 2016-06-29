@@ -1265,7 +1265,7 @@ L<Qui Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 =item *
 
-L<Github project wiki page|https://github.com/rocky/p5-BPWrapper>
+L<Github project wiki page|https://github.com/bioperl/p5-bprwrapper>
 
 =back
 

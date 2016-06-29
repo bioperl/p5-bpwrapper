@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/rocky/p5-bpwrapper.png)](https://travis-ci.org/rocky/p5-bpwrapper)
+[![Build Status](https://travis-ci.org/bioperl/p5-bpwrapper.png)](https://travis-ci.org/bioperl/p5-bpwrapper)
 
 # Description
 
@@ -7,10 +7,10 @@ Here we have command-line utilities for popular
 
 Specifically:
 
-* [bioaln](https://github.com/rocky/p5-bpwrapper/wiki/bioaln): [`Bio::SimpleAlign`](https://metacpan.org/pod/Bio::SimpleAlign) with additional methods
-* [biopop](https://github.com/rocky/p5-bpwrapper/wiki/biopop): [`Bio::PopGen`](https://metacpan.org/pod/Bio::PopGen) which can be converted from `Bio::SimpleAlign`; and additional methods
-* [bioseq](https://github.com/rocky/p5-bpwrapper/wiki/bioseq):  [`Bio::Seq`](https://metacpan.org/pod/Bio::Seq) with additional methods
-* [biotree](https://github.com/rocky/p5-bpwrapper/wiki/biotree): [`Bio::Tree`](https://metacpan.org/pod/Bio::Seq) with additional methods
+* [bioaln](https://github.com/bioperl/p5-bpwrapper/wiki/bioaln): [`Bio::SimpleAlign`](https://metacpan.org/pod/Bio::SimpleAlign) with additional methods
+* [biopop](https://github.com/bioperl/p5-bpwrapper/wiki/biopop): [`Bio::PopGen`](https://metacpan.org/pod/Bio::PopGen) which can be converted from `Bio::SimpleAlign`; and additional methods
+* [bioseq](https://github.com/bioperl/p5-bpwrapper/wiki/bioseq):  [`Bio::Seq`](https://metacpan.org/pod/Bio::Seq) with additional methods
+* [biotree](https://github.com/bioperl/p5-bpwrapper/wiki/biotree): [`Bio::Tree`](https://metacpan.org/pod/Bio::Seq) with additional methods
 
 The motivation is to allow BioPerl users from writing full-blown
 scripts for routine manipulations of sequences, alignments, trees, and
@@ -37,7 +37,7 @@ You need Perl 5.010 or later. There are other Perl dependencies, but the
 package will check and install that.
 
 ```console
-    $ git clone https://github.com/rocky/p5-bpwrapper
+    $ git clone https://github.com/bioperl/p5-bpwrapper
     $ cd p5-bpwrapper
     $ cpan Module::Build  # may need sudo
     $ perl ./Build.PL
@@ -49,9 +49,9 @@ package will check and install that.
 
 # Get Help
 
-Each script, [`bioaln`](https://github.com/rocky/p5-bpwrapper/wiki/bioaln), [`biopop`](https://metacpan.org/pod/distribution/Bio-BPWrapper/bin/biopop), [`bioseq`](https://github.com/rocky/p5-bpwrapper/wiki/bioseq) and [`biotree`](https://github.com/rocky/p5-bpwrapper/wiki/biotree) give shorter usage help when given command-line option `--help`. Manual-page help is also giving the option `--man`.
+Each script, [`bioaln`](https://github.com/bioperl/p5-bpwrapper/wiki/bioaln), [`biopop`](https://metacpan.org/pod/distribution/Bio-BPWrapper/bin/biopop), [`bioseq`](https://github.com/bioperl/p5-bpwrapper/wiki/bioseq) and [`biotree`](https://github.com/bioperl/p5-bpwrapper/wiki/biotree) give shorter usage help when given command-line option `--help`. Manual-page help is also giving the option `--man`.
 
-Documentation is maintained in [this project's wiki](https://github.com/rocky/p5-bpwrapper/wiki).
+Documentation is maintained in [this project's wiki](https://github.com/bioperl/p5-bpwrapper/wiki).
 
 A help file with use cases is maintained at: http://diverge.hunter.cuny.edu/labwiki/Bioutils
 

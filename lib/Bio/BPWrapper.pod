@@ -7,7 +7,7 @@ where we can immediately see the results and others can contribute.
 
 =begin html
 
-<a href="https://travis-ci.org/rocky/p5-bpwrapper"><img src="https://travis-ci.org/rocky/p5-bpwrapper.png"></a>
+<a href="https://travis-ci.org/bioperl/p5-bprwrapper"><img src="https://travis-ci.org/bioperl/p5-bprwrapper.png"></a>
 
 =end html
 
