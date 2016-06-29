@@ -465,19 +465,21 @@ sub gap_states_matrix {
 
 Print the average percent identity of an alignment.
 
-Wraps L<Bio::SimpleAlign-E<gt>average_percentage_identity()|https://metacpan.org/pod/Bio::SimpleAlign#average_percentage_identity>.
+Wraps
+L<Bio::SimpleAlign-E<gt>average_percentage_identity()|https://metacpan.org/pod/Bio::SimpleAlign#average_percentage_identity>.
 
 
 =cut
 
 sub print_avp_id {
-    say $aln->average_percentage_identity();
+    printf "%.4f\n", $aln->average_percentage_identity();
     exit
 }
 
 =head2 boostrap()
 
-Produce a bootstrapped alignment. L<Bio::Align::Utilities-E<gt>bootstrap()|https://metacpan.org/pod/Bio::Align::Utilities#bootstrap_replicates>.
+Produce a bootstrapped
+alignment. L<Bio::Align::Utilities-E<gt>bootstrap()|https://metacpan.org/pod/Bio::Align::Utilities#bootstrap_replicates>.
 
 =cut
 
