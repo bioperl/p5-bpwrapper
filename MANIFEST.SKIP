@@ -1,37 +1,12 @@
-
-#!start included /home/rocky/perl5/perlbrew/perls/perl-5.20.3/lib/site_perl/5.20.3/ExtUtils/MANIFEST.SKIP
 # Avoid version control files.
-\bRCS\b
-\bCVS\b
-\bSCCS\b
-,v$
-\B\.svn\b
 \B\.git\b
 \B\.gitignore\b
-\b_darcs\b
-\B\.cvsignore$
-
-# Avoid VMS specific MakeMaker generated files
-\bDescrip.MMS$
-\bDESCRIP.MMS$
-\bdescrip.mms$
-
-# Avoid Makemaker generated and utility files.
-\bMANIFEST\.bak
-\bMakefile$
-\bblib/
-\bMakeMaker-\d
-\bpm_to_blib\.ts$
-\bpm_to_blib$
-\bblibdirs\.ts$         # 6.18 through 6.25 generated this
 
 # Avoid Module::Build generated and utility files.
 \bBuild$
 \b_build/
-\bBuild.bat$
-\bBuild.COM$
-\bBUILD.COM$
-\bbuild.com$
+\bblib
+
 
 # Avoid temp and backup files.
 ~$
@@ -43,6 +18,8 @@
 \.#
 \.rej$
 \..*\.sw.?$
+\btmp/
+\btemp/
 
 # Avoid OS-specific files/dirs
 # Mac OSX metadata
@@ -66,17 +43,28 @@
 
 # Avoid Module::Build generated and utility files.
 \bBuild$
-\bBuild.bat$
 \b_build
-\bBuild.COM$
-\bBUILD.COM$
-\bbuild.com$
 ^MANIFEST\.SKIP
 
 # Avoid archives of this distribution
 \bBio-Wrapper-[\d\.\_]+
 
 # Temporary test files
-test-files/test-bioaln.aln.slice-*.aln
-test-files/test-bioaln.cds.slice-*.aln
-t/check-data/*.err
+test-files/test-bioaln.aln.slice-.*\.aln$
+test-files/test-bioaln.cds.slice-.*\.aln$
+t/check-data/.*\.err$
+.*\.err$
+
+# Continuous Integration Files
+.travis.yml
+circle.yml
+
+# Test data and remnants
+\.fas
+test-bioseq.nuc.sed$
+
+# Program to update programs from wiki
+util/update_pod
+
+# The Change log - get this from git
+ChangeLog
