@@ -2,11 +2,14 @@
 
 =head1 NAME
 
-Bio::BPWrapper::SeqManipulations - Functions for bioseq
+Bio::BPWrapper::SeqManipulations - Functions for L<bioseq>
 
 =head1 SYNOPSIS
 
-    require Bio::BPWrapper::SeqManipulations;
+    use Bio::BPWrapper::SeqManipulations;
+    # Set options hash ...
+    initialize(\%opts);
+    write_out(\%opts);
 
 =cut
 
@@ -34,7 +37,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 @EXPORT      = qw(initialize can_handle handle_opt write_out
 print_composition filter_seqs retrieve_seqs remove_gaps
 print_lengths print_seq_count make_revcom
-print_subseq restrict_digets anonymize
+print_subseq restrict_digest anonymize
 shred_seq count_codons print_gb_gene_feats
 count_leading_gaps hydroB linearize reloop_at
 remove_stop parse_orders find_by_order
@@ -100,10 +103,25 @@ my %filter_dispatch = (
     'del_by_length'  => \&del_by_length,
 );
 
+=head1 SUBROUTINES
+
+=cut
+
 ##################### initializer & option handlers ###################
 
 ## TODO Function documentation!
 ## TODO Formal testing!
+
+=head2 initialize()
+
+Sets up most of the actions to be performed on an alignment.
+
+Call this right after setting up an options hash.
+
+Sets package variables: C<$in_format>, C<$binary>, C<$out_format>, and C<$out>.
+
+
+=cut
 
 sub initialize {
     my $opts_ref = shift;
@@ -133,6 +151,14 @@ sub handle_opt {
     my $option = shift;
     $opt_dispatch{$option}->($option)  # This passes option name to all functions
 }
+
+=head2 write_out()
+
+Writes out the sequence file.
+
+Call this after calling C<#initialize(\%opts)> and processing those options.
+
+=cut
 
 sub write_out {
     while ($seq = $in->next_seq()) { $out->write_seq($seq) }
@@ -277,6 +303,18 @@ sub _internal_stop_or_x {
     return ($str =~ /[X\*]/) ? 1 : 0; # previously missed double **
 }
 
+=head2 reading_frame_ops
+
+Translate in 1, 3, or 6 frames based on the value of C<$opts> set via
+L<C<#initilize(\%opts)>|/initialize>.  Wraps
+L<Bio::Seq-E<gt>translate()|https://metacpan.org/pod/Bio::Seq#translate>,
+L<Bio::SeqUtils-E<gt>translate_3frames()|https://metacpan.org/pod/Bio::SeqUtils#translate_3frames>,
+and
+L<Bio::SeqUtils-E<gt>translate_6frames()|https://metacpan.org/pod/Bio::SeqUtils#translate_6frames>.
+
+=cut
+
+
 sub reading_frame_ops {
     my $frame = $opts{"translate"};
     while ($seq = $in->next_seq()) {
@@ -297,6 +335,17 @@ sub reading_frame_ops {
     }
 }
 
+=head2 restrict_digest()
+
+Predicted fragments from digestion by a specified restriction enzyme
+specified in C<$opts{restrinct}> set via L<C<#initilize(\%opts)>|/initialize>.
+
+An input file with a single sequence is expected. Wraps
+L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
+
+=cut
+
+
 sub restrict_digest {
     my $enz = $opts{"restrict"};
     use Bio::Restriction::Analysis;
@@ -311,6 +360,20 @@ sub restrict_digest {
         $out->write_seq($seq_obj)
     }
 }
+
+=head2 anonymize()
+
+Replace sequence IDs with serial IDs I<n> characters long, as specified in
+C<$opts{'anonymize'}> set via L<C<#initilize(\%opts)>|/initialize>.
+For example if C<$opts{'anonymize'}>, the first ID will be C<S0001>.
+leading 'S' The length of the serial idea
+
+A sed script file is produced with a F<.sed> suffix that may be used
+with sed's C<'-f'> argument. If the filename is F<'-'>, the sed file
+is named C<STDOUT.sed> instead. A message containing the sed filename is
+written to C<STDERR>.
+
+=cut
 
 sub anonymize {
     my $char_len = $opts{"anonymize"} // die "Tried to use option 'preifx' without using option 'anonymize'. Exiting...\n";
@@ -337,6 +400,13 @@ sub anonymize {
     warn "WARNING: Anonymized ID length exceeded requested length: try a different length or prefix.\n" if $length_warn
 }
 
+=head2 shred_seq()
+
+Break into individual sequences writing a FASTA file for each sequence.
+
+=cut
+
+
 sub shred_seq {
     while ($seq = $in->next_seq()) {
         my $newid = $seq->id();
@@ -347,6 +417,14 @@ sub shred_seq {
     }
     exit
 }
+
+=head2 count_codons()
+
+Count codons for coding sequences (e.g., a genome file consisting of
+CDS sequences). Wraps
+L<Bio::Tools::SeqStats-E<gt>count_codons()|https://metacpan.org/pod/Bio::Tools::SeqStats#count_codons>.
+
+=cut
 
 sub count_codons {
     my $new_seq;
@@ -361,6 +439,13 @@ sub count_codons {
         print "%\n"
     }
 }
+
+=head2 print_gb_gene_feats()
+
+print gene sequences in FASTA from a GenBank file of bacterial
+genome. Won't work for a eukaryote genbank file.
+
+=cut
 
 sub print_gb_gene_feats { # works only for prokaryote genome
     $seq = $in->next_seq();
@@ -399,6 +484,15 @@ sub count_leading_gaps {
     }
 }
 
+=head2 hydroB()
+
+Return the mean Kyte-Doolittle hydropathicity for protein
+sequences. Wraps
+L<Bio::Tools::SeqStats-E<gt>hydropathicity()|https://metacpan.org/pod/Bio::Tools::SeqStats#hydropathicity>.
+
+=cut
+
+
 sub hydroB {
     while ($seq = $in->next_seq()) {
         my $pep_str = $seq->seq();
@@ -408,6 +502,13 @@ sub hydroB {
         printf "%s\t%.4f\n", $seq->id(), $gravy
     }
 }
+
+=head2 linearize()
+
+Linearize FASTA, print one sequence per line.
+
+=cut
+
 
 sub linearize {
     while ($seq = $in->next_seq()) { print $seq->id(),  "\t", $seq->seq(), "\n" }

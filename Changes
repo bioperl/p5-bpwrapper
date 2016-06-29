@@ -1,11 +1,19 @@
 Revision history for Bio::BPWrappers
 
+1.06 2016-06-29:
+
+- Canonicalize bioaln --avpid floating point values
+- Convert links from rocky to bioperl github namespace
+- Start documenting Bio::BPWrapper::SeqManipulations
+- Changes to decrease likelihood automated test failures
+- misc doc changes
+
 1.05 2016-06-28:
 
 - Try to addess OSX testing problems:
   test using long options
 - Start package documentation:
-  Bio::BPWrapperAlnManipulations
+  Bio::BPWrapper::AlnManipulations
 - improve/standardize command-line documentation
 
 1.04 2016-06-02:

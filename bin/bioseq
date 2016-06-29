@@ -188,15 +188,19 @@ L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restrictio
 
 =item --anonymize | -A 'number' <input_file>
 
-Replace sequence IDs with serial IDs 'n' characters long, including a
-leading 'S' (e.g., --anonymize '5' gives S0001). Produces a sed script file with
-a '.sed' suffix that may be used with sed's '-f' argument. If the
-filename is '-', the sed file is named C<STDOUT.sed> instead. The sed
-filename is specified on C<STDERR>.
+Replace sequence IDs with serial IDs I<n> characters long. The
+sequence is prefaced with a leading C<'S'>.
+
+For example using option C<--anonymize '5'> the first ID will be  C<S0001>.
+
+A sed script file with a C<.sed> suffix that may be used with sed's
+C<-f> argument. If the filename is C<->, the sed file is named
+C<STDOUT.sed> instead. A message containing the sed filename is
+written to C<STDERR>.
 
 =item --break | -B <input_file>
 
-Break into individual sequences, one sequence per file
+Break into individual sequences, writing a FASTA file for each sequence.
 
 =item --count-codons | -C <input_file>
 
@@ -268,7 +272,7 @@ Print the manual page and exit.
  bioseq --length fasta_file       # lengths of sequences
  bioseq --numseq fasta_file       # number of sequences
  bioseq --composition fasta_file  # base or aa composition of sequences
-
+xo
 =head2 FASTA filters
 
 These take a FASTA-format file as input and output one
@@ -320,7 +324,7 @@ L<Qiu Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 =item *
 
-L<Github project wiki page|https://github.com/bioperl/p5-bprwrapper>
+L<Github project wiki page|https://github.com/bioperl/p5-bpwrapper>
 
 =item *
 L<bioaln>: a wrapper of L<Bio::SimpleAlign> and additional methods
