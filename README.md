@@ -28,9 +28,6 @@ by BioPerl.
 The Bio::BPWrapper module also include some useful methods which are not part of
 Bio::Perl.
 
-See [BioUtils](http://diverge.hunter.cuny.edu/labwiki/Bioutils) for
-more information.
-
 # Install & Test from git:
 
 You need Perl 5.010 or later. There are other Perl dependencies, but the
