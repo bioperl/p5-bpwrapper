@@ -193,13 +193,24 @@ sub sister_pairs {
     }
 }
 
+=head2 countOTU()
+
+Print total number of OTUs (leaves).
+
+=cut
+
 sub countOTU {
 	my $otu_ct = 0;
 	foreach (@nodes) { $otu_ct++ if $_->is_Leaf() }
 	say $otu_ct
 }
 
-# Reroot the tree
+=head2 reroot()
+
+Reroot tree to node in C<$opts{'reroot'}> by creating new branch.
+
+=cut
+
 sub reroot {
     my $outgroup_id = $opts{'reroot'};
     my $outgroup    = $tree->find_node($outgroup_id);
@@ -391,6 +402,14 @@ sub listdistance {
     }
 }
 
+=head2 bin()
+
+Divides tree into number of specified segments and counts branches up
+to height the segment. Prints: bin_number, branch_count, bin_floor,
+bin_ceiling.
+
+=cut
+
 sub bin {
 	my $treeheight = _treeheight(\$tree);
 	my $bincount = $opts{'ltt'};
@@ -408,7 +427,7 @@ sub bin {
 		my $branchcount = 1; # branch from root
 		# Starting from the root, add a branch for each found descendent
 		$branchcount += _binrecursive(\$rootnode, $bins[$i+1]);
-		say $i+1, "\t$branchcount\t$bins[$i]\t", $bins[$i+1]
+		printf "%3d\t%3d\t%.4f\t%.4f\n", $i+1, $branchcount, $bins[$i], $bins[$i+1];
 	}
 }
 
@@ -487,6 +506,14 @@ sub walk {
 }
 
 
+=head2 write_out()
+
+Performs the bulk of the actions actions set via
+L<C<initialize(\%opts)>|/initialize>.
+
+Call this after calling C<#initialize(\%opts)>.
+
+=cut
 sub write_out {
     my $opts = shift;
     getdistance() if $opts->{'distance'};
