@@ -1,5 +1,10 @@
 Revision history for Bio::BPWrappers
 
+1.07 2016-06-30:
+
+- More complete documentation
+- Address GNUMakefile testing issues on CPANTesters
+
 1.06 2016-06-29:
 
 - Canonicalize bioaln --avpid floating point values
