@@ -103,14 +103,12 @@ my %filter_dispatch = (
     'del_by_length'  => \&del_by_length,
 );
 
-=head1 SUBROUTINES
-
-=cut
-
 ##################### initializer & option handlers ###################
 
 ## TODO Function documentation!
 ## TODO Formal testing!
+
+=head1 SUBROUTINES
 
 =head2 initialize()
 
@@ -118,7 +116,7 @@ Sets up most of the actions to be performed on an alignment.
 
 Call this right after setting up an options hash.
 
-Sets package variables: C<$in_format>, C<$binary>, C<$out_format>, and C<$out>.
+Sets package variables: C<$in>, C<$in_format>, C<$filename>, C<$out_format>, and C<$out>.
 
 
 =cut

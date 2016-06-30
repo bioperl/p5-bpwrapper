@@ -6,7 +6,10 @@ Bio::BPWrapper::TreeManipulations - Functions for biotree
 
 =head1 SYNOPSIS
 
-    require Bio::BPWrapper::TreeManipulations;
+    use Bio::BPWrapper::TreeManipulations;
+    # Set options hash ...
+    initialize(\%opts);
+    write_out(\%opts);
 
 =cut
 
@@ -36,6 +39,19 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 @EXPORT      = qw(print_tree_shape edge_length_abundance swap_otus getdistance
                   sister_pairs countOTU reroot clean_tree delete_otus initialize
                   write_out);
+
+=head1 SUBROUTINES
+
+=head2 initialize()
+
+Sets up most of the actions to be performed on an alignment.
+
+Call this right after setting up an options hash.
+
+Sets package variables: C<$in_format>, C<@nodes>, C<$tree>, C<$out_format>, and C<$out>.
+
+
+=cut
 
 sub initialize {
     my $opts_ref = shift;

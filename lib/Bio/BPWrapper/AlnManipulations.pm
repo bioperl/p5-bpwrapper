@@ -94,13 +94,11 @@ my %opt_dispatch = (
    );
 
 
-=head1 SUBROUTINES
-
-=cut
-
 ##################### initializer & option handlers ###################
 
 ## TODO Formal testing!
+
+=head1 SUBROUTINES
 
 =head2 initialize()
 

@@ -199,6 +199,10 @@ Print current release version of this command and exit.
 
 =item *
 
+L<Bio::BPWrapper::TreeManipulations>, the underlying Perl Module
+
+=item *
+
 L<Qiu Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 =item *

@@ -141,6 +141,28 @@ Print current release version of this command and exit.
 
 =back
 
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<Bio::BPWrapper::PopManipulations>, the underlying Perl Module
+
+=item *
+
+L<Qiu Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
+
+=item *
+
+L<Github project wiki page|https://github.com/rock/p5-bpwrapper>
+
+=item *
+
+L<bioseq>: a wrapper of BioPerl class L<Bio::Seq> with additional methods
+
+=back
+
 =head1 CONTRIBUTORS
 
 =over 4

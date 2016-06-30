@@ -320,6 +320,10 @@ or more FASTA-format file.
 
 =item *
 
+L<Bio::BPWrapper::SeqManipulations>, the underlying Perl Module
+
+=item *
+
 L<Qiu Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 =item *

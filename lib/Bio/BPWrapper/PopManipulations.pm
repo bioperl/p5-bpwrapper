@@ -6,7 +6,10 @@ Bio::Wrapper::PopManipulations - Functions for biopop
 
 =head1 SYNOPSIS
 
-    require Bio::BPWrapper::PopManipulations;
+    use Bio::BPWrapper::PopManipulations;
+    # Set options hash ...
+    initialize(\%opts);
+    write_out(\%opts);
 
 =cut
 
