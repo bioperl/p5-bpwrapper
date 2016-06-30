@@ -101,9 +101,13 @@ Print a brief help message and exits.
 
 Print the manual page and exits.
 
+=item --cleanbr
+
 =item --distance, -d 'node1' -d 'node2'
 
 Prints the distance between a pair of nodes or leaves.
+
+=item --delete-otus
 
 =item --input, -i 'format'
 
@@ -147,7 +151,9 @@ Prints half-matrix list of distances between ALL leaves.
 
 =item --ltt, -G 'number_of_bins'
 
-Linear through time. Divides tree into number of specified segments and counts branches up to height the segment. Returns: bin_number, branch_count, bin_floor, bin_ceiling.
+Divides tree into number of specified segments and counts branches up to height the segment. Returns: bin_number, branch_count, bin_floor, bin_ceiling.
+
+llt: Linear through time.
 
 =item --lengthall, -L
 
@@ -168,6 +174,8 @@ Remove branch lengths from tree.
 =item --allchildOTU, -U 'internal_node_id' | 'all'
 
 Prints all OTU's that are descended from the given internal node. If no node is provided, a complete list of all internal nodes and their descendents is returned instead (given in the order of "walking" through the tree from the root node).
+
+=item --sis-pairs
 
 =item --walk, -W 'otu'
 

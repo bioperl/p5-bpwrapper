@@ -1,5 +1,10 @@
 Revision history for Bio::BPWrappers
 
+1.08 2016-06-30:
+
+- Caonicalize biotree -llt output
+- More doc updates
+
 1.07 2016-06-30:
 
 - More complete documentation
