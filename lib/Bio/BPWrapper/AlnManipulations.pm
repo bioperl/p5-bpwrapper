@@ -459,7 +459,7 @@ sub gap_states_matrix {
     exit;
 }
 
-=head2 print_avpid
+=head2 print_avp_id
 
 Print the average percent identity of an alignment.
 
@@ -1313,7 +1313,7 @@ Here is how to extend.  We'll use option C<--avpid> as an example.
 Create a new method like one of the above. For example, see L<C<print_avp_id>|/print_avp_id>.
 
 =item *
-Document your method in pod using C<head2>. For example:
+Document your method in pod using C<=head2>. For example:
 
     =head2 print_avpid
 
