@@ -469,6 +469,12 @@ sub print_gb_gene_feats { # works only for prokaryote genome
     }
 }
 
+=head2 count_leading_gaps()
+
+Count and print the number of leading gaps in each sequence.
+
+=cut
+
 sub count_leading_gaps {
     while ($seq = $in->next_seq()) {
         my $lead_gap = 0;
@@ -512,6 +518,16 @@ sub linearize {
     while ($seq = $in->next_seq()) { print $seq->id(),  "\t", $seq->seq(), "\n" }
 }
 
+=head2 reloop_at()
+
+Re-circularize a bacterial genome by starting at a specified position
+given in the C<$opts{"reloop"> set via
+L<C<#initilize(\%opts)>|/initialize>.
+
+For example for sequence "ABCDE".  C<bioseq -R'2' ..>
+would generate"'BCDEA".
+
+=cut
 sub reloop_at {
     my $seq = $in->next_seq;  # only the first sequence
     my $break = $opts{"reloop"};
@@ -519,10 +535,11 @@ sub reloop_at {
     $out->write_seq($new_seq)
 }
 
-sub print_version {
-    say "bp-utils release version: ", $VERSION;
-    exit
-}
+=head2 remove_stop()
+
+Remove stop codons.
+
+=cut
 
 sub remove_stop {
     my $myCodonTable = Bio::Tools::CodonTable->new();

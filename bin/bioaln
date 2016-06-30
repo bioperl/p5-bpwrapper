@@ -321,6 +321,8 @@ Using a '-' character in the first or second position defaults to the beginning 
 
 NOTE: --slice'-,x' (where x is '-' or a position) does NOT work. Use --slice='-,x' instead.
 
+=item --trimends
+
 =item --varsites, -v
 
 Extracts variable sites. B<Used in conjunction with -g:> do not show sites with gaps in any sequence.
@@ -476,17 +478,25 @@ L<Bio::SimpleAlign-E<gt>column_from_residue_number()|https://metacpan.org/pod/Bi
 
 =item --permute-states, -M
 
-Generate an alignment with randomly permuted residues at each site. This operation removes phylogenetic signal among aligned sequences, if there is any in the original alignment. This is the basis of the Permutation Trail Prob (PTP) test of tree-ness of an alignment.
+Generate an alignment with randomly permuted residues at each
+site. This operation removes phylogenetic signal among aligned
+sequences, if there is any in the original alignment. This is the
+basis of the Permutation Trail Prob (PTP) test of tree-ness of an
+alignment.
 
    bioaln --permute-states <alignment_file>
 
 =item --resample, -R
 
-Picks I<n> random sequences from input alignment and produces a new alignment consisting of those sequences.
+Picks I<n> random sequences from input alignment and produces a new
+alignment consisting of those sequences.
 
-If n is not given, default is the number of sequences in alignment divided by 2, rounded down.
+If n is not given, default is the number of sequences in alignment
+divided by 2, rounded down.
 
-This functionality uses an implementation of Reservoir Sampling, based on the algorithm found here: http://blogs.msdn.com/b/spt/archive/2008/02/05/reservoir-sampling.aspx
+This functionality uses an implementation of Reservoir Sampling, based
+on the algorithm found here:
+http://blogs.msdn.com/b/spt/archive/2008/02/05/reservoir-sampling.aspx
 
    bioaln --resample 'n' <alignment_file>
 
@@ -510,7 +520,10 @@ you get:
 
 =item --shuffle-sites, -S
 
-Make a shuffled (not bootstraped) alignment. This operation randomizes alignment columns. It is used for testing the signficance of long-runs of conserved sites in an alignment (e.g., conserved intergenic spacers [IGSs]).
+Make a shuffled (not bootstraped) alignment. This operation randomizes
+alignment columns. It is used for testing the signficance of long-runs
+of conserved sites in an alignment (e.g., conserved intergenic spacers
+[IGSs]).
 
    bioaln --shuffle-sites <alignment_file>
 
@@ -577,6 +590,7 @@ ternal)
 
 =head2 Alignment filters which produce a new alignment
 
+ bioaln --binary-informative
  bioaln --consensus '90' aln_file         # add a 90% consensus sequence
  bioaln --delete 'Seq1,Seq2' aln_input    # delete sequences
  bioaln --dna2pep cds.aln                 # DNA alignment => protein alignment

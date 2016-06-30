@@ -562,7 +562,7 @@ sub draw_codon_view {
     exit 0
 }
 
-=head2 del_seqs
+=head2 del_seqs()
 
 Delete sequences based on their id. Option takes a comma-separated list of ids.
 The list of sequences to delete is in C<$opts{"delete"}> which is set via
@@ -695,6 +695,13 @@ sub _has_singleton {
     return 0;
 }
 
+=head2 binary_informative
+
+extract binary and informative sites (for clique): discard constant,
+3/4-states, non-informative
+
+=cut
+
 sub binary_informative {
     my $new_aln = Bio::SimpleAlign->new();
     my $len=$aln->length();
@@ -734,7 +741,7 @@ sub binary_informative {
     $aln = $new_aln
 }
 
-=head2 variable_sites
+=head2 variable_sites()
 
 Extracts variable sites.
 
@@ -789,6 +796,17 @@ sub avg_id_by_win {
     }
     exit
 }
+
+=head2 concat()
+
+Concatenate multiple alignments sharing the same set of unique
+IDs. This is normally used for concatenating individual gene
+alignments of the same set of samples to a single one for making a
+"supertree". Wraps
+L<Bio::Align::UtilitiesE<gt>cat()|https://metacpan.org/pod/Bio::Align::Utilities#cat>.
+
+=cut
+
 
 sub concat {
     $aln = cat(@alns)
@@ -949,6 +967,14 @@ sub permute_states {
     $aln = $new_aln
 }
 
+=head2 protein_to_dna()
+
+Align CDS sequences according to their corresponding protein
+alignment. Wraps
+L<Bio::Align::Utilities-E<gt>aa_to_dna_aln()https://metacpan.org/pod/Bio::Align::Utilities#aa_to_dna_aln>.
+
+=cut
+
 sub protein_to_dna {
     use Bio::SeqIO;
     my $cds_in = Bio::SeqIO->new(-file=>$opts{pep2dna}, -format=>'fasta');
@@ -956,6 +982,20 @@ sub protein_to_dna {
     while (my $seq = $cds_in->next_seq()) { $CDSs{$seq->display_id()} = $seq }
     $aln = aa_to_dna_aln($aln, \%CDSs);
 }
+
+=head2 sample_seqs()
+
+Picks I<n> random sequences from input alignment and produces a new
+alignment consisting of those sequences.
+
+If n is not given, default is the number of sequences in alignment
+divided by 2, rounded down.
+
+This functionality uses an implementation of Reservoir Sampling, based
+on the algorithm found here:
+http://blogs.msdn.com/b/spt/archive/2008/02/05/reservoir-sampling.aspx
+
+=cut
 
 sub sample_seqs {
     # If option was given with no number, take the integer part of num_sequences/2
@@ -975,6 +1015,15 @@ sub sample_seqs {
     my $tmp_aln = $aln->select_noncont(@sampled);
     $aln = $tmp_aln
 }
+
+=head2 shuffle_sites()
+
+Make a shuffled (not bootstraped) alignment. This operation randomizes
+alignment columns. It is used for testing the signficance of long-runs
+of conserved sites in an alignment (e.g., conserved intergenic spacers
+[IGSs]).
+
+=cut
 
 sub shuffle_sites {
     my $new_aln = Bio::SimpleAlign->new();
@@ -1251,6 +1300,59 @@ sub _find_max_id_len {
 
 1;
 __END__
+
+=head1 EXTENDING THIS MODULE
+
+We encourage BioPerl developers to add command-line interface to their BioPerl methods here.
+
+Here is how to extend.  We'll use option C<--avpid> as an example.
+
+=over 4
+
+=item *
+Create a new method like one of the above. For example, see L<C<print_avp_id>|/print_avp_id>.
+
+=item *
+Document your method in pod using C<head2>. For example:
+
+    =head2 print_avpid
+
+    Print the average percent identity of an alignment.
+
+    Wraps
+    L<Bio::SimpleAlign-E<gt>average_percentage_identity()|https://metacpan.org/pod/Bio::SimpleAlign#average_percentage_identity>.
+
+See L<C<print_avpid()>|/print_avpid> for how this gets rendered.
+
+
+=item *
+Add the method to C<@EXPORT> list in C<AlnManipulations.pm>..
+
+=item *
+Add option to C<%opt_displatch> which maps the option used in C<bioaln> to the subroutine that
+gets called here. For example:
+
+    "avpid" => \&print_avp_id,
+
+=item *
+Add option in to C<bioaln> script. See the code that starts:
+
+    GetOptions(
+    ...
+    "avpid|a",
+    ...
+
+This option has a short option name C<a> and takes no additional argument
+
+=item *
+Write a test for the option. See the file C<t/10test-bioaln.t> and L<Testing|https://github.com/bioperl/p5-bpwrapper/wiki/Testing>.
+
+=item *
+Share back. Create a pull request to the github repository and contact
+Weigang Qiu, City University of New York, Hunter College (L<mailto:weigang@genectr.hunter.cuny.edu>)
+
+=back
+
 =head1 SEE ALSO
 
 =over 4

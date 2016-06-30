@@ -241,6 +241,8 @@ Remove stop codons (e.g., PAML input)
 
    bioseq --removestop <input_file>
 
+=item --split-cdhit
+
 =back
 
 =head3 Common Options
