@@ -97,7 +97,8 @@ skipcheck:  Build
 test check: test-t
 
 #: Run all Test::More tests
-test-t: Build
+test-t:
+	$(PERL) Build.PL
 	$(PERL) Build --makefile_env_macros 1 test && $(MAKE) clean
 
 #: Check code coverage
