@@ -66,6 +66,9 @@ test-bioseq.nuc.sed$
 # Program to update programs from wiki
 util/update_pod
 
+# For testing before a release
+util/gh-test.sh
+
 # The Change log - get this from git
 ChangeLog
 
