@@ -1,8 +1,14 @@
 Revision history for Bio::BPWrappers
 
+1.08 2016-07-01:
+
+- Adjust testing for MSWin
+- More doc improvements
+- Try to address other testing issues
+
 1.08 2016-06-30:
 
-- Caonicalize biotree -llt output
+- Canonicalize biotree -llt output
 - More doc updates
 
 1.07 2016-06-30:

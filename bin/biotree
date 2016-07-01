@@ -93,14 +93,6 @@ Currently, tree-manipulations does not support multiple trees per file or the ab
 
 =over 4
 
-=item --help, -h
-
-Print a brief help message and exits.
-
-=item --man
-
-Print the manual page and exits.
-
 =item --cleanbr
 
 =item --distance, -d 'node1' -d 'node2'
@@ -215,7 +207,7 @@ L<Qiu Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 =item *
 
-L<Github project wiki page|https://github.com/rocky/p5-BPWrapper>
+L<Github project wiki page|https://github.com/bioperl/p5-bpwrapper/wiki>
 
 =back
 
