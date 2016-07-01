@@ -6,7 +6,6 @@ use Helper;
 
 my %notes = (
     'anonymize' => 'anonymize sequence IDs',
-    'break' => 'break into single-sequence files',
     'composition' => 'base composition',
     'length' => 'protein sequence length',
     'linearize' => 'linearize fast sequence',
@@ -15,6 +14,13 @@ my %notes = (
     'removestop' => 'remove stop codons',
     'revcom' => 'reverse compliment sequence',
 );
+
+# Filenames like
+# VS116:7:310... created on MSWindows using --break are invalid
+#
+if ($^O ne 'MSWin32') {
+    $notes{'break'} = 'break into single-sequence files';
+}
 
 test_no_arg_opts('bioseq', 'test-bioseq.nuc', \%notes);
 
@@ -31,7 +37,7 @@ test_one_arg_opts('bioseq', 'test-bioseq.nuc', $opts);
 my $multi_opts = [
     ["--pick 'order:2,4'", 'test-bioseq.nuc',
      'pick-order-2,4.right', 'pick seqs by order delimited by commas'],
-    ["--pick 'order:2,4'", 'test-bioseq.nuc',
+    ["--pick order:2-4", 'test-bioseq.nuc',
      'pick-order-2-4.right', 'pick seqs by order with range'],
     ["--restrict EcoRI", 'test-bioseq-re.fas',
      'restrict.right', 'restriction cut'],

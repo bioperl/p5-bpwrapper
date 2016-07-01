@@ -68,3 +68,7 @@ util/update_pod
 
 # The Change log - get this from git
 ChangeLog
+
+# We use Build.PL; having Makefile.PL messes things up
+
+Makefile.PL

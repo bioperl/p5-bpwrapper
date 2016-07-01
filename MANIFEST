@@ -111,6 +111,5 @@ test-files/test-bioseq.pep
 test-files/test-biotree.dnd
 
 TODO.md
-Makefile.PL
 META.json
 META.yml

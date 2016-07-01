@@ -63,7 +63,8 @@ sub run_bio_program($$$$;$)
     if ($other_opts->{do_test}) {
 	Test::More::note("testing " . $other_opts->{note}) if $other_opts->{note};
 	Test::More::note( "running $bio_program $run_opts $full_data_filename" );
-	Test::More::is($rc, $test_rc, "command ${bio_program} executed giving exit code $test_rc");
+	Test::More::is($rc, $test_rc,
+		       "command ${bio_program} executed giving exit code $test_rc\n$cmd\n");
     }
     return $rc if $rc;
 
