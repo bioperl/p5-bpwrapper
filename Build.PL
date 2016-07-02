@@ -24,7 +24,7 @@ my $builder = Module::Build->new(
 			     'test-bioaln.cds.slice*.aln',
 			     '*.fas', '*.err',
 			     't/check-data/*.err'],
-    create_makefile_pl  => 'passthrough',
+    create_makefile_pl  => 'traditional',
     dist_abstract       =>
     'wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign',
     dist_version_from   => 'lib/Bio/BPWrapper.pm',

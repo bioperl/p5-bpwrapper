@@ -662,3 +662,52 @@ sub _desclen {
 }
 
 1;
+
+__END__
+
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<bioatree>: command-line tool for using this
+
+=item *
+
+L<Qui Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
+
+=item *
+
+L<Github project wiki page|https://github.com/bioperl/p5-bpwrapper/wiki>
+
+=back
+
+=head1 CONTRIBUTORS
+
+=over 4
+
+=item *
+William McCaig <wmccaig at gmail dot com>
+
+=item *
+Girish Ramrattan <gramratt at gmail dot com>
+
+=item  *
+Che Martin <che dot l dot martin at gmail dot com>
+
+=item  *
+Yözen Hernández yzhernand at gmail dot com
+
+=item *
+Levy Vargas <levy dot vargas at gmail dot com>
+
+=item  *
+L<Weigang Qiu|mailto:weigang@genectr.hunter.cuny.edu> (Maintainer)
+
+=item *
+Rocky Bernstein
+
+=back
+
+=cut

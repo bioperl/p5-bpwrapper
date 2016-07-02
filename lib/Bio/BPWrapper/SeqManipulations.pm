@@ -751,7 +751,7 @@ Here is how to extend.  We'll use option C<--count-codons> as an example.
 =over 4
 
 =item *
-Create a new method like one of the above. For example, see L<C<count_codons>|/count_codons>.
+Create a new method like one of the above in the previous section.
 
 =item *
 Document your method in pod using C<=head2>. For example:
@@ -774,7 +774,7 @@ Add the method to C<@EXPORT> list in C<SeqManipulations.pm>.
 Add option to C<%opt_displatch> which maps the option used in C<bioaln> to the subroutine that
 gets called here. For example:
 
-    "avpid" => \&print_avp_id,
+   'count-codons' => \&count_codons,
 
 =item *
 Add option in to C<bioseq> script. See the code that starts:
@@ -784,7 +784,7 @@ Add option in to C<bioseq> script. See the code that starts:
     "count-codons|C",
     ...
 
-This option has a short option name C<C> and takes no additional argument
+This option has a short option name C<C> and takes no additional argument. See L<Getopt::Long> for how to specify options.
 
 =item *
 Write a test for the option. See the file C<t/10test-bioseq.t> and L<Testing|https://github.com/bioperl/p5-bpwrapper/wiki/Testing>.
@@ -809,7 +809,7 @@ L<Qui Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 =item *
 
-L<Github project wiki page|https://github.com/bioperl/p5-bpwrapper>
+L<Github project wiki page|https://github.com/bioperl/p5-bpwrapper/wiki>
 
 =back
 
@@ -817,14 +817,11 @@ L<Github project wiki page|https://github.com/bioperl/p5-bpwrapper>
 
 =over 4
 
-=item *
- Yözen Hernández yzhernand at gmail dot com
-
-=item *
-Girish Ramrattan <gramratt at gmail dot com>
-
 =item  *
-Levy Vargas <levy dot vargas at gmail dot com>
+Yözen Hernández yzhernand at gmail dot com
+
+=item *
+Pedro Pegan
 
 =item  *
 L<Weigang Qiu | mailto:weigang@genectr.hunter.cuny.edu> (Maintainer)

@@ -1310,7 +1310,7 @@ Here is how to extend.  We'll use option C<--avpid> as an example.
 =over 4
 
 =item *
-Create a new method like one of the above. For example, see L<C<print_avp_id>|/print_avp_id>.
+Create a new method like one of the above in the previos section.
 
 =item *
 Document your method in pod using C<=head2>. For example:

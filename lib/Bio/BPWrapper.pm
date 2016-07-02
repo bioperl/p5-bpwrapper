@@ -3,7 +3,7 @@
 
 package Bio::BPWrapper;
 
-our $VERSION = '1.10';
+our $VERSION = '1.11';
 use strict; use warnings;
 use 5.010;
 
