@@ -1322,11 +1322,13 @@ Document your method in pod using C<=head2>. For example:
     Wraps
     L<Bio::SimpleAlign-E<gt>average_percentage_identity()|https://metacpan.org/pod/Bio::SimpleAlign#average_percentage_identity>.
 
+    =cut
+
 See L<C<print_avpid()>|/print_avpid> for how this gets rendered.
 
 
 =item *
-Add the method to C<@EXPORT> list in C<AlnManipulations.pm>..
+Add the method to C<@EXPORT> list in C<AlnManipulations.pm>.
 
 =item *
 Add option to C<%opt_displatch> which maps the option used in C<bioaln> to the subroutine that

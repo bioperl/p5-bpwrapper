@@ -1,10 +1,9 @@
 Revision history for Bio::BPWrappers
 
-1.08 2016-07-01:
+1.10 2016-07-01:
 
-- Adjust testing for MSWin
+- Adjust testing for MSWin yet again
 - More doc improvements
-- Try to address other testing issues
 
 1.08 2016-06-30:
 

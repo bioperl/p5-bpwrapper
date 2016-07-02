@@ -35,7 +35,7 @@ my $opts = [
 test_one_arg_opts('bioseq', 'test-bioseq.nuc', $opts);
 
 my $multi_opts = [
-    ["--pick 'order:2,4'", 'test-bioseq.nuc',
+    ["--pick order:2,4", 'test-bioseq.nuc',
      'pick-order-2,4.right', 'pick seqs by order delimited by commas'],
     ["--pick order:2-4", 'test-bioseq.nuc',
      'pick-order-2-4.right', 'pick seqs by order with range'],

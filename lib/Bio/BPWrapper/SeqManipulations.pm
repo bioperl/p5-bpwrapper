@@ -251,6 +251,13 @@ sub filter_seqs {
     }
 }
 
+=head2 retrieve_seqs()
+
+Retrieves a sequence from GenBank using the provided accession
+number. A wrapper for C<L<Bio::DB::GenBank>E<gt>#get_Seq_by_acc>.
+
+=cut
+
 # To do: add fetch by gi
 sub retrieve_seqs {
     my $gb  = Bio::DB::GenBank->new();
@@ -258,7 +265,13 @@ sub retrieve_seqs {
     $out->write_seq($seq)
 }
 
-sub remove_gaps {    # remove gaps
+=head2 remove_gaps()
+
+Remove gaps
+
+=cut
+
+sub remove_gaps {
     while ($seq = $in->next_seq()) {
         my $string = $seq->seq();
         $string =~ s/-//g;
@@ -267,9 +280,24 @@ sub remove_gaps {    # remove gaps
     }
 }
 
+=head2 print_lengths()
+
+Print all sequence lengths. Wraps
+L<Bio::Seq-E<gt>length|https://metacpan.org/pod/Bio::Seq#length>.
+
+=cut
+
 sub print_lengths {
     while ($seq = $in->next_seq()) { print $seq->id(), "\t", $seq->length(), "\n" }
 }
+
+
+=head2 print_seq_count()
+
+Print all sequence lengths. Wraps
+L<Bio::Seq-E<gt>length|https://metacpan.org/pod/Bio::Seq#length>.
+
+=cut
 
 sub print_seq_count {
     my $count;
@@ -277,12 +305,28 @@ sub print_seq_count {
     print $count, "\n"
 }
 
+=head2 make_revcom()
+
+Reverse complement. Wraps
+L<Bio::Seq-E<gt>revcom()|https://metacpan.org/pod/Bio::Seq#revcom>.
+
+=cut
+
+
 sub make_revcom {    # reverse-complement a sequence
     while ($seq = $in->next_seq()) {
         my $new = Bio::Seq->new(-id  => $seq->id() . ":revcom", -seq => $seq->revcom()->seq());
         $out->write_seq($new)
     }
 }
+
+=head2 print_subseq()
+
+Select substring (of the 1st sequence). Wraps
+L<Bio::Seq-E<gt>subseq()|https://metacpan.org/pod/Bio::Seq#subseq>.
+
+=cut
+
 
 sub print_subseq {
     while ($seq = $in->next_seq()) {
@@ -696,3 +740,98 @@ sub del_by_length {
 }
 
 1;
+__END__
+
+=head1 EXTENDING THIS MODULE
+
+We encourage BioPerl developers to add command-line interface to their BioPerl methods here.
+
+Here is how to extend.  We'll use option C<--count-codons> as an example.
+
+=over 4
+
+=item *
+Create a new method like one of the above. For example, see L<C<count_codons>|/count_codons>.
+
+=item *
+Document your method in pod using C<=head2>. For example:
+
+    =head2 count_codons()
+
+    Count codons for coding sequences (e.g., a genome file consisting of
+    CDS sequences). Wraps
+    L<Bio::Tools::SeqStats-E<gt>count_codons()|https://metacpan.org/pod/Bio::Tools::SeqStats#count_codons>.
+
+    =cut
+
+See L<C<count_codons()>|/count_codons> for how this gets rendered.
+
+
+=item *
+Add the method to C<@EXPORT> list in C<SeqManipulations.pm>.
+
+=item *
+Add option to C<%opt_displatch> which maps the option used in C<bioaln> to the subroutine that
+gets called here. For example:
+
+    "avpid" => \&print_avp_id,
+
+=item *
+Add option in to C<bioseq> script. See the code that starts:
+
+    GetOptions(
+    ...
+    "count-codons|C",
+    ...
+
+This option has a short option name C<C> and takes no additional argument
+
+=item *
+Write a test for the option. See the file C<t/10test-bioseq.t> and L<Testing|https://github.com/bioperl/p5-bpwrapper/wiki/Testing>.
+
+=item *
+Share back. Create a pull request to the github repository and contact
+Weigang Qiu, City University of New York, Hunter College (L<mailto:weigang@genectr.hunter.cuny.edu>)
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<bioaseq>: command-line tool for using this
+
+=item *
+
+L<Qui Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
+
+=item *
+
+L<Github project wiki page|https://github.com/bioperl/p5-bpwrapper>
+
+=back
+
+=head1 CONTRIBUTORS
+
+=over 4
+
+=item *
+ Yözen Hernández yzhernand at gmail dot com
+
+=item *
+Girish Ramrattan <gramratt at gmail dot com>
+
+=item  *
+Levy Vargas <levy dot vargas at gmail dot com>
+
+=item  *
+L<Weigang Qiu | mailto:weigang@genectr.hunter.cuny.edu> (Maintainer)
+
+=item *
+Rocky Bernstein
+
+=back
+
+=cut
