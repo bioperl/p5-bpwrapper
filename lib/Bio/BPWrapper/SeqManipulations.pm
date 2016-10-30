@@ -391,15 +391,16 @@ L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restrictio
 sub restrict_digest {
     my $enz = $opts{"restrict"};
     use Bio::Restriction::Analysis;
-    $seq = $in->next_seq();
-    my $seq_str = $seq->seq();
-    die "Not a DNA sequence\n" unless $seq_str =~ /^[ATCG]+$/i;
-    my $ra = Bio::Restriction::Analysis->new(-seq=>$seq);
-    foreach my $frag ($ra->fragment_maps($enz)) {
-        my $seq_obj = Bio::Seq->new(
-            -id=>$seq->id().'|'.$frag->{start}.'-'.$frag->{end}.'|'.($frag->{end}-$frag->{start}+1),
-            -seq=>$frag->{seq});
-        $out->write_seq($seq_obj)
+    while ( $seq = $in->next_seq() ) {
+	my $seq_str = $seq->seq();
+	die "Not a DNA sequence\n" unless $seq_str =~ /^[ATCG]+$/i;
+	my $ra = Bio::Restriction::Analysis->new(-seq=>$seq);
+	foreach my $frag ($ra->fragment_maps($enz)) {
+	    my $seq_obj = Bio::Seq->new(
+		-id=>$seq->id().'|'.$frag->{start}.'-'.$frag->{end}.'|'.($frag->{end}-$frag->{start}+1),
+		-seq=>$frag->{seq});
+	    $out->write_seq($seq_obj)
+	}
     }
 }
 
@@ -418,7 +419,7 @@ written to C<STDERR>.
 =cut
 
 sub anonymize {
-    my $char_len = $opts{"anonymize"} // die "Tried to use option 'preifx' without using option 'anonymize'. Exiting...\n";
+    my $char_len = $opts{"anonymize"} // die "Tried to use option 'prefix' without using option 'anonymize'. Exiting...\n";
     my $prefix = (defined($opts{"prefix"})) ? $opts{"prefix"} : "S";
 
     pod2usage(1) if $char_len < 1;
