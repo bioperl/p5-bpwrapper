@@ -37,7 +37,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 @EXPORT      = qw(initialize can_handle handle_opt write_out
 print_composition filter_seqs retrieve_seqs remove_gaps
 print_lengths print_seq_count make_revcom
-print_subseq restrict_digest anonymize
+print_subseq restrict_coord restrict_digest anonymize
 shred_seq count_codons print_gb_gene_feats
 count_leading_gaps hydroB linearize reloop_at
 remove_stop parse_orders find_by_order
@@ -65,6 +65,7 @@ my %opt_dispatch = (
     'revcom' => \&make_revcom,
     'subseq' => \&print_subseq,
     'translate' => \&reading_frame_ops,
+    'restrict-coord' => \&restrict_coord,
     'restrict' => \&restrict_digest,
     'anonymize' => \&anonymize,
     'break' => \&shred_seq,
@@ -377,12 +378,43 @@ sub reading_frame_ops {
     }
 }
 
+=head2 restrict_coord()
+
+Finds digestion coordinates by a specified restriction enzyme
+specified in C<$opts{restrinct}> set via L<C<#initilize(\%opts)>|/initialize>.
+
+An input file with sequences is expected. Wraps
+L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
+
+Outputs coordinates of overhangs in BED format.
+
+=cut
+
+
+sub restrict_coord {
+    use Bio::Restriction::Analysis;
+    use Bio::Restriction::EnzymeCollection;
+
+    my $enz = $opts{"restrict-coord"};
+    my $re = Bio::Restriction::EnzymeCollection->new()->get_enzyme($enz);
+    my $len = length($re->overhang_seq());
+
+    while ( $seq = $in->next_seq() ) {
+        my $seq_str = $seq->seq();
+        die "Not a DNA sequence\n" unless $seq_str =~ /^[ATCGRYSWKMBDHVN]+$/i;
+        my $ra = Bio::Restriction::Analysis->new(-seq=>$seq);
+        foreach my $pos ($ra->positions($enz)) {
+	    print $seq->id()."\t".($pos-$len)."\t".$pos."\n";
+        }
+    }
+}
+
 =head2 restrict_digest()
 
 Predicted fragments from digestion by a specified restriction enzyme
 specified in C<$opts{restrinct}> set via L<C<#initilize(\%opts)>|/initialize>.
 
-An input file with a single sequence is expected. Wraps
+An input file with sequences is expected. Wraps
 L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
 
 =cut

@@ -26,6 +26,7 @@ GetOptions(
     "revcom|r",
     "subseq|s=s",
     "translate|t=i", #Needs error checking
+    "restrict-coord=s",
     "restrict|x=s",
     "anonymize|A:10",    # default 10 char (for phylip) (prefix + num_digits)
     "break|B",
@@ -180,10 +181,14 @@ L<Bio::SeqUtils-E<gt>translate_3frames()|https://metacpan.org/pod/Bio::SeqUtils#
 and
 L<Bio::SeqUtils-E<gt>translate_6frames()|https://metacpan.org/pod/Bio::SeqUtils#translate_6frames>.
 
+=item --restrict-coord 'RE' <dna_fasta_file>
+
+Predicted digestion coordinates by a specified restriction enzyme. Outputs coordinates of overhangs in BED format. Wraps
+L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
+
 =item --restrict | -x 'RE' <dna_fasta_file>
 
-Predicted fragments from digestion by a specified restriction
-enzyme. An input file with a single sequence is expected. Wraps
+Predicted fragments from digestion by a specified restriction enzyme. Wraps
 L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
 
 =item --anonymize | -A 'number' <input_file>
