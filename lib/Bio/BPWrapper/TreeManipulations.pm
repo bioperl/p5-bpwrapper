@@ -505,7 +505,12 @@ sub walk {
     }
 }
 
-
+# works for RAxML bipartition output, with bootstrap values as node names
+sub delete_low_boot_support {
+   my $cutoff = $opts{'del-low-boot'} || 75; # default 75
+   &_remove_branch($rootnode, \$cutoff);
+   $print_tree = 1;
+}
 =head2 write_out()
 
 Performs the bulk of the actions actions set via
@@ -517,6 +522,7 @@ Call this after calling C<#initialize(\%opts)>.
 sub write_out {
     my $opts = shift;
     getdistance() if $opts->{'distance'};
+    delete_low_boot_support() if $opts->{'del-low-boot'};
     say $tree->total_branch_length() if $opts->{'length'};
     countOTU() if $opts->{'numOTU'};
     $print_tree = 1 if defined($opts->{'output'});
@@ -545,6 +551,27 @@ sub write_out {
 }
 
 ################# internal subroutines ##############
+
+sub _remove_branch {
+    my $nd = shift;
+    my $ref = shift;
+    my $bootcut = $$ref;
+    return if $nd->is_Leaf();
+    my @desc = $nd->each_Descendent();
+    my $pa = $nd->ancestor();
+    foreach my $ch (@desc) {
+	if (!$nd->id()) { # no boostrap as node id (in-group branch)
+	    &_remove_branch($ch, $ref);
+	    next;
+	} 
+	if ($nd->id() < $bootcut) {
+	    $pa->remove_Descendent($nd); # remove the current node
+	    $pa->add_Descendent($ch); # elevate the child node
+	    $ch->branch_length($ch->branch_length() + $nd->branch_length()); # increment branch length
+	}
+	&_remove_branch($ch, $ref);
+    }    
+}
 
 sub _name2node {
     my $str = shift;

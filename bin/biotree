@@ -17,6 +17,7 @@ my %opts;
 GetOptions(\%opts,
 	   "help|h",
 	   "man",
+	   "del-low-boot=i",
 	   "distance|d=s",
 	   "input|i:s",
 	   "length|l",
