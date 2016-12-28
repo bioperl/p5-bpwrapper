@@ -28,6 +28,7 @@ use Bio::BPWrapper;
 use Bio::TreeIO;
 use Bio::Tree::Tree;
 use Bio::Tree::Node;
+use Bio::Tree::TreeFunctionsI;
 use Data::Dumper;
 
 if ($ENV{'DEBUG'}) { use Data::Dumper }
@@ -214,8 +215,8 @@ Reroot tree to node in C<$opts{'reroot'}> by creating new branch.
 sub reroot {
     my $outgroup_id = $opts{'reroot'};
     my $outgroup    = $tree->find_node($outgroup_id);
-    my $newroot     = $outgroup->create_node_on_branch(-FRACTION => 0.5, -ANNOT => {id => 'newroot'});
-    $tree->reroot($newroot);
+#    my $newroot     = $outgroup->create_node_on_branch(-FRACTION => 0.5, -ANNOT => {id => 'newroot'});
+    $tree->reroot($outgroup);
     $print_tree = 1;
 }
 
@@ -511,6 +512,53 @@ sub delete_low_boot_support {
    &_remove_branch($rootnode, \$cutoff);
    $print_tree = 1;
 }
+
+sub mid_point_root {
+    my (@leaves, @sortedleaf_names, @leafnames);
+    foreach (@nodes) { push(@leaves, $_) if $_->is_Leaf() }
+
+    my $maxL=0;
+    my ($node1, $node2);
+    for (my $i=0; $i<$#leaves; $i++){
+        my $firstleaf = $leaves[$i];
+        for (my $j=$i+1; $j<scalar(@leaves); $j++){
+            my $secondleaf = $leaves[$j];
+            my $dis = $tree->distance(-nodes=>[$firstleaf, $secondleaf]);
+            if ($dis>$maxL){
+                $maxL = $dis;
+                $node1 = $firstleaf;
+                $node2 = $secondleaf;
+            }
+        }
+    }
+
+    my $nd = &_get_all_parents($node1,0,$maxL);
+    $nd = &_get_all_parents($node2,0,$maxL) unless $nd;
+    my ($node, $sumL) = @{$nd};
+
+    my $nodeL = $node->branch_length();
+    my $pnode = $node->ancestor();
+    my $nodeL_new = $nodeL - $sumL + $maxL/2;
+
+    $tree->reroot_at_midpoint($node);
+
+    $pnode->branch_length($node->branch_length()*2-$nodeL_new);
+    $node->branch_length($nodeL_new);    
+
+    $print_tree = 1;
+}
+
+sub _get_all_parents {
+    my $nd = shift;
+    my $sumL = shift;
+    my $mL = shift;
+    $sumL += $nd->branch_length();
+
+    return [$nd, $sumL] if $sumL >= $mL/2;
+    return if $nd->ancestor() eq $rootnode;
+    &_get_all_parents($nd->ancestor(), $sumL, $mL);
+}
+
 =head2 write_out()
 
 Performs the bulk of the actions actions set via
@@ -519,8 +567,10 @@ L<C<initialize(\%opts)>|/initialize>.
 Call this after calling C<#initialize(\%opts)>.
 
 =cut
+
 sub write_out {
     my $opts = shift;
+    mid_point_root() if $opts->{'mid-point'};
     getdistance() if $opts->{'distance'};
     delete_low_boot_support() if $opts->{'del-low-boot'};
     say $tree->total_branch_length() if $opts->{'length'};
@@ -530,7 +580,6 @@ sub write_out {
     subset() if $opts->{'subset'};
     print_leaves_lengths() if $opts->{'otu'};
     getlca() if $opts->{'lca'};
-
     label_nodes() if $opts->{'labelnodes'};
     listdistance() if $opts->{'distanceall'};
     bin() if $opts->{'ltt'};
