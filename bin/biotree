@@ -17,35 +17,35 @@ my %opts;
 GetOptions(\%opts,
 	   "help|h",
 	   "man",
-	   "mid-point|m",
-	   "del-low-boot=i",
-	   "distance|d=s",
-	   "input|i:s",
-	   "length|l",
-	   "numOTU|n",
-	   "output|o:s",
-	   "reroot|r=s",
-	   "subset|s=s",
-	   "otu|u",
-	   "lca|A=s",
-	   "labelnodes|B",
-	   "distanceall|D",
-	   "ltt|G=s",
-	   "lengthall|L",
-	   "random|M:i",
-	   "depth|P=s",
-	   "rmbl|R",
-	   "allchildOTU|U=s",
 	   "version|V",
-	   "walk|W=s",
-	   "multi2bi",
+	   "allchildOTU|U=s",
 	   "cleanbr",
 	   "cleanboot",
 	   "delete-otus=s",
-	   "sis-pairs", # pairwise OTU togetherness
-	   "swap-otus=s", # output trees with each possible pairs (with the designated one) swapped
+	   "del-low-boot=i",
+	   "depth|P=s",
+	   "distance|d=s",
+	   "distanceall|D",
 	   "ead", # edge-length abundance distribution; ODwyer et al. PNAS (2015)
+	   "input|i:s",
+	   "labelnodes|B",
+	   "lca|A=s",
+	   "length|l",
+	   "lengthall|L",
+	   "ltt|G=s",
+	   "mid-point|m",
+	   "multi2bi",
+	   "numOTU|n",
+	   "otu|u",
+	   "output|o:s",
+	   "random|M:i",
+	   "reroot|r=s",
+	   "rmbl|R",
+	   "sis-pairs", # pairwise OTU togetherness
+	   "subset|s=s",
+	   "swap-otus=s", # output trees with each possible pairs (with the designated one) swapped
 	   "tree-shape", # for apTreeshape
+	   "walk|W=s",
 	   #    "bootclean|b:f",
 	   #    "collapse|c=s@",
 	   #    "getroot|g",
@@ -91,61 +91,65 @@ possible formats, so behavior may be unexpected with some.
 
 Currently, tree-manipulations does not support multiple trees per file or the ability to read from standard input.
 
-=head2 OPTIONS
+=head1 OPTIONS
 
 =over 4
 
-=item --mid-point (-m)
+=item --allchildOTU, -U 'internal_node_id' | 'all'
 
-Reroot tree at mid-point
+Prints all OTU's that are descended from the given internal node. If no node is provided, a complete list of all internal nodes and their descendents is returned instead (given in the order of "walking" through the tree from the root node).
 
 =item --cleanbr
+
+???
+
+=item --cleanboot
+
+???
+
+=item --delete-otus
+
+???
+
+=item --del-low-boot
+
+???
+
+=item --depth, -P 'node' [-D 'node'] [-D 'node']...
+
+Prints depth to root. Accepts node names and/or IDs.
 
 =item --distance, -d 'node1' -d 'node2'
 
 Prints the distance between a pair of nodes or leaves.
 
-=item --delete-otus
+=item --distanceall, -D
+
+Prints half-matrix list of distances between ALL leaves.
+
+=item --ead
+
+??
 
 =item --input, -i 'format'
 
 Input file format. Accepts newick and nhx.
 
-=item --length, -l
+=item --labelnodes, -B
 
-Print total branch length.
-
-=item --numOTU, -n
-
-Print total number of OTUs (leaves).
-
-=item --output, -o 'format'
-
-Output file format. Accepts newick, nhx, and tabtree.
-
-=item --reroot, -r 'newroot'
-
-Reroot tree to specified node by creating new branch.
-
-=item --subset, -s 'node1,node2,node3'
-
-Creates a tree of only the specified leaves/nodes and their descendants. Specifying a single internal node produces a subtree from that node.
-
-=item --otu, -u
-
-Print leaf nodes with branch lengths.
+Prepends ID to each leaf/node label. Useful when identifying unlabed nodes, such as when using --prune.
 
 =item --lca, -A 'node1,node2,node3,...'
 
 Returns ID of most recent common ancestor across provided nodes. Returns direct ancestor if single leaf/node provided.
 
-=item --labelnodes, -B
+=item --length, -l
 
-Prepends ID to each leaf/node label. Useful when identifying unlabed nodes, such as when using --prune.
+Print total branch length.
 
-=item --distanceall, -D
+=item --lengthall, -L
 
-Prints half-matrix list of distances between ALL leaves.
+Prints all nodes and branch lengths.
 
 =item --ltt, -G 'number_of_bins'
 
@@ -153,27 +157,53 @@ Divides tree into number of specified segments and counts branches up to height 
 
 llt: Linear through time.
 
-=item --lengthall, -L
+=item --mid-point (-m)
 
-Prints all nodes and branch lengths.
+Reroot tree at mid-point
+
+=item --multi2bi
+
+??
+
+=item --numOTU, -n
+
+Print total number of OTUs (leaves).
+
+=item --otu, -u
+
+Print leaf nodes with branch lengths.
+
+=item --output, -o 'format'
+
+Output file format. Accepts newick, nhx, and tabtree.
 
 =item --random, -M [sample_size]
 
 Builds a tree of a random subset of the original tree's OTUs. Defults to selecting half of the original tree's nodes.
 
-=item --depth, -P 'node' [-D 'node'] [-D 'node']...
+=item --reroot, -r 'newroot'
 
-Prints depth to root. Accepts node names and/or IDs.
+Reroot tree to specified node by creating new branch.
 
 =item --rmbl, -R
 
 Remove branch lengths from tree.
 
-=item --allchildOTU, -U 'internal_node_id' | 'all'
-
-Prints all OTU's that are descended from the given internal node. If no node is provided, a complete list of all internal nodes and their descendents is returned instead (given in the order of "walking" through the tree from the root node).
-
 =item --sis-pairs
+
+???
+
+=item --subset, -s 'node1,node2,node3'
+
+Creates a tree of only the specified leaves/nodes and their descendants. Specifying a single internal node produces a subtree from that node.
+
+=item --swap-otus
+
+???
+
+=item --tree-shape
+
+???
 
 =item --walk, -W 'otu'
 
@@ -181,7 +211,7 @@ Walks along the tree starting from the specified OTU and prints the total distan
 
 =back
 
-=head3 Common Options
+=head2 Common Options
 
 =over 4
 
@@ -189,7 +219,7 @@ Walks along the tree starting from the specified OTU and prints the total distan
 
 Print a brief help message and exit.
 
-=item --man
+=item --man (but not "-m")
 
 Print the manual page and exit.
 

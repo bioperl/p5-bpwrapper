@@ -108,7 +108,6 @@ Call this right after setting up an options hash.
 
 Sets package variables: C<$in_format>, C<$binary>, C<$out_format>, and C<$out>.
 
-
 =cut
 
 sub initialize {

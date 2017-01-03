@@ -20,46 +20,46 @@ GetOptions(
     \%opts,
     "help|h",
     "man",
+    "version|V",
+    "aln-index|I=s",
     "avpid|a",
+    "binary", # 0/1 for binary sites (for phylip lagacy programs)
+    "bin-inform", # extract binary & informative sites (for clique): discard constant, 3/4-states, non-informative
     "bootstrap|b",
     "codon-view|c:20",    # Optional value, default 20
-    "delete|d=s",
-    "nogaps|g",
-    "input|i=s",
-    "length|l",
-    "match|m",
-    "numseq|n",
-    "output|o=s",
-    "pick|p=s",
-    "refseq|r=s",
-    "slice|s=s",
-    "split-cdhit=s",
-    "uniq|u",
-    "varsites|v",
-    "window|w:30",
-    "concat|A",
     "conblocks|B:6",
+    "concat|A",
     "consensus|C:50",
+    "delete|d=s",
     "dna2pep|D",
     "erasecol|E=s",
-    "noflatname|F",
-    "aln-index|I=s",
-    "listids|L",
-    "permute-states|M",
-    "pep2dna|P=s",
-    "resample|R:i",    # Optional value, default is floor of num_sequences/2
-    "shuffle-sites|S",
-    "select-third",
-    "remove-third",
-    "uppercase", # make upper case (for DNAStatistics)
     "gapstates",
     "gapstates2",
-    "random-slice=i",
-    "trimends",
-    "bin-inform", # extract binary & informative sites (for clique): discard constant, 3/4-states, non-informative
-    "version|V",
-    "binary", # 0/1 for binary sites (for phylip lagacy programs)
+    "input|i=s",
+    "length|l",
+    "listids|L",
+    "match|m",
+    "noflatname|F",
+    "nogaps|g",
+    "numseq|n",
+    "output|o=s",
+    "pep2dna|P=s",
+    "permute-states|M",
     "phy-nonint" # non-interleaved phylip (for e.g.,clique)
+    "pick|p=s",
+    "random-slice=i",
+    "refseq|r=s",
+    "remove-third",
+    "resample|R:i",    # Optional value, default is floor of num_sequences/2
+    "select-third",
+    "shuffle-sites|S",
+    "slice|s=s",
+    "split-cdhit=s",
+    "trimends",
+    "uniq|u",
+    "uppercase", # make upper case (for DNAStatistics)
+    "varsites|v",
+    "window|w:30",
   #  "dnadist|D=s", # Needs fixing
   #  "inform|Z",
 ) or pod2usage(2);
@@ -94,9 +94,39 @@ output files are in CLUSTALW format so that multiple C<bioaln> runs
 can be chained with UNIX pipes. Upper-case options are less commonly
 used.
 
-=head2 OPTIONS
+=head1 OPTIONS
 
-=head3 Alignment Descriptors
+=head2 option groups Unasigned
+
+=over 4
+
+=item --binary
+
+???
+
+=item --bin-inform
+
+???
+
+=item --phy-nonint
+
+???
+
+=item --random-slice=i
+
+???
+
+=item --remove-third
+
+???
+
+=item --split-cdhit=s
+
+???
+
+=back
+
+=head2 Alignment Descriptors
 
 =over 4
 
@@ -107,9 +137,13 @@ value alone.
 
 Wraps L<Bio::SimpleAlign-E<gt>average_percentage_identity()|https://metacpan.org/pod/Bio::SimpleAlign#average_percentage_identity>.
 
-=item --gapstate
+=item --gapstates
 
-   bioaln --gapstate <alignment_file>
+   bioaln --gapstates <alignment_file>
+
+=item --gapstates2
+
+???
 
 =item --length, -l
 
@@ -137,7 +171,7 @@ Calculate pairwise average sequence difference by windows (overlapping windows w
 
 =back
 
-=head3 Alignment Viewers
+=head2 Alignment Viewers
 
 =over 4
 
@@ -197,7 +231,7 @@ C<bioaln --match input.aln> gives:
 
 =back
 
-=head3 Alignment filters which produce a new alignment
+=head2 Alignment filters which produce a new alignment
 
 =over 4
 
@@ -292,6 +326,14 @@ L<Bio::AlignIO-E<gt>new()|https://metacpan.org/pod/Bio::AlignIO#new>.
 
    bioaln --output 'format'
 
+=item --pep2dna, -P
+
+Align CDS sequences according to their corresponding protein
+alignment. Wraps
+L<Bio::Align::Utilities-E<gt>aa_to_dna_aln()https://metacpan.org/pod/Bio::Align::Utilities#aa_to_dna_aln>.
+
+   bioaln --pep2dna 'unaligned_cds.fas' <protein_alignment>
+
 =item --pick, -p
 
 Pick sequences based on their id. Option takes a comma-separated list of ids.
@@ -323,11 +365,7 @@ NOTE: --slice'-,x' (where x is '-' or a position) does NOT work. Use --slice='-,
 
 =item --trimends
 
-=item --varsites, -v
-
-Extracts variable sites. B<Used in conjunction with -g:> do not show sites with gaps in any sequence.
-
-   bioaln --varsites <alignment_file>
+???
 
 =item --uniq, -u.
 
@@ -366,25 +404,30 @@ you get:
  ST6                   ATGAATAAAAAAATATATAGCATAGAAGAATTAATAGACAAA--ATAAGT
                        ******** ** * *** *************** **** ***  *****
 
-=item --pep2dna, -P
-
-Align CDS sequences according to their corresponding protein
-alignment. Wraps
-L<Bio::Align::Utilities-E<gt>aa_to_dna_aln()https://metacpan.org/pod/Bio::Align::Utilities#aa_to_dna_aln>.
-
-   bioaln --pep2dna 'unaligned_cds.fas' <protein_alignment>
-
 =item --uppercase
 
 Make an uppercase alignment.
 
    bioaln --uppercase <alignment_file>
 
+=item --varsites, -v
+
+Extracts variable sites. B<Used in conjunction with -g:> do not show sites with gaps in any sequence.
+
+   bioaln --varsites <alignment_file>
+
 =back
 
-=head3 Evolutionary Analysis
+=head2 Evolutionary Analysis
 
 =over 4
+
+=item --aln-index, -I
+
+Identify aligned position of a residue. Wraps
+L<Bio::SimpleAlign-E<gt>column_from_residue_number()|https://metacpan.org/pod/Bio::SimpleAlign#column_from_residue_number>.
+
+   bioaln --aln-index 'seq_id,position' <alignment_file>
 
 =item --bootstrap, -b
 
@@ -469,13 +512,6 @@ L<Bio::SimpleAlign-E<gt>set_displayname_flat()|https://metacpan.org/pod/Bio::Sim
 
    bioaln --noflatname <alignment_file>
 
-=item --aln-index, -I
-
-Identify aligned position of a residue. Wraps
-L<Bio::SimpleAlign-E<gt>column_from_residue_number()|https://metacpan.org/pod/Bio::SimpleAlign#column_from_residue_number>.
-
-   bioaln --aln-index 'seq_id,position' <alignment_file>
-
 =item --permute-states, -M
 
 Generate an alignment with randomly permuted residues at each
@@ -518,6 +554,10 @@ you get:
  Seq6                  MNKKIYSIEELVDKISMPVVAYSGEAKSFLREALEYAKNK
                        **** ******:***********************:****
 
+=item --select-third
+
+Generate an alignment of every-third (mostly synonymous) bases (assuming a CDS alignment).
+
 =item --shuffle-sites, -S
 
 Make a shuffled (not bootstraped) alignment. This operation randomizes
@@ -547,13 +587,9 @@ you get:
  Seq6                  VIEELKYEKAAEAFVPNISEDASGKIRLKLMSVKSYKMYN
                        **************:********** *******::***:*
 
-=item --select-third
-
-Generate an alignment of every-third (mostly synonymous) bases (assuming a CDS alignment).
-
 =back
 
-=head3 Common Options
+=head2 Common Options
 
 =over 4
 

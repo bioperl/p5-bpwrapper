@@ -16,9 +16,11 @@ GetOptions(
     \%opts,
     "help|h",
     "man",
+    "version|V",
 #    "distance|d",
 #    "dist-method|D=s" => \$flags{"dist-method"},
     "bihaps",
+    "bipart",
     "bisites",
     "bisites-for-r",
     "heterozygosity|H",
@@ -27,14 +29,12 @@ GetOptions(
     "mut-info",
 #    "numseq|n=i"    => \$flags{"numseq"},
     "pi|p",
-    "stats|s=s@",    # Comma-separated, or multiply specified, list
+    "segsites|S",
     "snp",
     "snp-coding",
     "snp-coding-long",
     "snp-noncoding",
-    "version|V",
-    "segsites|S",
-    "bipart",
+    "stats|s=s@",    # Comma-separated, or multiply specified, list
 #    "mutrec|b",
 #    "exclude|group3|seq3|r=s@",
 #    "ingroup|group1|seq1|p=s@",
@@ -70,21 +70,25 @@ B<biopop> [C<-h> | C<--help> | --C<v> | C<--version> C<--man>]
 Wrapper script for L<Bio::Perl>'s population genetics modules: use L<Bio::PopGen::Utilities>;
 L<Bio::PopGen::Statistics>, and L<Bio::PopGen::Population>;
 
-=head2 OPTIONS
+=head1 OPTIONS
 
 =over 4
 
-=item --distance, -d
+=item --bihaps
 
-Calculates a distance matrix for all pairwise distances of all sequences in the input alignment and prints it out.
+???
 
-Use B<--dist-method> to specify the method desired. The default in Bio::Align::DNAStatistics is "JukesCantor".
+=item --bipart
 
-=item --dist-method, -D
+???
 
-Used with --distance to specify which distance method to use when getting the distance matrix.
+=item --bisites
 
-Program quits if the distance method is invalid
+???
+
+=item --bisites-for-r
+
+???
 
 =item --heterozygosity, -H
 
@@ -98,13 +102,34 @@ Input file format. By default, this is 'clustalw'.
 
 Pairwise calculation of mismatches for all sequences in the alignment.
 
-=item --numseq, -n
+-item --mut-info
 
-Input file format. By default, this is 'clustalw'.
+???
 
 =item --pi, -p
 
 Nucleotide Diversity is a measure of genetic variation or differences. It is similar to expected heterozygosity. This method takes in an alignment and outputs an integer.
+
+=item --segsites, -S
+
+??
+
+=item --snp
+
+??
+
+=item --snp-coding
+
+Identify & print, for each 2-state SNP, codon position, aligned nucleotide position, syn/nonsyn, frequencies of each allleic state, for a coding alignment.
+
+
+=item --coding-long
+
+??
+
+=item --snp-noncoding
+
+??
 
 =item --stats, -s <comma separated list of values>
 
@@ -113,17 +138,37 @@ Specify the statistics you would like to gather from input data. e.g., "theta,pi
 Can also be specified by giving the option multiple times. e.g.,
  biopop --stats=pi --stats=theta
 
-=item --snp_coding
+=item --distance, -d
 
-Identify & print, for each 2-state SNP, codon position, aligned nucleotide position, syn/nonsyn, frequencies of each allleic state, for a coding alignment.
+Not in opts hash!
+
+Calculates a distance matrix for all pairwise distances of all sequences in the input alignment and prints it out.
+
+Use B<--dist-method> to specify the method desired. The default in Bio::Align::DNAStatistics is "JukesCantor".
+
+=item --dist-method, -D
+
+Not in opts hash!
+
+Used with --distance to specify which distance method to use when getting the distance matrix.
+
+Program quits if the distance method is invalid
+
+=item --numseq, -n
+
+Not in opts hash!
+
+Input file format. By default, this is 'clustalw'.
 
 =item --varsites, -v
+
+Not in opts hash!
 
 This method outputs the number of segregating or SNP sites within your alignment.
 
 =back
 
-=head3 Common Options
+=head2 Common Options
 
 =over 4
 

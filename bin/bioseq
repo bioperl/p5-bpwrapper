@@ -14,31 +14,31 @@ GetOptions(
     \%opts,
     "help|h",
     "man",
+    "version|V",
+    "anonymize|A:10",    # default 10 char (for phylip) (prefix + num_digits)
+    "break|B",
     "composition|c",
+    "count-codons|C",
     "delete|d=s",
+    "feat2fas|F",
     "fetch|f=s", # Retrieve sequence by accession number
-    "nogaps|g",
+    "hydroB|H",
     "input|i=s",
+    "leadgaps|G",
     "length|l",
+    "linearize|L",
+    "nogaps|g",
     "numseq|n",
     "output|o=s",
     "pick|p=s",
+    "reloop|R=i", # recircularize a genome at "loop_at"
+    "removestop|X", # for PAML/codeml
+    "restrict|x=s",
+    "restrict-coord=s",
     "revcom|r",
+    "split-cdhit=s",
     "subseq|s=s",
     "translate|t=i", #Needs error checking
-    "restrict-coord=s",
-    "restrict|x=s",
-    "anonymize|A:10",    # default 10 char (for phylip) (prefix + num_digits)
-    "break|B",
-    "count-codons|C",
-    "feat2fas|F",
-    "leadgaps|G",
-    "hydroB|H",
-    "linearize|L",
-    "reloop|R=i", # recircularize a genome at "loop_at"
-    "version|V",
-    "removestop|X", # for PAML/codeml
-    "split-cdhit=s",
  #   "longest-orf|C",
  #   "extract|e",
  #   "dotplot|D=s",
@@ -102,13 +102,34 @@ exceptions better than stand-alone codes in the L<Bio::BPWrapper>
 package. As a design principle, command-line scripts here should
 consist of I<only> wrapper calls.
 
-=head2 Options
+=head1 Options
 
 =over 4
+
+=item --anonymize | -A 'number' <input_file>
+
+Replace sequence IDs with serial IDs I<n> characters long. The
+sequence is prefaced with a leading C<'S'>.
+
+For example using option C<--anonymize '5'> the first ID will be  C<S0001>.
+
+A sed script file with a C<.sed> suffix that may be used with sed's
+C<-f> argument. If the filename is C<->, the sed file is named
+C<STDOUT.sed> instead. A message containing the sed filename is
+written to C<STDERR>.
+
+=item --break | -B <input_file>
+
+Break into individual sequences, writing a FASTA file for each sequence.
 
 =item --composition, -c <input_file>
 
 Base or AA composition. A wrapper for L<Bio::Tools::SeqStats-E<gt>count_monomers|https://metacpan.org/pod/Bio::Tools::SeqStats#count_monomers>
+
+=item --count-codons | -C <input_file>
+
+Count codons for coding sequences (e.g., a genome file consisting of
+CDS sequences). Wraps L<Bio::Tools::SeqStats-E<gt>count_codons()|https://metacpan.org/pod/Bio::Tools::SeqStats#count_codons>.
 
 =item --delete, -d 'tag:value' <input_file>
 
@@ -121,22 +142,42 @@ Delete a sequence or a comma-separated list of sequences, e.g.,
    --delete id:foo,bar   # list by id
    --delete re:REGEX     # using a regular expression (only one regex is expected)
 
+=item --feat2fas | -F
+
+Extract gene sequences in FASTA from a GenBank file of bacterial
+genome. Won't work for a eukaryote genbank file. For example:
+
+   bioseq --input genbank --feat2fas <genbank_file>
+
 =item --fetch, -f <genbank_accession>
 
 Retrieves a sequence from GenBank using the provided accession
 number. A wrapper for C<L<Bio::DB::GenBank>E<gt>#get_Seq_by_acc>.
 
-=item --nogaps, -g <input_file>
+=item --hydroB, -H
 
-Remove gaps
+Return the mean Kyte-Doolittle hydropathicity for protein sequences. Wraps
+L<Bio::Tools::SeqStats-E<gt>hydropathicity()|https://metacpan.org/pod/Bio::Tools::SeqStats#hydropathicity>.
 
 =item --input, -i <input_file>
 
 Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'. Wraps L<Bio::SeqIO>.
 
+=item --leadgaps | -G <input_file>
+
+Count and return the number of leading gaps in each sequence.
+
 =item --length, -l <input_file>
 
 Print all sequence lengths. Wraps L<Bio::Seq-E<gt>length|https://metacpan.org/pod/Bio::Seq#length>.
+
+=item --linearize, -L <input_file>
+
+Linearize FASTA, one sequence per line.
+
+=item --nogaps, -g <input_file>
+
+Remove gaps
 
 =item --numseq, -n.
 
@@ -163,9 +204,37 @@ Select a list of sequences:
 
 Usage: bioseq -p 'tag:value' <input_file>
 
+=item --reloop, -R
+
+Re-circularize a bacterial genome by starting at a specified position.
+For example for sequence "ABCDE".  C<bioseq -R'2' ..>
+would generate"'BCDEA".
+
+ bioseq --reloop 'number' <input_file>
+
+=item --removestop, -X
+
+Remove stop codons (e.g., PAML input)
+
+   bioseq --removestop <input_file>
+
+=item --restrict | -x 'RE' <dna_fasta_file>
+
+Predicted fragments from digestion by a specified restriction enzyme. Wraps
+L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
+
+=item --restrict-coord 'RE' <dna_fasta_file>
+
+Predicted digestion coordinates by a specified restriction enzyme. Outputs coordinates of overhangs in BED format. Wraps
+L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
+
 =item --revcom | -r <input_file>
 
 Reverse complement. Wraps L<Bio::Seq-E<gt>revcom()|https://metacpan.org/pod/Bio::Seq#revcom>.
+
+=item --split-cdhit
+
+???
 
 =item --subseq | -s 'beginning_index, ending_index' <input_file>
 
@@ -181,76 +250,9 @@ L<Bio::SeqUtils-E<gt>translate_3frames()|https://metacpan.org/pod/Bio::SeqUtils#
 and
 L<Bio::SeqUtils-E<gt>translate_6frames()|https://metacpan.org/pod/Bio::SeqUtils#translate_6frames>.
 
-=item --restrict-coord 'RE' <dna_fasta_file>
-
-Predicted digestion coordinates by a specified restriction enzyme. Outputs coordinates of overhangs in BED format. Wraps
-L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
-
-=item --restrict | -x 'RE' <dna_fasta_file>
-
-Predicted fragments from digestion by a specified restriction enzyme. Wraps
-L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
-
-=item --anonymize | -A 'number' <input_file>
-
-Replace sequence IDs with serial IDs I<n> characters long. The
-sequence is prefaced with a leading C<'S'>.
-
-For example using option C<--anonymize '5'> the first ID will be  C<S0001>.
-
-A sed script file with a C<.sed> suffix that may be used with sed's
-C<-f> argument. If the filename is C<->, the sed file is named
-C<STDOUT.sed> instead. A message containing the sed filename is
-written to C<STDERR>.
-
-=item --break | -B <input_file>
-
-Break into individual sequences, writing a FASTA file for each sequence.
-
-=item --count-codons | -C <input_file>
-
-Count codons for coding sequences (e.g., a genome file consisting of
-CDS sequences). Wraps L<Bio::Tools::SeqStats-E<gt>count_codons()|https://metacpan.org/pod/Bio::Tools::SeqStats#count_codons>.
-
-=item --feat2fas | -F
-
-Extract gene sequences in FASTA from a GenBank file of bacterial
-genome. Won't work for a eukaryote genbank file. For example:
-
-   bioseq --input genbank --feat2fas <genbank_file>
-
-=item --leadgaps | -G <input_file>
-
-Count and return the number of leading gaps in each sequence.
-
-=item --hydroB, -H
-
-Return the mean Kyte-Doolittle hydropathicity for protein sequences. Wraps
-L<Bio::Tools::SeqStats-E<gt>hydropathicity()|https://metacpan.org/pod/Bio::Tools::SeqStats#hydropathicity>.
-
-=item --linearize, -L <input_file>
-
-Linearize FASTA, one sequence per line.
-
-=item --reloop, -R
-
-Re-circularize a bacterial genome by starting at a specified position.
-For example for sequence "ABCDE".  C<bioseq -R'2' ..>
-would generate"'BCDEA".
-
- bioseq --reloop 'number' <input_file>
-
-=item --removestop, -X
-
-Remove stop codons (e.g., PAML input)
-
-   bioseq --removestop <input_file>
-
-=item --split-cdhit
-
 =back
 
-=head3 Common Options
+=head2 Common Options
 
 =over 4
 
@@ -258,17 +260,13 @@ Remove stop codons (e.g., PAML input)
 
 Print a brief help message and exit.
 
-=item --man
+=item --man (but not "-m")
 
 Print the manual page and exit.
 
 =item --version, -V
 
 Print current release version of this command and exit.
-
-=item --man (but not "-m")
-
-Print the manual page and exit.
 
 =back
 
