@@ -524,13 +524,15 @@ sub mid_point_root {
         for (my $j=$i+1; $j<scalar(@leaves); $j++){
             my $secondleaf = $leaves[$j];
             my $dis = $tree->distance(-nodes=>[$firstleaf, $secondleaf]);
-            if ($dis>$maxL){
+            if ($dis>=$maxL){
                 $maxL = $dis;
                 $node1 = $firstleaf;
                 $node2 = $secondleaf;
             }
         }
     }
+
+    if (!$maxL) { $print_tree = 1; return }
 
     my $nd = &_get_all_parents($node1,0,$maxL);
     $nd = &_get_all_parents($node2,0,$maxL) unless $nd;
@@ -541,9 +543,8 @@ sub mid_point_root {
     my $nodeL_new = $nodeL - $sumL + $maxL/2;
 
     $tree->reroot_at_midpoint($node);
-
     $pnode->branch_length($node->branch_length()*2-$nodeL_new);
-    $node->branch_length($nodeL_new);    
+    $node->branch_length($nodeL_new); 
 
     $print_tree = 1;
 }
@@ -553,7 +554,6 @@ sub _get_all_parents {
     my $sumL = shift;
     my $mL = shift;
     $sumL += $nd->branch_length();
-
     return [$nd, $sumL] if $sumL >= $mL/2;
     return if $nd->ancestor() eq $rootnode;
     &_get_all_parents($nd->ancestor(), $sumL, $mL);

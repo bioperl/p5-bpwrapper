@@ -45,7 +45,7 @@ GetOptions(
     "output|o=s",
     "pep2dna|P=s",
     "permute-states|M",
-    "phy-nonint" # non-interleaved phylip (for e.g.,clique)
+    "phy-nonint", # non-interleaved phylip (for e.g.,clique)
     "pick|p=s",
     "random-slice=i",
     "refseq|r=s",
