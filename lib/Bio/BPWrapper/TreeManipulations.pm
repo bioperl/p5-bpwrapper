@@ -506,9 +506,9 @@ sub walk {
     }
 }
 
-# works for RAxML bipartition output, with bootstrap values as node names
+# works for RAxML bipartition output and FastTree output with bootstrap values as node names
 sub delete_low_boot_support {
-   my $cutoff = $opts{'del-low-boot'} || 75; # default 75
+   my $cutoff = $opts{'del-low-boot'} || die 'spcify cutoff, e.g., 0.75 or 75\n'; # default 75
    &_remove_branch($rootnode, \$cutoff);
    $print_tree = 1;
 }
