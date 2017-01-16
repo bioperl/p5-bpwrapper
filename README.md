@@ -42,7 +42,13 @@ package will check and install that.
     $ ./Build install # may require sudo or root access
 ```
 
-# Get Help
+# Install from CPAN
+
+The git code generally has the newest code. If git is not your thing, you can also install the last release from CPAN:
+
+```
+   $ cpan install Bio::BPWrapper
+```
 
 Each script, [`bioaln`](https://github.com/bioperl/p5-bpwrapper/wiki/bioaln), [`biopop`](https://metacpan.org/pod/distribution/Bio-BPWrapper/bin/biopop), [`bioseq`](https://github.com/bioperl/p5-bpwrapper/wiki/bioseq) and [`biotree`](https://github.com/bioperl/p5-bpwrapper/wiki/biotree) give shorter usage help when given command-line option `--help`. Manual-page help is also giving the option `--man`.
 
