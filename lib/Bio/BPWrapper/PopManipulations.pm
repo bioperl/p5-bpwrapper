@@ -46,7 +46,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 @EXPORT      = qw(initialize can_handle handle_opt
 print_distance print_heterozygosity print_mismatch_distr
 count_four_gametes print_diversity bi_partition
-bisites_for_r bisites snp_noncoding snp_coding
+bisites_for_r bisites snp_noncoding snp_coding write_out
 snp_coding_log print_num_snps
 );
 

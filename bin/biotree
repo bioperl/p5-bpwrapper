@@ -41,6 +41,7 @@ GetOptions(\%opts,
 	   "random|M:i",
 	   "reroot|r=s",
 	   "rmbl|R",
+	   "pars-binary=s", # attach binary trait table
 	   "sis-pairs", # pairwise OTU togetherness
 	   "subset|s=s",
 	   "swap-otus=s", # output trees with each possible pairs (with the designated one) swapped
@@ -188,6 +189,10 @@ Reroot tree to specified node by creating new branch.
 =item --rmbl, -R
 
 Remove branch lengths from tree.
+
+=item --pars-binary [file] (in development)
+
+Attach a file containing binary trait values and perform a parsimony analysis
 
 =item --sis-pairs
 

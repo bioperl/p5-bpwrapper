@@ -72,6 +72,58 @@ sub initialize {
     $rootnode = $tree->get_root_node;
 }
 
+sub pars_binary {
+    my $trait_table_file = $opts{"pars-binary"};
+    open BIN, "<", $trait_table_file || die "no trait file: $trait_table_file\n";
+    my (%traits, @colnames, @rownames);
+    my $first_line = 1;
+    while(<BIN>) {
+	chomp;
+	my @data = split /\t/, $_;
+	if ($first_line) {
+	    shift @data;
+	    @colnames = @data;
+	    $first_line = 0;
+	    next;
+	} 
+
+	my $otu = shift @data;
+	push @rownames, $otu;
+	die "check colnames\n" unless @colnames == @data;
+	for(my $i=0; $i<=$#colnames; $i++) {
+	    $traits{$otu}->{$colnames[$i]} = $data[$i];
+	}
+    }
+    close BIN;
+#    print Dumper(\%traits);
+#    my $trait_id = $tree->add_trait($trait_table_file);
+    my @otus;
+    foreach my $node (@nodes) {
+	next unless $node->is_Leaf();
+	push @otus, $node;
+	die "otu id not found in rownames\n" unless &_check_id($node->id, \@rownames);
+	foreach my $trait_name (@colnames) {
+	    $node->add_tag_value($trait_name, $traits{$node->id}->{$trait_name});
+	}
+    }
+
+    foreach my $otu (@otus) {
+	print $otu->id, "\t";
+	foreach my $trait_name (@colnames) {
+	    print $otu->get_tag_values($trait_name);
+	}
+	print "\n";
+    }
+}
+
+sub _check_id {
+    my $st = shift;
+    my $ref = shift;
+    foreach my $id (@$ref) {
+	return 1 if $st eq $id;
+    }
+    return 0;
+}
 
 sub print_tree_shape {
     my @matrix;
@@ -571,6 +623,7 @@ Call this after calling C<#initialize(\%opts)>.
 sub write_out {
     my $opts = shift;
     mid_point_root() if $opts->{'mid-point'};
+    pars_binary() if $opts->{'pars-binary'};
     getdistance() if $opts->{'distance'};
     delete_low_boot_support() if $opts->{'del-low-boot'};
     say $tree->total_branch_length() if $opts->{'length'};
