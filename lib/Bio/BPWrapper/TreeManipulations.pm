@@ -558,9 +558,9 @@ sub walk {
     }
 }
 
-# works for RAxML bipartition output, with bootstrap values as node names
+# works for RAxML bipartition output and FastTree output with bootstrap values as node names
 sub delete_low_boot_support {
-   my $cutoff = $opts{'del-low-boot'} || 75; # default 75
+   my $cutoff = $opts{'del-low-boot'} || die 'spcify cutoff, e.g., 0.75 or 75\n'; # default 75
    &_remove_branch($rootnode, \$cutoff);
    $print_tree = 1;
 }
@@ -576,13 +576,15 @@ sub mid_point_root {
         for (my $j=$i+1; $j<scalar(@leaves); $j++){
             my $secondleaf = $leaves[$j];
             my $dis = $tree->distance(-nodes=>[$firstleaf, $secondleaf]);
-            if ($dis>$maxL){
+            if ($dis>=$maxL){
                 $maxL = $dis;
                 $node1 = $firstleaf;
                 $node2 = $secondleaf;
             }
         }
     }
+
+    if (!$maxL) { $print_tree = 1; return }
 
     my $nd = &_get_all_parents($node1,0,$maxL);
     $nd = &_get_all_parents($node2,0,$maxL) unless $nd;
@@ -593,9 +595,8 @@ sub mid_point_root {
     my $nodeL_new = $nodeL - $sumL + $maxL/2;
 
     $tree->reroot_at_midpoint($node);
-
     $pnode->branch_length($node->branch_length()*2-$nodeL_new);
-    $node->branch_length($nodeL_new);    
+    $node->branch_length($nodeL_new); 
 
     $print_tree = 1;
 }
@@ -605,7 +606,6 @@ sub _get_all_parents {
     my $sumL = shift;
     my $mL = shift;
     $sumL += $nd->branch_length();
-
     return [$nd, $sumL] if $sumL >= $mL/2;
     return if $nd->ancestor() eq $rootnode;
     &_get_all_parents($nd->ancestor(), $sumL, $mL);
