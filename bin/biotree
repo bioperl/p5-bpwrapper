@@ -40,7 +40,7 @@ GetOptions(\%opts,
 	   "output|o:s",
 	   "random|M:i",
 	   "reroot|r=s",
-	   "rmbl|R",
+#	   "rmbl|R",
 	   "pars-binary=s", # attach binary trait table
 	   "sis-pairs", # pairwise OTU togetherness
 	   "subset|s=s",
@@ -73,13 +73,21 @@ __END__
 
 =head1 NAME
 
-biotree - FASTA L<Bio::TreeIO> tools
+biotree - Tree manipulations based on BioPerl
 
 =head1 SYNOPSIS
 
-B<biotree> [options] [<tree file>]
+B<biotree> [options] <tree file>
 
-B<biotree> [C<-h> | C<--help> | --C<v> | C<--version> C<--man>]
+=head1 EXAMPLES
+
+biotree -h # show help page
+biotree -l tree.newick # total tree length
+biotree -m tree.newick # reroot at mid point
+biotree --del-low-boot'0.9' tree.newick # collapse branches with <0.9 bootstrap support
+biotree --del-otus'otu1,out2' tree.newick # return a subtree with specifified OTUs removed
+biotree --subset'otu1,otu2,otu3,otu4' tree.newick # return a subtree with only specified OTUs
+biotree --reroot'otu1' tree.newick # reroot with specified OTU as outgroup
 
 =head1 DESCRIPTION
 
@@ -90,7 +98,7 @@ Trees can be in any format supported by L<Bio::TreeIO> in
 L<Bio::Perl>. However, tree-manipulations has not been tested on all
 possible formats, so behavior may be unexpected with some.
 
-Currently, tree-manipulations does not support multiple trees per file or the ability to read from standard input.
+Currently, tree-manipulations does not support multiple trees per file.
 
 =head1 OPTIONS
 
@@ -102,19 +110,19 @@ Prints all OTU's that are descended from the given internal node. If no node is 
 
 =item --cleanbr
 
-???
+Remove branch lengths from all nodes.
 
 =item --cleanboot
 
-???
+Remove all branch support values.
 
-=item --delete-otus
+=item --delete-otus 'otu1,out2,etc'
 
-???
+Get a subtree by removing specified OTUs
 
-=item --del-low-boot
+=item --del-low-boot 'cutoff'
 
-???
+Remove branches supported by less than specified cutoff value, creating a multi-furcating tree.
 
 =item --depth, -P 'node' [-D 'node'] [-D 'node']...
 
@@ -130,7 +138,7 @@ Prints half-matrix list of distances between ALL leaves.
 
 =item --ead
 
-??
+Edge-length abundance distribution, a statistics measuring tree balance (ODwyer et al. PNAS 2015)
 
 =item --input, -i 'format'
 
@@ -164,7 +172,7 @@ Reroot tree at mid-point
 
 =item --multi2bi
 
-??
+Force a multi-furcating tree into a bifurcating tree (by randomly resolve nodes with multiple descendants)
 
 =item --numOTU, -n
 
@@ -186,29 +194,25 @@ Builds a tree of a random subset of the original tree's OTUs. Defults to selecti
 
 Reroot tree to specified node by creating new branch.
 
-=item --rmbl, -R
-
-Remove branch lengths from tree.
-
 =item --pars-binary [file] (in development)
 
 Attach a file containing binary trait values and perform a parsimony analysis
 
 =item --sis-pairs
 
-???
+For each pair of OTUs, print 1/0 if they are (or not) sister OTUs.
 
 =item --subset, -s 'node1,node2,node3'
 
 Creates a tree of only the specified leaves/nodes and their descendants. Specifying a single internal node produces a subtree from that node.
 
-=item --swap-otus
+=item --swap-otus 'OTU'
 
-???
+Set OTU as the new reference OTU.
 
 =item --tree-shape
 
-???
+Print a matrix of tree shapes (need reference)
 
 =item --walk, -W 'otu'
 
