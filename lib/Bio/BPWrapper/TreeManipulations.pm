@@ -139,9 +139,9 @@ sub print_tree_shape {
     }
 
     for my $nd (@nodes) {
-	next if $nd->is_Leaf();
+	next if $nd->is_Leaf() || $nd eq $rootnode;
 	my @dscs = $nd->each_Descendent;
-	die unless @dscs == 2;
+	die $nd->internal_id . ": node has more than two descendants\n" unless @dscs == 2;
 	my $id1 = $dscs[0]->is_Leaf
 	    ? -1 * $leaf{$dscs[0]->id} : $inode{$dscs[0]->internal_id};
 	my $id2 = $dscs[1]->is_Leaf
@@ -516,10 +516,10 @@ sub depth_to_root {
 }
 
 # Remove Branch Lenghts
-sub remove_brlengths {
-    foreach (@nodes) { $_->branch_length(0) if defined $_->branch_length }
-    $print_tree = 1
-}
+#sub remove_brlengths {
+#    foreach (@nodes) { $_->branch_length(0) if defined $_->branch_length }
+#    $print_tree = 1
+#}
 
 sub alldesc {
     my @inodes;
@@ -639,7 +639,7 @@ sub write_out {
     print_all_lengths() if $opts->{'lengthall'};
     random_tree() if defined($opts->{'random'});
     depth_to_root() if $opts->{'depth'};
-    remove_brlengths() if $opts->{'rmbl'};
+#    remove_brlengths() if $opts->{'rmbl'};
     alldesc() if $opts->{'allchildOTU'};
     walk() if $opts->{'walk'};
     multi2bi() if $opts->{'multi2bi'};
