@@ -73,35 +73,31 @@ __END__
 
 =head1 NAME
 
-biotree - Tree manipulations based on BioPerl
+biotree - Tree manipulations based on L<BioPerl>
 
 =head1 SYNOPSIS
 
 B<biotree> [options] <tree file>
 
-biotree -l tree.newick # total tree [l]ength
+B<biotree> [-h | --help | -V | --version | --man]
 
-biotree -m tree.newick # [m]id-point rooting
-
-biotree -u tree.newick # list all OT[u]s
-
-biotree -d 'otu1,out2' tree.newick # [d]elete these OTUs
-
-biotree -s 'otu1,otu2,etc' tree.newick # [s]ubset these OTUs
-
-biotree -D '0.9' tree.newick # [D]elete low-support (< 0.9) branches
-
-biotree -r 'otu1' tree.newick # [r]eroot with a OTU as outgroup
-
-biotree -o 'tabtree' tree.newick # [o]utput tree in text format
-
-biotree --ci 'binary-trait-table' tree.newick # consistency indices at informative sites
+ biotree -l tree.newick              # total tree [l]ength
+ biotree -m tree.newick              # [m]id-point rooting
+ biotree -u tree.newick              # list all OT[u]s
+ biotree -d 'otu1,out2' tree.newick  # [d]elete these OTUs
+ biotree -s 'otu1,otu2' tree.newick  # [s]ubset these OTUs
+ biotree -D '0.9' tree.newick        # [D]elete low-support (< 0.9) branches
+ biotree -r 'otu1' tree.newick       # [r]eroot with a OTU as outgroup
+ biotree -o 'tabtree' tree.newick    # [o]utput tree in text format
+ biotree --ci 'binary-trait' tree    # consistency indices at informative sites
 
 =head1 DESCRIPTION
 
-Designed as a UNIX-like utility, B<biotree> reads a tree file and reformats branches and nodes.
+Designed as a UNIX-like utility, B<biotree> reads a tree file and reformats branches and nodes based on these BioPerl moduels: L<Bio::TreeIO>, L<Bio::Tree::Tree>, L<Bio::Tree::Node>, and L<Bio::Tree::TreeFunctionsI>. 
 
-Trees can be in any format supported by L<Bio::TreeIO> in L<Bio::Perl>. However, biotree has not been tested on all possible formats, so behavior may be unexpected with some. Currently, biotree does not support multiple trees per file.
+Trees can be in any format supported by L<Bio::TreeIO> in L<BioPerl>. However, biotree has not been tested on all possible formats, so behavior may be unexpected with some. Currently, biotree does not support multiple trees per file.
+
+B<biotree> supports reading from STDIN, so that multiple tree manipulations could be chained using pipe ("|").
 
 =head1 OPTIONS
 
@@ -239,15 +235,6 @@ Print current release version of this command and exit.
 
 =back
 
-=head1 TO DO
-
-=over 4
-
-=item *
-consistency index for DNA alignments
-
-=back
-
 =head1 SEE ALSO
 
 =over 4
@@ -285,6 +272,30 @@ Pedro Pegan
 
 =item  *
 Weigang Qiu <weigang@genectr.hunter.cuny.edu> (Maintainer)
+
+=back
+
+=head1 TO DO
+
+=over 4
+
+=item *
+consistency index for DNA/protein alignments
+
+=item *
+text-format tree display needs improvement (as in newick utilities)
+
+=back
+
+=head1 TO CITE
+
+=over 4
+
+=item *
+Hernandez, Bernstein, Qiu, et al (2017). "BpWrappers: Command-line utilities for manipulation of sequences, alignments, and phylogenetic trees based on BioPerl". (In prep).
+
+=item *
+Stajich et al (2002). "The BioPerl Toolkit: Perl Modules for the Life Sciences". Genome Research 12(10):1611-1618.
 
 =back
 
