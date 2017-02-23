@@ -79,21 +79,23 @@ biotree - Tree manipulations based on BioPerl
 
 B<biotree> [options] <tree file>
 
-biotree -l tree.newick # total tree length
+biotree -l tree.newick # total tree [l]ength
 
-biotree -m tree.newick # reroot at mid-point
+biotree -m tree.newick # [m]id-point rooting
 
-biotree -u tree.newick # list all OTUs
+biotree -u tree.newick # list all OT[u]s
 
-biotree -d 'otu1,out2' tree.newick # remove these OTUs
+biotree -d 'otu1,out2' tree.newick # [d]elete these OTUs
 
-biotree -s 'otu1,otu2,etc' tree.newick # retain these OTUs
+biotree -s 'otu1,otu2,etc' tree.newick # [s]ubset these OTUs
 
-biotree -D '0.9' tree.newick # collapse low-support (< 0.9) branches
+biotree -D '0.9' tree.newick # [D]elete low-support (< 0.9) branches
 
-biotree -r 'otu1' tree.newick # reroot with a OTU as outgroup
+biotree -r 'otu1' tree.newick # [r]eroot with a OTU as outgroup
 
-biotree -o 'tabtree' tree.newick # preview tree in text format
+biotree -o 'tabtree' tree.newick # [o]utput tree in text format
+
+biotree --ci 'binary-trait-table' tree.newick # consistency indices at informative sites
 
 =head1 DESCRIPTION
 
@@ -125,7 +127,7 @@ Get a subtree by removing specified OTUs
 
 Remove branches supported by less than specified cutoff value, creating a multi-furcating tree.
 
-=item --depth, -P 'node' [-D 'node'] [-D 'node']...
+=item --depth 'node' 
 
 Prints depth to root. Accepts node names and/or IDs.
 
