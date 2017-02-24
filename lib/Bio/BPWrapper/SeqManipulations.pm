@@ -58,9 +58,9 @@ my %opt_dispatch = (
     'composition' => \&print_composition,
     'delete' => \&filter_seqs,
     'fetch' => \&retrieve_seqs,
-    'nogaps' => \&remove_gaps,
+    'no-gaps' => \&remove_gaps,
     'length' => \&print_lengths,
-    'numseq' => \&print_seq_count,
+    'num-seq' => \&print_seq_count,
     'pick' => \&filter_seqs,
     'revcom' => \&make_revcom,
     'subseq' => \&print_subseq,
@@ -71,11 +71,11 @@ my %opt_dispatch = (
     'break' => \&shred_seq,
     'count-codons' => \&count_codons,
     'feat2fas' => \&print_gb_gene_feats,
-    'leadgaps' => \&count_leading_gaps,
+    'lead-gaps' => \&count_leading_gaps,
     'hydroB' => \&hydroB,
     'linearize' => \&linearize,
     'reloop' => \&reloop_at,
-    'removestop' => \&remove_stop,
+    'remove-stop' => \&remove_stop,
     'split-cdhit' => \&split_cdhit,
 #   'dotplot' => \&draw_dotplot,
 #    'extract' => \&reading_frame_ops,
@@ -106,14 +106,11 @@ my %filter_dispatch = (
 
 ##################### initializer & option handlers ###################
 
-## TODO Function documentation!
-## TODO Formal testing!
-
 =head1 SUBROUTINES
 
 =head2 initialize()
 
-Sets up most of the actions to be performed on an alignment.
+Sets up most of the actions to be performed on sequences.
 
 Call this right after setting up an options hash.
 
