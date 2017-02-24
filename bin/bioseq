@@ -79,7 +79,7 @@ __END__
 
 =head1 NAME
 
-bioseq - FASTA sequence utility based on L<BioPerl>
+bioseq - Manipulation of FASTA sequences based on L<BioPerl>
 
 =head1 SYNOPSIS
 
@@ -128,7 +128,7 @@ B<bioseq> [-h | --help | -V | --version | --man]
 
 =head1 DESCRIPTION
 
-B<bioseq> is a command-line utility for common, routine sequence manipulations. Most options are wrappers for L<BioPerl> modules: L<Bio::Seq>, L<Bio::SeqIO>, L<Bio::SeqUtils>, and L<Bio::Tools::SeqStats>.
+B<bioseq> is a command-line utility for common, routine sequence manipulations based on L<BioPerl> modules including L<Bio::Seq>, L<Bio::SeqIO>, L<Bio::SeqUtils>, and L<Bio::Tools::SeqStats>.
 
 By default, B<bioseq> assumes that both the input and the output files are in FASTA format, to facilitate the chainning (by UNIX pipes) of serial B<bioseq> runs.
 
@@ -227,15 +227,19 @@ Select a list of sequences:
 
 =item --reloop, -R 'number'
 
-Re-circularize a bacterial genome by starting at a specified position. For example for sequence "ABCDE".  C<bioseq -R'2'> would generate"'BCDEA".
+Re-circularize a bacterial genome by starting at a specified position. For example, for sequence "ABCDE",  C<bioseq -R'2'> would generate "BCDEA".
 
 =item --remove-stop, -X
 
-Remove stop codons (e.g., PAML input)
+Remove stop codons (e.g., for PAML input)
 
-=item --restrict | -x 'RE'
+=item --restrict, -x 'RE'
 
 Predicted fragments from digestion by a specified restriction enzyme. 
+
+=item --restrict-coord 'RE'
+
+Predicted fragments from digestion by a specified restriction enzyme.  Outputs cooridnates of overhangs in BED format.
 
 =item --revcom | -r
 
@@ -289,6 +293,10 @@ L<Qiu Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 L<Github project wiki page|https://github.com/bioperl/p5-bpwrapper/wiki>
 
+=item *
+
+Lawrence et al (2015). FAST: FAST analysis of sequences toolbox. Front. Genet. 6:172. L<weblink|https://github.com/tlawrence3/FAST>
+
 =back
 
 =head1 CONTRIBUTORS
@@ -296,7 +304,7 @@ L<Github project wiki page|https://github.com/bioperl/p5-bpwrapper/wiki>
 =over 4
 
 =item *
- Yözen Hernández yzhernand at gmail dot com
+Yözen Hernández <yzhernand at gmail dot com>
 
 =item *
 Girish Ramrattan <gramratt at gmail dot com>
@@ -309,6 +317,10 @@ L<Weigang Qiu | mailto:weigang@genectr.hunter.cuny.edu> (Maintainer)
 
 =item *
 Rocky Bernstein
+
+=item *
+
+Filipe G. Vieira (--restrict; --restrict-coord)
 
 =back
 
