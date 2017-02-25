@@ -304,23 +304,23 @@ Lawrence et al (2015). FAST: FAST analysis of sequences toolbox. Front. Genet. 6
 =over 4
 
 =item *
-Yözen Hernández <yzhernand at gmail dot com>
+Yözen Hernández <yzhernand at gmail dot com> (Initital desgin and implementation)
 
 =item *
-Girish Ramrattan <gramratt at gmail dot com>
+Girish Ramrattan <gramratt at gmail dot com> (developer)
 
 =item  *
-Levy Vargas <levy dot vargas at gmail dot com>
+Levy Vargas <levy dot vargas at gmail dot com> (developer)
 
 =item  *
 L<Weigang Qiu | mailto:weigang@genectr.hunter.cuny.edu> (Maintainer)
 
 =item *
-Rocky Bernstein
+Rocky Bernstein (testing and release)
 
 =item *
 
-Filipe G. Vieira (--restrict; --restrict-coord)
+Filipe G. Vieira (developer of --restrict; --restrict-coord methods)
 
 =back
 

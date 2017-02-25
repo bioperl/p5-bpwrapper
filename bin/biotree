@@ -103,6 +103,10 @@ B<biotree> supports reading from STDIN, so that multiple tree manipulations coul
 
 =over 4
 
+=item --ci, -c 'binary-trait-file' 
+
+Attach a file containing binary trait values and prints consistency index for informative sites (not verified)
+
 =item --clean-br, -b
 
 Remove branch lengths from all nodes.
@@ -110,10 +114,6 @@ Remove branch lengths from all nodes.
 =item --clean-boot, -B
 
 Remove all branch support values.
-
-=item --ci, -c 'binary-trait-file' 
-
-Attach a file containing binary trait values and prints consistency index for informative sites (not verified)
 
 =item --del-otus, -d 'otu1,out2,etc'
 
@@ -262,16 +262,16 @@ L<Newick utilities by Junier & Zdobnov (Bioinformatics, 2010, 26:1669)|http://ce
 =over 4
 
 =item *
-Rocky Bernstein
+Rocky Bernstein (testing & release)
 
 =item  *
-Yözen Hernández yzhernand at gmail dot com
+Yözen Hernández yzhernand at gmail dot com (initial design of implementation)
 
 =item *
-Pedro Pegan
+Pedro Pegan (developer)
 
 =item  *
-Weigang Qiu <weigang@genectr.hunter.cuny.edu> (Maintainer)
+Weigang Qiu <weigang@genectr.hunter.cuny.edu> (maintainer)
 
 =back
 
@@ -283,7 +283,7 @@ Weigang Qiu <weigang@genectr.hunter.cuny.edu> (Maintainer)
 consistency index for DNA/protein alignments
 
 =item *
-text-format tree display needs improvement (as in newick utilities)
+text-format tree display needs improvement or re-implementation (as in newick utilities)
 
 =back
 

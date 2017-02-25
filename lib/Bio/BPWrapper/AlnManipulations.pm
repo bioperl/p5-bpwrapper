@@ -56,28 +56,28 @@ my $VERSION = $Bio::BPWrapper::VERSION;
 ## a reference to the handler subroutine (defined below), and test
 ## that it works.
 my %opt_dispatch = (
-    "avpid" => \&print_avp_id,
-    "bootstrap" => \&bootstrap,
+    "avg-pid" => \&print_avp_id,
+    "boot" => \&bootstrap,
     "codon-view" => \&draw_codon_view,
     "delete" => \&del_seqs,
-    "nogaps" => \&remove_gaps,
+    "no-gaps" => \&remove_gaps,
     "length" => \&print_length,
     "match" => \&print_match,
-    "numseq" => \&print_num_seq,
+    "num-seq" => \&print_num_seq,
     "pick" => \&pick_seqs,
-    "refseq" => \&change_ref,
+    "ref-seq" => \&change_ref,
     "slice" => \&aln_slice,
     "split-cdhit" => \&split_cdhit,
     "uniq" => \&get_unique,
-    "varsites" => \&variable_sites,
+    "var-sites" => \&variable_sites,
     "window" => \&avg_id_by_win,
     "concat" => \&concat,
-    "conblocks" => \&conserved_blocks,
+    "con-blocks" => \&conserved_blocks,
     "consensus" => \&get_consensus,
     "dna2pep" => \&dna_to_protein,
-    "erasecol" => \&remove_gapped_cols_in_one_seq,
+    "rm-col" => \&remove_gapped_cols_in_one_seq,
     "aln-index" => \&colnum_from_residue_pos,
-    "listids" => \&list_ids,
+    "list-ids" => \&list_ids,
     "permute-states" => \&permute_states,
     "pep2dna" => \&protein_to_dna,
     "resample" => \&sample_seqs,
@@ -85,10 +85,10 @@ my %opt_dispatch = (
     "select-third" => \&select_third_sites,
     "remove-third" => \&remove_third_sites,
     "random-slice" => \&random_slice,
-    "uppercase" => \&upper_case,
-    "gapstates" => \&gap_states,
-    "gapstates2" => \&gap_states_matrix,
-    "trimends" => \&trim_ends,
+    "upper" => \&upper_case,
+    "gap-states" => \&gap_states,
+    "gap-states2" => \&gap_states_matrix,
+    "trim-ends" => \&trim_ends,
     "bin-inform" => \&binary_informative,
     "phy-nonint" => \&phylip_non_interleaved
    );
@@ -198,7 +198,7 @@ sub write_out($) {
     }
 
 
-    $aln->set_displayname_flat() unless $opts{"noflatname"};
+    $aln->set_displayname_flat() unless $opts{"no-flat"};
     if ($out_format eq 'paml') { &write_out_paml($aln) }
     else { $out->write_aln($aln) }
 }
@@ -639,7 +639,7 @@ L<Bio::SimpleAlign-E<gt>set_new_reference()|https://metacpan.org/pod/Bio::Simple
 =cut
 
 sub change_ref {
-    $aln = $aln->set_new_reference($opts{"refseq"})
+    $aln = $aln->set_new_reference($opts{"ref-seq"})
 }
 
 
@@ -815,7 +815,7 @@ sub concat {
 sub conserved_blocks {
     my $len=$aln->length();
     my $nseq = $aln->num_sequences();
-    my $min_block_size = $opts{"conblocks"};
+    my $min_block_size = $opts{"con-blocks"};
     my %seq_ids;
 
     die "Alignment contains only one sequence: $file\n" if $nseq < 2;
@@ -898,7 +898,7 @@ sub dna_to_protein {
 }
 
 sub remove_gapped_cols_in_one_seq {
-    my $id = $opts{"erasecol"};
+    my $id = $opts{"rm-col"};
     my $nmatch=0;
     my $ref_seq;
     foreach ($aln->each_seq) {
