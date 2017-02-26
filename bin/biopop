@@ -94,7 +94,7 @@ Prints binary-informative SNPs for each individual, in a pseudo-diploid genotype
 
 =item --four-gametes, -f
 
-Performs four-gametes test of recombination by Hudson & Kaplan (Genetics.1985. 111:147-164) and a test of epistasis (Wilson??). It identifies all binary-informative SNPs and print, for each of pair of SNPs per line, site coordinates, counts of four possible gametes, Shanonon diversity of haplotypes, and whether competible or not. Two SNPs are incompetibile if all four possible haplotypes are present, indicating recombination. Presence of only two of the four possible haplotypes indicate, on the other hand, a possible epistatic interaction.
+Performs four-gametes test of recombination by Hudson & Kaplan (Genetics.1985. 111:147-164) and a test of epistasis (Wilson??). It identifies all binary-informative SNPs and print, for each of pair of SNPs per line, site coordinates, counts of four possible gametes, Shanonon diversity of haplotypes, and whether compatible or not. Two SNPs are incompatibile if all four possible haplotypes are present, indicating recombination. Presence of only two of the four possible haplotypes indicate, on the other hand, a possible epistatic interaction.
 
 =item --heterozygosity, -H
 
