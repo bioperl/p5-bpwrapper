@@ -62,6 +62,8 @@ biopop - SNP statistics based on L<BioPerl>
 
 B<biopop> [options] <alignment_file>
 
+B<biopop> [-h | --help | -V | --version | --man]
+
  biopop -s pop.fas            # num of [s]egregating sites
  biopop -p pop.fas            # average [p]airwise nucleotide difference
  biopop -f pop.fas            # [f]our gamete tests
@@ -69,8 +71,6 @@ B<biopop> [options] <alignment_file>
  biopop -n pop.fas            # [n]on-coding SNPs
  biopop -m pop.fas            # [m]is-match distribution
  biopop -b pop.fas            # Retain only [b]inary informative sites
-
-B<biopop> [-h | --help | -V | --version | --man]
 
 =head1 DESCRIPTION
 
