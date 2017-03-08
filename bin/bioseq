@@ -109,7 +109,7 @@ B<bioseq> [-h | --help | -V | --version | --man]
 
 =head3 Single FASTA-file output
 
- bioseq -s '1,10' fasta_file       # sub-sequence from positions 1-10
+ bioseq -s '1,10' fasta_file         # sub-sequence from positions 1-10
  bioseq --reloop '10' contig_fasta   # re-circularize a genome at position 10
 
 =head3 Less common usages
@@ -329,7 +329,7 @@ Filipe G. Vieira (developer of --restrict; --restrict-coord methods)
 =over 4
 
 =item *
-???
+Add bioperl scriots ("bp_xxx.pl") functions?
 
 =back
 
