@@ -687,6 +687,7 @@ sub mid_point_root {
         for (my $j=$i+1; $j<scalar(@leaves); $j++){
             my $secondleaf = $leaves[$j];
             my $dis = $tree->distance(-nodes=>[$firstleaf, $secondleaf]);
+	   # print $firstleaf->id, "\t", $secondleaf->id, "\t", $dis, "\n";
             if ($dis>=$maxL){
                 $maxL = $dis;
                 $node1 = $firstleaf;
@@ -694,6 +695,8 @@ sub mid_point_root {
             }
         }
     }
+
+#    print Dumper($node1);
 
     if (!$maxL) { $print_tree = 1; return }
 

@@ -270,6 +270,9 @@ Yözen Hernández yzhernand at gmail dot com (initial design of implementation)
 =item *
 Pedro Pegan (developer)
 
+=item *
+Lia Di (developer, --mid-point)
+
 =item  *
 Weigang Qiu <weigang@genectr.hunter.cuny.edu> (maintainer)
 
@@ -278,6 +281,9 @@ Weigang Qiu <weigang@genectr.hunter.cuny.edu> (maintainer)
 =head1 TO DO
 
 =over 4
+
+=item *
+Bio::Tree reroot produces trees unreadable by R package "ape"
 
 =item *
 consistency index for DNA/protein alignments
