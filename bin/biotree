@@ -93,7 +93,7 @@ B<biotree> [-h | --help | -V | --version | --man]
 
 =head1 DESCRIPTION
 
-Designed as a UNIX-like utility, B<biotree> reads a tree file and reformats branches and nodes based on these BioPerl moduels: L<Bio::TreeIO>, L<Bio::Tree::Tree>, L<Bio::Tree::Node>, and L<Bio::Tree::TreeFunctionsI>. 
+Designed as a UNIX-like utility, B<biotree> reads a tree file and reformats branches and nodes based on these BioPerl moduels: L<Bio::TreeIO>, L<Bio::Tree::Tree>, L<Bio::Tree::Node>, and L<Bio::Tree::TreeFunctionsI>.
 
 Trees can be in any format supported by L<Bio::TreeIO> in L<BioPerl>. However, biotree has not been tested on all possible formats, so behavior may be unexpected with some. Currently, biotree does not support multiple trees per file.
 
@@ -103,7 +103,7 @@ B<biotree> supports reading from STDIN, so that multiple tree manipulations coul
 
 =over 4
 
-=item --ci, -c 'binary-trait-file' 
+=item --ci, -c 'binary-trait-file'
 
 Attach a file containing binary trait values and prints consistency index for informative sites (not verified)
 
@@ -123,7 +123,7 @@ Get a subtree by removing specified OTUs
 
 Remove branches supported by less than specified cutoff value, creating a multi-furcating tree.
 
-=item --depth 'node' 
+=item --depth 'node'
 
 Prints depth to root. Accepts node names and/or IDs.
 
@@ -187,9 +187,9 @@ Print total number of OTUs (leaves).
 
 Output file format. Accepts newick, nhx, and tabtree.
 
-=item --random [sample_size]
+=item --random sample_size
 
-Builds a tree of a random subset of the original tree's OTUs. 
+Builds a tree of a random subset of the original tree's OTUs.
 
 =item --reroot, -r 'newroot'
 
