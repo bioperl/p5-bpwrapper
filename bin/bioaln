@@ -115,7 +115,7 @@ B<bioaln> [-h | --help | -V | --version | --man]
 
 =head2 Evolutionary analysis
 
- bioaln --concat *.aln                # concattenate aln files (throw error if IDs don't amtch)
+ bioaln --concat *.aln                # concatenate aln files (throw error if IDs don't match)
  bioaln --con-blocks aln_file         # extract conserved blocks
  bioaln --shuffle-sites aln_file      # shuffle sites (for testing conserved blocks)
  bioaln --resample '10' aln_file      # [R]e-sampled an alignment of 10 sequences
@@ -135,7 +135,7 @@ B<bioaln> [-h | --help | -V | --version | --man]
 
 =head1 DESCRIPTION
 
-B<bioaln> performs common, routine manipulations of sequence alignments based on L<BioPerl> modules including L<Bio::AlignIO>, L<Bio::SimpleAlign> and L<Bio::Align::Utilities>. By default, B<bioaln> assumes that both the input and the output files are in CLUSTALW format so that multiple B<bioaln> runs can be chained with UNIX pipes. 
+B<bioaln> performs common, routine manipulations of sequence alignments based on L<BioPerl> modules including L<Bio::AlignIO>, L<Bio::SimpleAlign> and L<Bio::Align::Utilities>. By default, B<bioaln> assumes that both the input and the output files are in CLUSTALW format so that multiple B<bioaln> runs can be chained with UNIX pipes.
 
 Users are encouraged to use L<bioseq> for sequence manipulations not depending on alignment (e.g., deletion, picking sequences), by transforming an alignment into FASTA format.
 
@@ -149,11 +149,11 @@ Return aligned position of a residue of a sequence based on its unaligned (gap-f
 
 =item --avg-pid, -a
 
-Return average percent identity of an alignment. 
+Return average percent identity of an alignment.
 
 =item --binary
 
-Transform sequences into binary (0/1) strings for e.g., PHYLIP suites (see below) 
+Transform sequences into binary (0/1) strings for e.g., PHYLIP suites (see below)
 
 =item --bin-inform
 
@@ -163,9 +163,9 @@ Print only binary informative sites (e.g., for parsimony analysis). Example PHYL
 
 =item --boot, -b
 
-Produced a bootstrapped alignment. To produce multiple bootstraped alignments, use a BASH loop, e.g.: 
-  for i in {1..10}; do 
-    bioaln -b foo.aln > foo.boot-$i.aln; 
+Produced a bootstrapped alignment. To produce multiple bootstraped alignments, use a BASH loop, e.g.:
+  for i in {1..10}; do
+    bioaln -b foo.aln > foo.boot-$i.aln;
  done
 
 =item --codon-view, -c 'num-of-codon-per-line' (default 20 codons per line)
@@ -242,7 +242,7 @@ you get:
 =item --concat, -A
 
 Concatenate multiple alignments sharing the same set of IDs. This is normally used for concatenating individual gene
-alignments of the same set of samples to a single one for making a "supertree". 
+alignments of the same set of samples to a single one for making a "supertree".
 
    bioaln --concat gene1.aln gene2.aln gene3.aln gene4.aln
 
@@ -260,7 +260,7 @@ Delete sequences based on their ids. Option takes a comma-separated list of ids.
 
 =item --dna2pep, -D
 
-Turn an in-frame protein-coding sequence alignment to a corresponding protein alignment. 
+Turn an in-frame protein-coding sequence alignment to a corresponding protein alignment.
 
 =item --gap-states
 
@@ -272,11 +272,11 @@ Prints one alignment gap per column, including its start-end as column heading a
 
 =item --input, -i 'format'
 
-Specify input file format. Common ones include 'clustalw' (default), 'fasta' and 'phylip'. See L<Bio::AlignIO> for supported formats. 
+Specify input file format. Common ones include 'clustalw' (default), 'fasta' and 'phylip'. See L<Bio::AlignIO> for supported formats.
 
 =item --length, -l
 
-Print alignment length. 
+Print alignment length.
 
 =item --listids, -L
 
@@ -307,7 +307,7 @@ C<bioaln -m input.aln> gives:
 
 =item --no-flat, -F
 
-By default, sequence names do not contain 'begin-end'. This option turns ON 'begin-end' naming. 
+By default, sequence names do not contain 'begin-end'. This option turns ON 'begin-end' naming.
 
 =item --no-gaps, -g
 
@@ -323,7 +323,7 @@ Output file format. Common ones include 'clustalw' (default), 'fasta' and 'phyli
 
 =item --pep2dna, -P 'unaligned-cds-file' <protein_alignment>
 
-Produce an in-frame codon alignment by align CDS sequences according to their corresponding protein alignment. Throws an error if names in two files do not match exactly. 
+Produce an in-frame codon alignment by align CDS sequences according to their corresponding protein alignment. Throws an error if names in two files do not match exactly.
 
 =item --permute-states, -M
 
@@ -343,7 +343,7 @@ Get a random alignment slice (can't remember the usage).
 
 =item --ref-seq, -r 'seqid'
 
-Change the reference sequence to be I<seq_id>. 
+Change the reference sequence to be I<seq_id>.
 
 =item --remove-third
 
@@ -381,7 +381,7 @@ you get output:
 
 =item --select-third
 
-Generate an alignment of every-third (mostly synonymous) bases (assuming a CDS alignment). 
+Generate an alignment of every-third (mostly synonymous) bases (assuming a CDS alignment).
 
 =item --shuffle-sites, -S
 
@@ -389,12 +389,12 @@ Make a shuffled (not bootstraped, which is sampling I<with> replacement) alignme
 
 =item --slice, -s 'start|-,end|-'
 
-Get a slice of the alignment. 
+Get a slice of the alignment.
 
 Using a '-' character in the first or second position defaults to the beginning or end, respectively. Therefore specifying -s'-,-' is the same as grabbing the whole alignment.
 
  --slice'20,80' or --slice '20,80' or -s='20,80' or --slice='20,80': Slice from position 20 to 80, inclusive.
- --slice'-,80':  Slice from beginning up to, and including position 80 
+ --slice'-,80':  Slice from beginning up to, and including position 80
  --slice'20,-':  Slice from position 20 up to, and including, the end of the alignment
 
 NOTE: --slice'-,x' (where x is '-' or a position) does NOT work. Use --slice='-,x' (or a space in place of =) instead.
@@ -409,7 +409,7 @@ Remove 5'- and 3'-gapped columns.
 
 =item --uniq, -u.
 
-Extract the alignment of unique sequences. 
+Extract the alignment of unique sequences.
 
 =item --upper
 

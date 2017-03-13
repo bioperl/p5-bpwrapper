@@ -8,6 +8,7 @@
 /_build
 /blib
 /tmp
+/lib/Bio/BPWrapper/pod2htmd.tmp
 Bio-BPWrapper-*.tar.gz
 META.json
 META.yml
