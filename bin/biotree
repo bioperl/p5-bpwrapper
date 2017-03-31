@@ -18,6 +18,7 @@ GetOptions(\%opts,
 	   "help|h",
 	   "man",
 	   "version|V",
+	   "as-text|t", # for preview text tree
 	   "ci|c=s", # attach binary trait table
 	   "clean-br|b",
 	   "clean-boot|B",
@@ -81,6 +82,7 @@ B<biotree> [options] <tree file>
 
 B<biotree> [-h | --help | -V | --version | --man]
 
+ biotree -t tree.newick              # preview [t]ext tree
  biotree -l tree.newick              # total tree [l]ength
  biotree -m tree.newick              # [m]id-point rooting
  biotree -u tree.newick              # list all OT[u]s
@@ -102,6 +104,10 @@ B<biotree> supports reading from STDIN, so that multiple tree manipulations coul
 =head1 OPTIONS
 
 =over 4
+
+=item --as-text, -t
+
+Draw an ASCII tree for quick preview (needs refinement). Default max screen width 100 characters.
 
 =item --ci, -c 'binary-trait-file'
 
@@ -278,18 +284,30 @@ Weigang Qiu <weigang@genectr.hunter.cuny.edu> (maintainer)
 
 =back
 
+=head1 TO ADD
+
+=over 4
+
+=item *
+Insert an option in biotree
+
+=item *
+Insert new code in lib/Bio/BPWrapper/TreeManipulations.pm. Test by using or adding a test file in test-files/.
+
+=item *
+Add documentation in POD in biotree
+
+=back
+
 =head1 TO DO
 
 =over 4
 
 =item *
-Bio::Tree reroot produces trees unreadable by R package "ape"
+Bug: Bio::Tree reroot produces trees unreadable by R package "ape"
 
 =item *
 consistency index for DNA/protein alignments
-
-=item *
-text-format tree display needs improvement or re-implementation (as in newick utilities)
 
 =back
 

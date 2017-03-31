@@ -1,5 +1,5 @@
 =encoding utf8
-
+.
 =head1 NAME
 
 Bio::BPWrapper::TreeManipulations - Functions for biotree
@@ -30,6 +30,7 @@ use Bio::Tree::Tree;
 use Bio::Tree::Node;
 use Bio::Tree::TreeFunctionsI;
 use Data::Dumper;
+use POSIX;
 
 if ($ENV{'DEBUG'}) { use Data::Dumper }
 
@@ -58,19 +59,108 @@ sub initialize {
     my $opts_ref = shift;
     Bio::BPWrapper::common_opts($opts_ref);
     %opts = %{$opts_ref};
-
     $in_format = $opts{"input"} // 'newick';  # This doesn't work...or does it?
     $out_format = $opts{"output"} // "newick";
     $print_tree = 0;    # Trigger printing the tree.
     my $file = shift || "STDIN";
-
     $in = Bio::TreeIO->new(-format => $in_format, ($file eq "STDIN") ? (-fh => \*STDIN) : (-file => $file));
-    $tree = $in->next_tree(); # get the first tree (and ignore the rest)
-
+    $tree  =   $in->next_tree(); # get the first tree (and ignore the rest)
     $out      = Bio::TreeIO->new(-format => $out_format);
     @nodes    = $tree->get_nodes;
     $rootnode = $tree->get_root_node;
     foreach (@nodes) { push @otus, $_ if $_->is_Leaf }
+}
+
+sub write_tab_tree{
+#    print "*" x 200, "\n";
+    my $y_space = 1; # number of lines between two neighboring nodes
+    my $root_pos = 1;
+    my $maxL = 100;
+    my $longest_leaf_length=0;
+    my $largest_int_length =0;
+    &assign_leaf_ycoord($rootnode, \$root_pos, \$y_space);
+    &assign_inode_ycoord($rootnode);
+    my @nd_sorted = sort {$b->{ycoord} <=> $a->{ycoord}} @nodes;
+    foreach my $nd (@nd_sorted) {
+	my $branch_length = $nd->branch_length;
+	$nd->{xcoord} = &distance_to_root($nd);
+	next unless $nd->is_Leaf();
+	$longest_leaf_length = $nd->{xcoord} if $nd->{xcoord} >= $longest_leaf_length;
+    }
+    my $scale = int($maxL/$longest_leaf_length);
+
+    foreach my $nd (@nd_sorted) {
+	$nd->{xcoord_scaled} = ceil($scale * $nd->{xcoord});
+    }
+
+# draw initial lines
+    my %lines;
+    foreach my $nd (@nd_sorted) {
+        my $dashes = ceil(($nd->branch_length || 0) * $scale);
+        my $spaces = $nd->{xcoord_scaled} - $dashes + 1;
+	my $tag = $nd->is_Leaf ? $nd->id() : $nd->internal_id();
+	my $line = " " x $spaces . "+" . "-" x ($dashes-1) . $tag;
+	$lines{$nd->internal_id()} = $line;
+    }
+
+# update by adding vertical lines
+# algorithm: replace with pipe at parent xcoord for every node in-between a node and its parent
+    for (my $i=0; $i<=$#nd_sorted; $i++) {
+	my $current_node = $nd_sorted[$i];
+	my $current_ycoord = $current_node->{ycoord};
+	next if $current_node eq $rootnode;
+	my $parent_node = $current_node->ancestor();
+	my $parent_ycoord = $parent_node->{ycoord};
+	my $parent_xcoord = $parent_node->{xcoord_scaled};
+	foreach my $nid (keys %lines) { # capture in-between nodes to add pipes
+	    my $node = $tree->find_node(internal_id=>$nid);
+	    next if $node eq $current_node || $node eq $parent_node; 
+	    next if ($current_ycoord < $parent_ycoord) && (($node->{ycoord} < $current_ycoord) || ($node->{ycoord} > $parent_ycoord));
+	    next if ($current_ycoord > $parent_ycoord) && (($node->{ycoord} > $current_ycoord) || ($node->{ycoord} < $parent_ycoord));
+	    my $line = $lines{$nid};
+	    $line .= ' ' while length($line) <= $parent_xcoord+1; # pad spaces when line not long enough to reach parent node xcoord
+	    my @chars = split //, $line;
+	    $chars[$parent_xcoord+1] ='|' unless $chars[$parent_xcoord+1] eq '+';
+	    $lines{$nid} = join '', @chars;
+	}
+    }
+    
+    foreach  (@nd_sorted) {
+	print $lines{$_->internal_id}, "\n";
+    }
+}
+
+sub assign_leaf_ycoord {
+    my ($node, $ypos, $yspacing) = @_;
+    return if $node->is_Leaf();
+    for my $child ($node->each_Descendent()) {
+	if ($child->is_Leaf()) {
+	    $child->{'ycoord'} = $$ypos; # de-reference
+	    $$ypos += $$yspacing;
+	} else {
+	    &assign_leaf_ycoord($child, $ypos, $yspacing);
+	}
+    }
+}
+
+sub assign_inode_ycoord {
+    my $node = shift;
+    my @tmp;
+    for my $child ($node->each_Descendent()) {
+	&assign_inode_ycoord($child) unless defined $child->{'ycoord'};
+	push @tmp, $child->{'ycoord'}
+    }
+    my @sorted = sort { $a <=> $b } @tmp;
+    $node->{'ycoord'} = $sorted[0] + 1 / 2 * ($sorted[-1] - $sorted[0])
+}
+
+
+sub distance_to_root {
+    my $node = shift;
+    my $dist = $node->branch_length() || 0;
+    my $parent = $node->ancestor();
+    $dist += &distance_to_root($parent) if defined $parent;
+    return $dist;
 }
 
 sub pars_binary {
@@ -687,7 +777,6 @@ sub mid_point_root {
         for (my $j=$i+1; $j<scalar(@leaves); $j++){
             my $secondleaf = $leaves[$j];
             my $dis = $tree->distance(-nodes=>[$firstleaf, $secondleaf]);
-	   # print $firstleaf->id, "\t", $secondleaf->id, "\t", $dis, "\n";
             if ($dis>=$maxL){
                 $maxL = $dis;
                 $node1 = $firstleaf;
@@ -695,8 +784,6 @@ sub mid_point_root {
             }
         }
     }
-
-#    print Dumper($node1);
 
     if (!$maxL) { $print_tree = 1; return }
 
@@ -736,6 +823,7 @@ Call this after calling C<#initialize(\%opts)>.
 
 sub write_out {
     my $opts = shift;
+    write_tab_tree() if $opts->{'as-text'};
     mid_point_root() if $opts->{'mid-point'};
     pars_binary() if $opts->{'ci'};
     getdistance() if $opts->{'dist'};
