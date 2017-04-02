@@ -149,7 +149,7 @@ Edge-length abundance distribution, a statistics of tree balance (ODwyer et al. 
 
 Input file format. Accepts newick and nhx.
 
-=item --labelnodes
+=item --label-nodes
 
 Prepends ID to each leaf/node label. Useful when identifying unlabled nodes, such as when using --otus-desc or --subset.
 
@@ -161,7 +161,7 @@ Returns ID of most recent common ancestor across provided nodes. Returns direct 
 
 Print total branch length.
 
-=item --lengthall, -L
+=item --length-all, -L
 
 Prints all nodes and branch lengths.
 

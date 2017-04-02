@@ -112,7 +112,7 @@ Print pairwise mismatches for all sequences, the distribution of which indicates
 
 Nucleotide Diversity is a measure of genetic variation or differences. 
 
-=item --segsites, -s
+=item --seg-sites, -s
 
 Prints number of segregating sites.
 
