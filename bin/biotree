@@ -82,16 +82,16 @@ B<biotree> [options] <tree file>
 
 B<biotree> [-h | --help | -V | --version | --man]
 
- biotree -t tree.newick              # preview [t]ext tree
- biotree -l tree.newick              # total tree [l]ength
- biotree -m tree.newick              # [m]id-point rooting
- biotree -u tree.newick              # list all OT[u]s
- biotree -d 'otu1,out2' tree.newick  # [d]elete these OTUs
- biotree -s 'otu1,otu2' tree.newick  # [s]ubset these OTUs
- biotree -D '0.9' tree.newick        # [D]elete low-support (< 0.9) branches
- biotree -r 'otu1' tree.newick       # [r]eroot with a OTU as outgroup
- biotree -o 'tabtree' tree.newick    # [o]utput tree in text format
- biotree --ci 'binary-trait' tree    # consistency indices at informative sites
+ biotree -t tree.newick                   # preview [t]ext tree
+ biotree -l tree.newick                   # total tree [l]ength
+ biotree -m tree.newick                   # [m]id-point rooting
+ biotree -u tree.newick                   # list all OT[u]s
+ biotree -d 'otu1,otu2,otu3' tree.newick  # [d]elete these OTUs
+ biotree -s 'otu1,otu2' tree.newick       # [s]ubset these OTUs
+ biotree -D '0.9' tree.newick             # [D]elete low-support (< 0.9) branches
+ biotree -r 'otu1' tree.newick            # [r]eroot with a OTU as outgroup
+ biotree -o 'tabtree' tree.newick         # [o]utput tree in text format
+ biotree --ci 'binary-trait' tree         # consistency indices at informative sites
 
 =head1 DESCRIPTION
 
@@ -133,7 +133,7 @@ Remove branches supported by less than specified cutoff value, creating a multi-
 
 Prints depth to root. Accepts node names and/or IDs.
 
-=item --distance 'node1,node2'
+=item --dist 'node1,node2'
 
 Prints the distance between a pair of nodes or leaves.
 

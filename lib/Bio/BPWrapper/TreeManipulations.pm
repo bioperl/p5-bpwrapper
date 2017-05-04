@@ -99,7 +99,7 @@ sub write_tab_tree{
         my $dashes = ceil(($nd->branch_length || 0) * $scale);
         my $spaces = $nd->{xcoord_scaled} - $dashes + 1;
 	my $tag = $nd->is_Leaf ? $nd->id() : $nd->internal_id();
-	my $line = " " x $spaces . "+" . "-" x ($dashes-1) . $tag;
+	my $line = " " x $spaces . "+" . "-" x ($dashes ? ($dashes-1):0) . $tag;
 	$lines{$nd->internal_id()} = $line;
     }
 
