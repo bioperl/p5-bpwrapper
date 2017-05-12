@@ -30,6 +30,7 @@ GetOptions(\%opts,
 	   "ead", # edge-length abundance distribution; ODwyer et al. PNAS (2015)
 	   "input|i=s",
 	   "label-nodes",
+	   "label-selected-nodes=s", # based on a file
 	   "lca=s",
 	   "length|l",
 	   "length-all|L",
@@ -152,6 +153,12 @@ Input file format. Accepts newick and nhx.
 =item --label-nodes
 
 Prepends ID to each leaf/node label. Useful when identifying unlabled nodes, such as when using --otus-desc or --subset.
+
+=item --label-selected-nodes 'file'
+
+Adds clade labels to selected internal nodes, based on a file containing, on each line, an internal id and a label. Internal id could be obtained by using "--label nodes" or "-U 'all'".
+
+Nodes not in the file are unlabeled (or removed if bootstrap value exists).
 
 =item --lca 'node1,node2,node3,etc'
 

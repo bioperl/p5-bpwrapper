@@ -71,6 +71,28 @@ sub initialize {
     foreach (@nodes) { push @otus, $_ if $_->is_Leaf }
 }
 
+sub label_selected_nodes {
+    my $label_file = $opts{'label-selected-nodes'}; # each line consists of internal_id label
+    my %labs;
+    open LAB, "<", $label_file || die "label file not found\n";
+    while(<LAB>) {
+	chomp;
+	my ($a, $b) = split;
+	$labs{$a} = $b;
+    }
+    close LAB;
+    foreach my $nd (@nodes) {
+	next if $nd->is_Leaf;
+        if ($labs{$nd->internal_id}) {
+	    $nd->id($labs{$nd->internal_id});
+	    warn $nd->internal_id, "\t", "changed to ", $labs{$nd->internal_id}, "\n";
+	} else {
+	    $nd->id('');
+	}
+    }
+    $print_tree = 1
+}
+
 sub write_tab_tree{
 #    print "*" x 200, "\n";
     my $y_space = 1; # number of lines between two neighboring nodes
@@ -836,6 +858,7 @@ sub write_out {
     print_leaves_lengths() if $opts->{'otus-all'};
     getlca() if $opts->{'lca'};
     label_nodes() if $opts->{'label-nodes'};
+    label_selected_nodes() if $opts->{'label-selected-nodes'};
     listdistance() if $opts->{'dist-all'};
     bin() if $opts->{'ltt'};
     print_all_lengths() if $opts->{'length-all'};
