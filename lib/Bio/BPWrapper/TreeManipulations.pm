@@ -789,18 +789,27 @@ sub delete_low_boot_support {
 }
 
 sub mid_point_root {
-    my @leaves;
+    my $node1;
+    my $maxL=0;
     foreach (@nodes) {
-        push @leaves, [$_->depth,$_] if $_->is_Leaf() && $_->depth
+        next unless $_->is_Leaf();
+        my $dis = $_->depth();
+        if ($dis > $maxL){
+            $node1 = $_;
+            $maxL = $dis
+        }
     }
-    if (!scalar @leaves) { $print_tree = 1; return }
-    my @sorted =  sort {${$a}[0] <=> ${$b}[0]} @leaves;
 
-    my $obj1 = pop @sorted;
-    my $obj2 = pop @sorted;
-    my $node1 = ${$obj1}[1];
-    my $node2 = ${$obj2}[1];
-    my $maxL = ${$obj1}[0] + ${$obj2}[0];
+    my $node2;
+    $maxL=0;
+    foreach (@nodes) {
+        next unless $_->is_Leaf() || $_ eq $node1;
+        my $dis = $tree->distance(-nodes=>[$node1, $_]);
+        if ($dis > $maxL){
+            $node2 = $_;
+            $maxL = $dis
+        }
+    }
 
     my $nd = &_get_all_parents($node1,0,$maxL);
     $nd = &_get_all_parents($node2,0,$maxL) unless $nd;
