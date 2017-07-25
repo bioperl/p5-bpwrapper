@@ -274,6 +274,8 @@ Prints one alignment gap per column, including its start-end as column heading a
 
 Specify input file format. Common ones include 'clustalw' (default), 'fasta' and 'phylip'. See L<Bio::AlignIO> for supported formats.
 
+In addition, it reads NCBI-blast outputs as well. The preferred output format is 'blastxml' (-outfmt 5). e.g., bioaln -i'blastxml' blast.out.
+
 =item --length, -l
 
 Print alignment length.
