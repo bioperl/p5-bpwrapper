@@ -130,7 +130,7 @@ sub initialize {
 	   }
     } else {
 	$file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line,
-	if ($opts{"input"} =~ /blast/) { # "blastxml" (-outfmt 5 ) preferred
+	if ($opts{"input"} && $opts{"input"} =~ /blast/) { # "blastxml" (-outfmt 5 ) preferred
 	    my $searchio = Bio::SearchIO->new( -format => $opts{'input'}, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
 	    while ( my $result = $searchio->next_result() ) {
 		while( my $hit = $result->next_hit ) {
