@@ -136,7 +136,7 @@ sub write_tab_tree{
 	my $parent_xcoord = $parent_node->{xcoord_scaled};
 	foreach my $nid (keys %lines) { # capture in-between nodes to add pipes
 	    my $node = $tree->find_node(internal_id=>$nid);
-	    next if $node eq $current_node || $node eq $parent_node; 
+	    next if $node eq $current_node || $node eq $parent_node;
 	    next if ($current_ycoord < $parent_ycoord) && (($node->{ycoord} < $current_ycoord) || ($node->{ycoord} > $parent_ycoord));
 	    next if ($current_ycoord > $parent_ycoord) && (($node->{ycoord} > $current_ycoord) || ($node->{ycoord} < $parent_ycoord));
 	    my $line = $lines{$nid};
@@ -146,7 +146,7 @@ sub write_tab_tree{
 	    $lines{$nid} = join '', @chars;
 	}
     }
-    
+
     foreach  (@nd_sorted) {
 	print $lines{$_->internal_id}, "\n";
     }
@@ -526,7 +526,7 @@ sub _remove_otus {
     my @otus_to_remove = split /\s*,\s*/, $str;
     my %to_del;
     foreach (@otus_to_remove) { $to_del{$_} = 1 }
-    
+
     foreach my $nd (@$ref) {
 	push @list, $nd->id() unless $to_del{$nd->id()};
     }
@@ -821,7 +821,7 @@ sub mid_point_root {
 
     $tree->reroot_at_midpoint($node);
     $pnode->branch_length($node->branch_length()*2-$nodeL_new);
-    $node->branch_length($nodeL_new); 
+    $node->branch_length($nodeL_new);
 
     $print_tree = 1;
 }
@@ -891,14 +891,14 @@ sub _remove_branch {
 	if (!$nd->id()) { # no boostrap as node id (in-group branch)
 	    &_remove_branch($ch, $ref);
 	    next;
-	} 
+	}
 	if ($nd->id() < $bootcut) {
 	    $pa->remove_Descendent($nd); # remove the current node
 	    $pa->add_Descendent($ch); # elevate the child node
 	    $ch->branch_length($ch->branch_length() + $nd->branch_length()); # increment branch length
 	}
 	&_remove_branch($ch, $ref);
-    }    
+    }
 }
 
 sub _name2node {
@@ -1030,7 +1030,7 @@ L<bioatree>: command-line tool for tree manipulations
 
 =item *
 
-L<Qui Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
+L<Qiu Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 =item *
 

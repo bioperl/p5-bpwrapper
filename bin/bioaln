@@ -23,7 +23,7 @@ GetOptions(
     "version|V",
     "aln-index|I=s",
     "avg-pid|a",
-    "binary", # 0/1 for binary sites (for phylip lagacy programs)
+    "binary", # 0/1 for binary sites (for phylip legacy programs)
     "bin-inform", # extract binary & informative sites (for clique): discard constant, 3/4-states, non-informative
     "boot|b",
     "codon-view|c:20",    # Optional value, default 20
@@ -163,7 +163,7 @@ Print only binary informative sites (e.g., for parsimony analysis). Example PHYL
 
 =item --boot, -b
 
-Produced a bootstrapped alignment. To produce multiple bootstraped alignments, use a BASH loop, e.g.:
+Produced a bootstrapped alignment. To produce multiple bootstrapped alignments, use a BASH loop, e.g.:
   for i in {1..10}; do
     bioaln -b foo.aln > foo.boot-$i.aln;
  done
@@ -387,7 +387,7 @@ Generate an alignment of every-third (mostly synonymous) bases (assuming a CDS a
 
 =item --shuffle-sites, -S
 
-Make a shuffled (not bootstraped, which is sampling I<with> replacement) alignment. This operation I<permutes> alignment columns. It is used for testing the signficance of long-runs of conserved sites in an alignment (e.g., conserved intergenic spacer sequences).
+Make a shuffled (not bootstrapped, which is sampling I<with> replacement) alignment. This operation I<permutes> alignment columns. It is used for testing the significance of long-runs of conserved sites in an alignment (e.g., conserved intergenic spacer sequences).
 
 =item --slice, -s 'start|-,end|-'
 

@@ -27,7 +27,7 @@ GetOptions(\%opts,
 	   "depth=s",
 	   "dist=s",
 	   "dist-all",
-	   "ead", # edge-length abundance distribution; ODwyer et al. PNAS (2015)
+	   "ead", # edge-length abundance distribution; O'Dwyer et al. PNAS (2015)
 	   "input|i=s",
 	   "label-nodes",
 	   "label-selected-nodes=s", # based on a file
@@ -96,7 +96,7 @@ B<biotree> [-h | --help | -V | --version | --man]
 
 =head1 DESCRIPTION
 
-Designed as a UNIX-like utility, B<biotree> reads a tree file and reformats branches and nodes based on these BioPerl moduels: L<Bio::TreeIO>, L<Bio::Tree::Tree>, L<Bio::Tree::Node>, and L<Bio::Tree::TreeFunctionsI>.
+Designed as a UNIX-like utility, B<biotree> reads a tree file and reformats branches and nodes based on these BioPerl modules: L<Bio::TreeIO>, L<Bio::Tree::Tree>, L<Bio::Tree::Node>, and L<Bio::Tree::TreeFunctionsI>.
 
 Trees can be in any format supported by L<Bio::TreeIO> in L<BioPerl>. However, biotree has not been tested on all possible formats, so behavior may be unexpected with some. Currently, biotree does not support multiple trees per file.
 
@@ -140,11 +140,11 @@ Prints the distance between a pair of nodes or leaves.
 
 =item --dist-all
 
-Prints half-matrix list of distances between ALL leaves.
+Prints half-matrix list of distances between I<all> leaves.
 
 =item --ead
 
-Edge-length abundance distribution, a statistics of tree balance (ODwyer et al. PNAS 2015)
+Edge-length abundance distribution, a statistics of tree balance (O'Dwyer et al. PNAS 2015)
 
 =item --input, -i 'format'
 

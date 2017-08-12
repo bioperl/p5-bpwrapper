@@ -6,7 +6,8 @@ check_scripts="../bin/bioaln
 ../bin/biotree
 ../lib/Bio/BPWrapper.pm
 ../lib/Bio/BPWrapper.pod
-../lib/Bio/BPWrapper/AlnManipulations.pm../lib/Bio/BPWrapper/PopManipulations.pm
+../lib/Bio/BPWrapper/AlnManipulations.pm
+../lib/Bio/BPWrapper/PopManipulations.pm
 ../lib/Bio/BPWrapper/TreeManipulations.pm
 "
 
