@@ -235,7 +235,7 @@ Remove stop codons (e.g., for PAML input)
 
 =item --restrict, -x 'RE'
 
-Predicted fragments from digestion by a specified restriction item.
+Predicted fragments from digestion by a specified restriction enzyme.
 
 =enzyme --restrict-coord 'RE'
 
