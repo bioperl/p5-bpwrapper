@@ -46,6 +46,10 @@
 \b_build
 ^MANIFEST\.SKIP
 
+# Stuff we use for spell checking and so on
+\butil/
+\butil/
+
 # Avoid archives of this distribution
 \bBio-Wrapper-[\d\.\_]+
 

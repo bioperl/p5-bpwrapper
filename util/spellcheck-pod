@@ -1,0 +1,25 @@
+#!/bin/bash
+# Rudimentary spelling checking
+check_scripts="../bin/bioaln
+../bin/bioseq
+../bin/biopop
+../bin/biotree
+../lib/Bio/BPWrapper.pm
+../lib/Bio/BPWrapper.pod
+../lib/Bio/BPWrapper/AlnManipulations.pm../lib/Bio/BPWrapper/PopManipulations.pm
+../lib/Bio/BPWrapper/TreeManipulations.pm
+"
+
+for script in $check_scripts ; do
+    echo "Checking ${script}"
+    ok_words=$(cat ok.words | tr '\n' ' ')
+    ok_words="^${ok_words// /|}"^$
+    outfile="${script}.check"
+    cat $script| podspell | spell | sort --ignore-case | uniq -i | grep -E -v "$ok_words" > $outfile
+    if [[ -e $outfile ]] && [[ -s $outfile ]] ; then
+	echo "$script needs looking at, see $outfile ...";
+	head -10 $outfile
+	echo "..."
+    fi
+    echo "------------"
+done
