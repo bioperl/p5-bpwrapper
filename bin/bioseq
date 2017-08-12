@@ -237,7 +237,7 @@ Remove stop codons (e.g., for PAML input)
 
 Predicted fragments from digestion by a specified restriction enzyme.
 
-=enzyme --restrict-coord 'RE'
+=item --restrict-coord 'RE'
 
 Predicted fragments from digestion by a specified restriction enzyme.  Outputs cooridnates of overhangs in BED format.
 
