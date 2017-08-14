@@ -37,7 +37,7 @@ GetOptions(
     "revcom|r",
     "split-cdhit=s",
     "subseq|s=s",
-    "translate|t=i", 
+    "translate|t=i",
  #   "fetch|f=s", # Retrieve sequence by accession number; broken by NCBI protocol change
  #   "longest-orf|C",
  #   "extract|e",
@@ -130,19 +130,19 @@ B<bioseq> [-h | --help | -V | --version | --man]
 
 B<bioseq> is a command-line utility for common, routine sequence manipulations based on L<BioPerl> modules including L<Bio::Seq>, L<Bio::SeqIO>, L<Bio::SeqUtils>, and L<Bio::Tools::SeqStats>.
 
-By default, B<bioseq> assumes that both the input and the output files are in FASTA format, to facilitate the chainning (by UNIX pipes) of serial B<bioseq> runs.
+By default, B<bioseq> assumes that both the input and the output files are in FASTA format, to facilitate the chaining (by UNIX pipes) of serial B<bioseq> runs.
 
 Methods that are currently I<not> wrappers should ideally be factored into individual L<Bio::Perl> modules, which are better tested and handle exceptions better than stand-alone codes in the L<Bio::BPWrapper> package. As a design principle, command-line scripts here should consist of I<only> wrapper calls.
-  
+
 =head1 OPTIONS
 
 =over 4
 
 =item --anonymize, -A 'number'
 
-This options was designed for lagacy programs (e.g., PHLIP suites) that takes only 10 character-long sequence IDs.
+This options was designed for legacy programs (e.g., PHLIP suites) that takes only 10 character-long sequence IDs.
 
-Replace sequence IDs with serial IDs I<n> characters long. The sequence is prefaced with a leading C<'S'>. For example using option C<--anonymize '5'> the first ID will be  C<S0001>. 
+Replace sequence IDs with serial IDs I<n> characters long. The sequence is prefaced with a leading C<'S'>. For example using option C<--anonymize '5'> the first ID will be  C<S0001>.
 
 A sed script file with a C<.sed> suffix that may be used with sed's C<-f> argument. If the filename is C<->, the sed file is named C<STDOUT.sed> instead. A message containing the sed filename is written to C<STDERR>.
 
@@ -177,15 +177,15 @@ Extract gene sequences in FASTA from a GenBank file of bacterial genome. Won't w
 
 =item --fetch, -f <genbank_accession>
 
-Don't use! Method broken due to NCBI protocol change. It used to be able to retrieves a sequence from GenBank using the provided accession number. 
+Don't use! Method broken due to NCBI protocol change. It used to be able to retrieves a sequence from GenBank using the provided accession number.
 
 =item --hydroB, -H
 
-Return the mean Kyte-Doolittle hydropathicity for protein sequences. 
+Return the mean Kyte-Doolittle hydropathicity for protein sequences.
 
-=item --input, -i 
+=item --input, -i
 
-Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'. 
+Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'.
 
 =item --lead-gaps | -G
 
@@ -193,9 +193,9 @@ Count and return the number of leading gaps in each sequence.
 
 =item --length, -l
 
-Print all sequence lengths. 
+Print all sequence lengths.
 
-=item --linearize, -L 
+=item --linearize, -L
 
 Linearize FASTA, one sequence per line.
 
@@ -235,7 +235,7 @@ Remove stop codons (e.g., for PAML input)
 
 =item --restrict, -x 'RE'
 
-Predicted fragments from digestion by a specified restriction enzyme. 
+Predicted fragments from digestion by a specified restriction enzyme.
 
 =item --restrict-coord 'RE'
 
@@ -243,7 +243,7 @@ Predicted fragments from digestion by a specified restriction enzyme.  Outputs c
 
 =item --revcom | -r
 
-Reverse complement. 
+Reverse complement.
 
 =item --split-cdhit 'cdhit .clstr file'
 
@@ -251,11 +251,11 @@ Parse cdhit output .clstr file and generate a FASTA file for each CDHIT family.
 
 =item --subseq | -s 'beginning_index,ending_index'
 
-Select substring (of the 1st sequence). 
+Select substring (of the 1st sequence).
 
-=item --translate | -t [1|3|6] 
+=item --translate | -t [1|3|6]
 
-Translate in 1, 3, or 6 frames. eg, -t1, -t3, or -t6. 
+Translate in 1, 3, or 6 frames. e.g., -t1, -t3, or -t6.
 
 =back
 
@@ -304,7 +304,7 @@ Lawrence et al (2015). FAST: FAST analysis of sequences toolbox. Front. Genet. 6
 =over 4
 
 =item *
-Yözen Hernández <yzhernand at gmail dot com> (Initital desgin and implementation)
+Yözen Hernández <yzhernand at gmail dot com> (Initial desgin and implementation)
 
 =item *
 Girish Ramrattan <gramratt at gmail dot com> (developer)
@@ -329,7 +329,7 @@ Filipe G. Vieira (developer of --restrict; --restrict-coord methods)
 =over 4
 
 =item *
-Add bioperl scriots ("bp_xxx.pl") functions?
+Add bioperl scripts ("bp_xxx.pl") functions?
 
 =back
 

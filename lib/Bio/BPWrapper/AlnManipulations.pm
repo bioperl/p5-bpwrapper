@@ -656,7 +656,7 @@ sub change_ref {
 
 =head2 aln_slice()
 
-Get a slice of the alignment.  The slice is specifiedn
+Get a slice of the alignment.  The slice is specified
 C<$opts{"slice"}> which is set via L<C<#initilize(\%opts)>|/initialize>.
 
 Wraps
@@ -1028,8 +1028,8 @@ sub sample_seqs {
 
 =head2 shuffle_sites()
 
-Make a shuffled (not bootstraped) alignment. This operation randomizes
-alignment columns. It is used for testing the signficance of long-runs
+Make a shuffled (not bootstrapped) alignment. This operation randomizes
+alignment columns. It is used for testing the significance of long-runs
 of conserved sites in an alignment (e.g., conserved intergenic spacers
 [IGSs]).
 
@@ -1320,7 +1320,7 @@ Here is how to extend.  We'll use option C<--avpid> as an example.
 =over 4
 
 =item *
-Create a new method like one of the above in the previos section.
+Create a new method like one of the above in the previous section.
 
 =item *
 Document your method in pod using C<=head2>. For example:
@@ -1375,7 +1375,7 @@ L<bioaln>: command-line tool for using this
 
 =item *
 
-L<Qui Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
+L<Qiu Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
 
 =item *
 
