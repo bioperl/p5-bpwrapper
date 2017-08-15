@@ -1,0 +1,30 @@
+#!/usr/bin/env perl
+use warnings; use strict;
+my @bin_scripts = qw(bioaln  bioseq biopop biotree);
+# my @bin_scripts = qw(bioaln);
+
+# FIXME: redo using github interface.
+
+# Refresh github data
+system "(cd ../../p5-bpwrapper.wiki && git pull)";
+system "git pull";
+
+system "cp -vp  ../lib/Bio/BPWrapper.pod ../../p5-bpwrapper.wiki/Bio::BPWrapper.pod";
+
+chdir "../bin/" || die $!;
+foreach my $script (@bin_scripts) {
+    print "Creating wiki pod from ${script}\n";
+    my $pod_path = "../../p5-bpwrapper.wiki/${script}.pod";
+    open(my $old_fh, '<', $script) || die $!;
+    open(my $pod_fh, '>', $pod_path) || die $!;
+    while (<$old_fh>) {
+	if (/^__END__$/) {
+	    while (<$old_fh>) {
+		print $pod_fh $_;
+	    }
+	    close $old_fh;
+	    last;
+	}
+    }
+    close $pod_fh;
+}

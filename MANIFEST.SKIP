@@ -63,6 +63,9 @@ t/check-data/.*\.err$
 .travis.yml
 circle.yml
 
+# Windows CI
+appveyor.yaml
+
 # Test data and remnants
 \.fas
 test-bioseq.nuc.sed$
