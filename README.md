@@ -54,6 +54,8 @@ The git code generally has the newest code. If git is not your thing, you can al
 
 ```
    $ cpan install Bio::BPWrapper
+   $ cpanm --sudo Bio::BPWrapper
+
 ```
 
 # Developers, Contact, Citation
