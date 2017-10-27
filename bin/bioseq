@@ -38,7 +38,7 @@ GetOptions(
     "split-cdhit=s",
     "subseq|s=s",
     "translate|t=i",
- #   "fetch|f=s", # Retrieve sequence by accession number; broken by NCBI protocol change
+    "fetch|f=s", # Retrieve sequence by accession number; broken by NCBI protocol change
  #   "longest-orf|C",
  #   "extract|e",
  #   "dotplot|D=s",
@@ -177,7 +177,8 @@ Extract gene sequences in FASTA from a GenBank file of bacterial genome. Won't w
 
 =item --fetch, -f <genbank_accession>
 
-Don't use! Method broken due to NCBI protocol change. It used to be able to retrieves a sequence from GenBank using the provided accession number.
+Retrieves a sequence from GenBank using the provided accession number, e.g.,
+   bioseq -f 'NC_003078' -o 'genbank'
 
 =item --hydroB, -H
 
