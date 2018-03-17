@@ -24,6 +24,7 @@ GetOptions(\%opts,
 	   "clean-boot|B",
 	   "del-otus|d=s",
 	   "del-low-boot|D=f",
+	   "del-short-br|E=f",
 	   "depth=s",
 	   "dist=s",
 	   "dist-all",
@@ -129,6 +130,10 @@ Get a subtree by removing specified OTUs
 =item --del-low-boot, -D 'cutoff'
 
 Remove branches supported by less than specified cutoff value, creating a multi-furcating tree.
+
+=item --del-short-br, -E 'cutoff'
+
+Remove branches shorter than specified cutoff value, creating a multi-furcating tree.
 
 =item --depth 'node'
 

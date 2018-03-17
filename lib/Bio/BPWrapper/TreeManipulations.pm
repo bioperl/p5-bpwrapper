@@ -788,6 +788,12 @@ sub delete_low_boot_support {
    $print_tree = 1;
 }
 
+sub delete_short_branch {
+   my $cutoff = $opts{'del-short-br'} || die 'spcify cutoff, e.g., 0.02\n'; # default 0.02
+   &_remove_short_branch($rootnode, $cutoff);
+   $print_tree = 1;
+}
+
 sub mid_point_root {
     my $node1;
     my $maxL=0;
@@ -852,6 +858,7 @@ sub write_out {
     pars_binary() if $opts->{'ci'};
     getdistance() if $opts->{'dist'};
     delete_low_boot_support() if $opts->{'del-low-boot'};
+    delete_short_branch() if $opts->{'del-short-br'};
     say $tree->total_branch_length() if $opts->{'length'};
     countOTU() if $opts->{'otus-num'};
     $print_tree = 1 if defined($opts->{'output'});
@@ -898,6 +905,22 @@ sub _remove_branch {
 	    $ch->branch_length($ch->branch_length() + $nd->branch_length()); # increment branch length
 	}
 	&_remove_branch($ch, $ref);
+    }
+}
+
+sub _remove_short_branch {
+    my $nd = shift;
+    my $brcut = shift;
+    return if $nd->is_Leaf();
+    my @desc = $nd->each_Descendent();
+    my $pa = $nd->ancestor();
+    foreach my $ch (@desc) {
+        if ($nd->branch_length() && $nd->branch_length() <= $brcut) {
+            $pa->remove_Descendent($nd); # remove the current node
+            $pa->add_Descendent($ch); # elevate the child node
+            $ch->branch_length($ch->branch_length() + $nd->branch_length()); # increment branch length
+        }
+        &_remove_short_branch($ch, $brcut);
     }
 }
 
