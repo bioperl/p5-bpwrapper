@@ -55,6 +55,7 @@ my $VERSION = '1.0';
 ## For new options, just add an entry into this table with the same key as in
 ## the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.
 my %opt_dispatch = (
+    'codon-table' => \&codon_table,
     'composition' => \&print_composition,
     'delete' => \&filter_seqs,
     'fetch' => \&retrieve_seqs,
@@ -521,6 +522,23 @@ L<Bio::Tools::SeqStats-E<gt>count_codons()|https://metacpan.org/pod/Bio::Tools::
 
 =cut
 
+sub codon_table {
+    my $string = $opts{'codon-table'};
+#    die "bioseq --codon-table atg|M\n" unless $string;
+    my $myCodonTable = Bio::Tools::CodonTable->new();
+    use Bio::Tools::IUPAC;
+    my $iupac = Bio::Tools::IUPAC->new();
+    my %aas = $iupac->iupac_iup(); #print Dumper(\%aas); # T=>T; Z=>E/Q; etc
+#    my %nts = $iupac->iupac(); #print Dumper(\%nts); # M=>A/C; A=>A; etc
+    if ($string =~ /^[atcg]{3}$/i) {
+	print $string, "\t", $myCodonTable->translate($string), "\n";
+    } elsif (&_in_list($string, [keys %aas])) {
+	print $string, "\t", join "\t", $myCodonTable->revtranslate($string), "\n";
+    } else {
+	print $string, "Currently only takes a 3-letter DNA-base codon or a 1-letter uppercase IUPAC aa code";
+    }
+}
+
 sub count_codons {
     my $new_seq;
     my $myCodonTable = Bio::Tools::CodonTable->new();
@@ -654,6 +672,15 @@ sub remove_stop {
 
 
 ####################### internal subroutine ###########################
+
+sub _in_list {
+    my $scalar = shift;
+    my $ref_to_array = shift;
+    foreach (@{$ref_to_array}) {
+	return 1 if $_ eq $scalar;
+    } 
+    return 0;
+}
 
 sub parse_orders {
     my @selected = @{shift()};

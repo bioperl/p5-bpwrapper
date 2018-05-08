@@ -17,6 +17,7 @@ GetOptions(
     "version|V",
     "anonymize|A:10",    # default 10 char (for phylip) (prefix + num_digits)
     "break|B",
+    "codon-table=s",
     "composition|c",
     "count-codons|C",
     "delete|d=s",
@@ -150,6 +151,13 @@ A sed script file with a C<.sed> suffix that may be used with sed's C<-f> argume
 =item --break, -B
 
 Break into individual sequences, writing a FASTA file for each sequence.
+
+=item --codon-table
+
+Interface to Bio::Tools::CodonTable. Methods include: translate a codon to AA & reverse list codons for an AA. Currently only takes a 3-letter DNA-base codon or a 1-letter uppercase IUPAC aa code
+
+    --codon-table 'ACG'
+    --codon-table 'L'
 
 =item --composition, -c
 
