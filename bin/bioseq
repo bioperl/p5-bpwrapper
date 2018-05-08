@@ -35,6 +35,7 @@ GetOptions(
     "restrict|x=s",
     "restrict-coord=s",
     "revcom|r",
+    "sort=s",
     "split-cdhit=s",
     "subseq|s=s",
     "translate|t=i",
@@ -245,6 +246,10 @@ Predicted fragments from digestion by a specified restriction enzyme.  Outputs c
 =item --revcom | -r
 
 Reverse complement.
+
+=item --sort 'id|length'
+
+Sort by id or length (Contributor: Jeffery Rosario; Fall 2017)
 
 =item --split-cdhit 'cdhit .clstr file'
 

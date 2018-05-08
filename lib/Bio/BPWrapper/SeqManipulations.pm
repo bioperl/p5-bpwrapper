@@ -76,6 +76,7 @@ my %opt_dispatch = (
     'linearize' => \&linearize,
     'reloop' => \&reloop_at,
     'remove-stop' => \&remove_stop,
+    'sort' => \&sort_by,
     'split-cdhit' => \&split_cdhit,
 #   'dotplot' => \&draw_dotplot,
 #    'extract' => \&reading_frame_ops,
@@ -161,7 +162,29 @@ sub write_out {
 }
 
 
-################### subroutine ########################
+################### subroutines ########################
+
+sub sort_by {
+    my $match = $opts{'sort'};
+    $match =~ /length|id/ || die "Enter 'length' or 'id' to sort.\n";
+    my @seqs;
+
+    while (my $seq = $in->next_seq()) {
+	push @seqs, {id => $seq->display_id, len => $seq->length, seqob => $seq};
+    }
+
+    if ($match eq 'id'){
+	@seqs =  sort {$a->{id} cmp $b->{id}}  @seqs;
+    }
+
+    if ($match eq 'length'){
+	@seqs =  sort {$a->{len} <=> $b->{len}}  @seqs;
+    }
+
+    foreach (@seqs) {
+	$out->write_seq($_->{seqob});
+    }
+}
 
 sub split_cdhit {
     my $cls_file = $opts{'split-cdhit'};
