@@ -26,6 +26,7 @@ use List::Util qw(shuffle);
 use Bio::Align::Utilities qw(:all);
 use Exporter ();
 use Bio::SearchIO;
+use Bio::Tools::GuessSeqFormat;
 
 if ($ENV{'DEBUG'}) { use Data::Dumper }
 
@@ -121,17 +122,32 @@ sub initialize {
 
     # assume we're getting input from standard input
 
-    $in_format = $opts{"input"} || $default_format;
+#    my $in_format = $opts{"input"} || $default_format;
+#    my $in_format;
 
+    $file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line
+    my $guesser;
+    if ($file eq "STDIN") {
+	my $lines; 
+	my $line_ct = 0; 
+	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 20 } # read the first 20 lines
+	$guesser = Bio::Tools::GuessSeqFormat->new( -text => $lines );
+    } else {
+	$guesser = Bio::Tools::GuessSeqFormat->new( -file => $file);
+    }
+    $in_format  = $guesser->guess;
+    
     if ($opts{"concat"}) {
 	   while ($file = shift @ARGV) {
+	       $guesser = Bio::Tools::GuessSeqFormat->new( -file => $file);
+	       $in_format  = $guesser->guess;
 	       $in = Bio::AlignIO->new(-file => $file, -format => $in_format);
 	       while ($aln=$in->next_aln()) { push @alns, $aln }
 	   }
-    } else {
-	$file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line,
-	if ($opts{"input"} && $opts{"input"} =~ /blast/) { # "blastxml" (-outfmt 5 ) preferred
-	    my $searchio = Bio::SearchIO->new( -format => $opts{'input'}, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
+    } else {	
+	if ($in_format =~ /blast/) {
+#	if ($opts{"input"} && $opts{"input"} =~ /blast/) { # "blastxml" (-outfmt 5 ) preferred
+	    my $searchio = Bio::SearchIO->new( -format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
 	    while ( my $result = $searchio->next_result() ) {
 		while( my $hit = $result->next_hit ) {
  		    my $hsp = $hit->next_hsp; # get first hit; others ignored
