@@ -573,6 +573,7 @@ genome. Won't work for a eukaryote genbank file.
 
 sub print_gb_gene_feats { # works only for prokaryote genome
     $seq = $in->next_seq();
+    die "$filename: Not a GenBank file. Quit\n" unless $in_format eq 'genbank';
     my $gene_count = 0;
     foreach my $feat ($seq->get_SeqFeatures()) {
         if ($feat->primary_tag eq 'gene') {

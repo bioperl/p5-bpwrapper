@@ -182,7 +182,7 @@ Delete a sequence or a comma-separated list of sequences, e.g.,
 
 Extract gene sequences in FASTA from a GenBank file of bacterial genome. Won't work for a eukaryote genbank file. For example:
 
-   bioseq -i 'genbank' -F <genbank_file>
+   bioseq -F <genbank_file.gb> (throws error if not genbank file)
 
 =item --fetch, -f <genbank_accession>
 
@@ -197,7 +197,7 @@ Return the mean Kyte-Doolittle hydropathicity for protein sequences.
 
 [Deprecated] Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'. For FASTQ, use 'fastq'
 
-Now it tries to guess the format (works for genbank, fasta, embl & fastq
+Now it tries to guess the format (works for genbank, fasta, embl & fastq. Input format could be specified if wanted.
 
 =item --lead-gaps | -G
 
