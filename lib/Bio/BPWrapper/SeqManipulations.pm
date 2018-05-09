@@ -27,6 +27,7 @@ use Bio::Tools::SeqStats;
 use Bio::SeqUtils;
 use Scalar::Util;
 use Exporter ();
+use Bio::Tools::GuessSeqFormat;
 
 if ($ENV{'DEBUG'}) { use Data::Dumper }
 
@@ -48,7 +49,7 @@ find_by_ambig pick_by_ambig del_by_ambig find_by_length
 del_by_length);
 
 # Package global variables
-my ($in, $out, $seq, %opts, $filename, $in_format, $out_format);
+my ($in, $out, $seq, %opts, $filename, $in_format, $out_format, $guesser);
 use Bio::BPWrapper;
 my $VERSION = '1.0';
 
@@ -130,7 +131,17 @@ sub initialize {
 
     $filename = shift @ARGV || "STDIN";    # If no more arguments were given on the command line, assume we're getting input from standard input
 
-    $in_format = $opts{"input"} // 'fasta';
+    if ($filename eq "STDIN") {
+	my $lines; 
+	my $line_ct = 0; 
+	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 100 } # read the first 100 lines
+	$guesser = Bio::Tools::GuessSeqFormat->new( -text => $lines );
+    } else {
+	$guesser = Bio::Tools::GuessSeqFormat->new( -file => $filename);
+    }
+    $in_format  = $guesser->guess() unless $opts{'input'};
+
+#    $in_format = $opts{"input"} // 'fasta';
 
     $in = Bio::SeqIO->new(-format => $in_format, ($filename eq "STDIN")? (-fh => \*STDIN) : (-file => $filename));
 

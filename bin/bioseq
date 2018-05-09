@@ -195,7 +195,9 @@ Return the mean Kyte-Doolittle hydropathicity for protein sequences.
 
 =item --input, -i
 
-Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'.
+[Deprecated] Input file format. By default, this is 'fasta'. For Genbank format, use 'genbank'. For EMBL format, use 'embl'. For FASTQ, use 'fastq'
+
+Now it tries to guess the format (works for genbank, fasta, embl & fastq
 
 =item --lead-gaps | -G
 
