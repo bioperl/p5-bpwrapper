@@ -94,9 +94,7 @@ sub initialize {
 #    ($opts, $flags) = @_;
     $opts = shift;
     Bio::BPWrapper::common_opts($opts);
-
     $aln_file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line, assume we're getting input from standard input
-
     my $guesser;
     if ($aln_file eq "STDIN") {
 	my $lines; 
@@ -111,9 +109,11 @@ sub initialize {
 #    warn "$in_format\n";
 #    my $in_format = $flags->{"input"} // 'fasta';
 
-    if ($aln_file eq "STDIN") { $in = Bio::AlignIO->new(-format => $in_format, -fh => \*STDIN) }  # We're getting input from STDIN
-    else                      { $in = Bio::AlignIO->new(-format => $in_format, -file => "<$aln_file") }  # Filename, or '-', was given
+    $in = Bio::AlignIO->new(-format => $in_format, ($aln_file eq "STDIN")? (-fh => \*STDIN) : (-file => $aln_file));
+#    if ($aln_file eq "STDIN") { $in = Bio::AlignIO->new(-format => $in_format, -fh => \*STDIN) }  # We're getting input from STDIN
+#    else                      { $in = Bio::AlignIO->new(-format => $in_format, -file => "<$aln_file") }  # Filename, or '-', was given
 
+    print Dumper(\$in);
     $aln = $in->next_aln;
 
 #    $sample_size = $flags->{"sample_size"} // undef;
@@ -513,6 +513,7 @@ sub _in_list {
 }
 
 sub _parse_stats {
+#    die "biopop --stats pi|theda|tajima_d <dna alignment file>" unless $opts->{'stats'};
     return split(/,/, join(',', @{ $opts->{"stats"} }))
 }
 

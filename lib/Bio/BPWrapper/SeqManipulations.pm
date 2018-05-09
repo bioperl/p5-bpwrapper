@@ -143,6 +143,7 @@ sub initialize {
 
 #    $in_format = $opts{"input"} // 'fasta';
 
+    die "Reads only fasta, fastq, embl, genbank. Not aligment file formats like clustalw\n" unless $in_format =~ /fasta|fastq|embl|genbank/;
     $in = Bio::SeqIO->new(-format => $in_format, ($filename eq "STDIN")? (-fh => \*STDIN) : (-file => $filename));
 
     $out_format = $opts{"output"} // 'fasta';
