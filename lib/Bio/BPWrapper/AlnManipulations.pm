@@ -130,38 +130,38 @@ sub initialize {
     if ($file eq "STDIN") {
 	my $lines; 
 	my $line_ct = 0; 
-	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 20 } # read the first 20 lines
+	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 100 } # read the first 100 lines
 	$guesser = Bio::Tools::GuessSeqFormat->new( -text => $lines );
     } else {
 	$guesser = Bio::Tools::GuessSeqFormat->new( -file => $file);
     }
-    $in_format  = $guesser->guess;
+    $in_format  = $guesser->guess() unless $opts{'input'};
     
     if ($opts{"concat"}) {
-	   while ($file = shift @ARGV) {
+	while ($file = shift @ARGV) {
 	       $guesser = Bio::Tools::GuessSeqFormat->new( -file => $file);
 	       $in_format  = $guesser->guess;
 	       $in = Bio::AlignIO->new(-file => $file, -format => $in_format);
 	       while ($aln=$in->next_aln()) { push @alns, $aln }
-	   }
+	}
     } else {	
-	if ($in_format =~ /blast/) {
+	if ($opts{'input'} && $opts{'input'} =~ /blast/) {
 #	if ($opts{"input"} && $opts{"input"} =~ /blast/) { # "blastxml" (-outfmt 5 ) preferred
-	    my $searchio = Bio::SearchIO->new( -format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
+	    my $searchio = Bio::SearchIO->new( -format => 'blast', ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file)); # works for regular blast output
 	    while ( my $result = $searchio->next_result() ) {
 		while( my $hit = $result->next_hit ) {
  		    my $hsp = $hit->next_hsp; # get first hit; others ignored
 		    $aln = $hsp->get_aln();
 		}
 	    }
-	} else {
-	   $in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
-	   $aln = $in->next_aln()
+	} else { # would throw error if format guessed wrong
+	    $in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
+	    $aln = $in->next_aln()
 	}
     }
-
+    
     $binary = $opts{"binary"} ? 1 : 0;
-
+    
     #### Options which *require an output FH* go *after* this ####
     $out_format = $opts{"output"} || $default_format;
     $out = Bio::AlignIO->new(-format => $out_format, -fh => \*STDOUT) unless $out_format eq 'paml'
