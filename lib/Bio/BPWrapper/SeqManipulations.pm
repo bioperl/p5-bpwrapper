@@ -27,7 +27,7 @@ use Bio::Tools::SeqStats;
 use Bio::SeqUtils;
 use Scalar::Util;
 use Exporter ();
-use Bio::Tools::GuessSeqFormat;
+# use Bio::Tools::GuessSeqFormat;
 
 if ($ENV{'DEBUG'}) { use Data::Dumper }
 
@@ -131,19 +131,20 @@ sub initialize {
 
     $filename = shift @ARGV || "STDIN";    # If no more arguments were given on the command line, assume we're getting input from standard input
 
-    if ($filename eq "STDIN") {
-	my $lines; 
-	my $line_ct = 0; 
-	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 100 } # read the first 100 lines
-	$guesser = Bio::Tools::GuessSeqFormat->new( -text => $lines );
-    } else {
-	$guesser = Bio::Tools::GuessSeqFormat->new( -file => $filename);
-    }
-    $in_format  = $guesser->guess() unless $opts{'input'};
+# guess format won't work for piped input; remove
+#    if ($filename eq "STDIN") {
+#	my $lines; 
+#	my $line_ct = 0; 
+#	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 100 } # read the first 100 lines
+#	$guesser = Bio::Tools::GuessSeqFormat->new( -text => $lines );
+#    } else {
+#	$guesser = Bio::Tools::GuessSeqFormat->new( -file => $filename);
+#    }
+#    $in_format  = $guesser->guess() unless $opts{'input'};
 
-#    $in_format = $opts{"input"} // 'fasta';
+    $in_format = $opts{"input"} // 'fasta';
 
-    die "Reads only fasta, fastq, embl, genbank. Not aligment file formats like clustalw\n" unless $in_format =~ /fasta|fastq|embl|genbank/;
+#    die "Reads only fasta, fastq, embl, genbank. Not aligment file formats like clustalw\n" unless $in_format =~ /fasta|fastq|embl|genbank/;
     $in = Bio::SeqIO->new(-format => $in_format, ($filename eq "STDIN")? (-fh => \*STDIN) : (-file => $filename));
 
     $out_format = $opts{"output"} // 'fasta';

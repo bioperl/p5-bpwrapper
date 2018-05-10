@@ -26,7 +26,7 @@ use List::Util qw(shuffle);
 use Bio::Align::Utilities qw(:all);
 use Exporter ();
 use Bio::SearchIO;
-use Bio::Tools::GuessSeqFormat;
+#use Bio::Tools::GuessSeqFormat;
 
 if ($ENV{'DEBUG'}) { use Data::Dumper }
 
@@ -124,30 +124,37 @@ sub initialize {
 
 #    my $in_format = $opts{"input"} || $default_format;
 #    my $in_format;
-
+#    use IO::Scalar;
+#    my $s;
     $file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line
-    my $guesser;
-    if ($file eq "STDIN") {
-	my $lines; 
-	my $line_ct = 0; 
-	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 100 } # read the first 100 lines
-	$guesser = Bio::Tools::GuessSeqFormat->new( -text => $lines );
-    } else {
-	$guesser = Bio::Tools::GuessSeqFormat->new( -file => $file);
-    }
-    $in_format  = $guesser->guess() unless $opts{'input'};
-    
+#    my ($guesser);
+#    if ($file eq "STDIN") {
+#	my $line_ct = 0; 
+#	my $lines;
+#	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 100 } # read the first 100 lines
+#	$guesser = Bio::Tools::GuessSeqFormat->new( -text => $lines );
+#   } else {
+#	open $ifh, "<", $file or die $!;
+#	$guesser = Bio::Tools::GuessSeqFormat->new( -file => $file );
+#    }
+#    $in_format  = $guesser->guess();
+#    die "unknown file format. Try specify with -i flag.\n" unless $in_format;
+#    seek (STDIN, 0, 0);
+#    warn "$in_format\n";
+
+    my $in_format = $opts{'input'} || 'clustalw';
     if ($opts{"concat"}) {
 	while ($file = shift @ARGV) {
-	       $guesser = Bio::Tools::GuessSeqFormat->new( -file => $file);
-	       $in_format  = $guesser->guess;
+#	       $guesser = Bio::Tools::GuessSeqFormat->new( -file => $file);
+#	       $in_format  = $guesser->guess;
 	       $in = Bio::AlignIO->new(-file => $file, -format => $in_format);
 	       while ($aln=$in->next_aln()) { push @alns, $aln }
 	}
     } else {	
-	if ($opts{'input'} && $opts{'input'} =~ /blast/) {
+	if ($in_format && $in_format =~ /blast/) { # guess blastoutput as "phylip", so -i 'blast' is needed
 #	if ($opts{"input"} && $opts{"input"} =~ /blast/) { # "blastxml" (-outfmt 5 ) preferred
 	    my $searchio = Bio::SearchIO->new( -format => 'blast', ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file)); # works for regular blast output
+#	    my $searchio = Bio::SearchIO->new( -format => 'blast', -fh => $ifh);
 	    while ( my $result = $searchio->next_result() ) {
 		while( my $hit = $result->next_hit ) {
  		    my $hsp = $hit->next_hsp; # get first hit; others ignored
@@ -155,7 +162,9 @@ sub initialize {
 		}
 	    }
 	} else { # would throw error if format guessed wrong
-	    $in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
+#	    $in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
+#	    $in = Bio::AlignIO->new(-format => $in_format, -fh => $ifh);
+	    $in = Bio::AlignIO->new(-format=>$in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file) );
 	    $aln = $in->next_aln()
 	}
     }

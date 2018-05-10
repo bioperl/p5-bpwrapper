@@ -36,7 +36,7 @@ use List::Util qw(shuffle sum);
 use Bio::Tools::CodonTable;
 use Data::Dumper;
 use Exporter ();
-use Bio::Tools::GuessSeqFormat;
+#use Bio::Tools::GuessSeqFormat;
 use vars qw(@ISA @EXPORT @EXPORT_OK);
 
 @ISA         = qw(Exporter);
@@ -95,25 +95,25 @@ sub initialize {
     $opts = shift;
     Bio::BPWrapper::common_opts($opts);
     $aln_file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line, assume we're getting input from standard input
-    my $guesser;
-    if ($aln_file eq "STDIN") {
-	my $lines; 
-	my $line_ct = 0; 
-	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 100 } # read the first 100 lines
-	$guesser = Bio::Tools::GuessSeqFormat->new( -text => $lines );
-    } else {
-	$guesser = Bio::Tools::GuessSeqFormat->new( -file => $aln_file);
-    }
+#    my $guesser;
+#    if ($aln_file eq "STDIN") {
+#	my $lines; 
+#	my $line_ct = 0; 
+#	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 100 } # read the first 100 lines
+#	$guesser = Bio::Tools::GuessSeqFormat->new( -text => $lines );
+#   } else {
+#	$guesser = Bio::Tools::GuessSeqFormat->new( -file => $aln_file);
+#    }
 
-    my $in_format  = $guesser->guess(); # unless $opts->{'input'};
+#    my $in_format  = $guesser->guess(); # unless $opts->{'input'};
 #    warn "$in_format\n";
-#    my $in_format = $flags->{"input"} // 'fasta';
+    my $in_format = $opts->{"input"} // 'fasta';
 
     $in = Bio::AlignIO->new(-format => $in_format, ($aln_file eq "STDIN")? (-fh => \*STDIN) : (-file => $aln_file));
 #    if ($aln_file eq "STDIN") { $in = Bio::AlignIO->new(-format => $in_format, -fh => \*STDIN) }  # We're getting input from STDIN
 #    else                      { $in = Bio::AlignIO->new(-format => $in_format, -file => "<$aln_file") }  # Filename, or '-', was given
 
-    print Dumper(\$in);
+#    print Dumper(\$in);
     $aln = $in->next_aln;
 
 #    $sample_size = $flags->{"sample_size"} // undef;
