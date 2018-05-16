@@ -71,6 +71,44 @@ sub initialize {
     foreach (@nodes) { push @otus, $_ if $_->is_Leaf }
 }
 
+sub cut_tree {
+    my $max_height = 0;
+    $rootnode->{height} = 0;
+    foreach my $nd (@nodes) {
+	my $ht = &distance_to_root($nd);
+	$nd->{height} = $ht;
+	$max_height = $ht unless $ht < $max_height;
+    }
+
+    my $cut = $opts{'cut-tree'} || 0.25 * $max_height; # default to cut the branches traversing the line that is 1/4 of max height
+    die "Cut tree at $cut, greater than max node depth ($max_height). Lower cut value.\n" if $cut >= $max_height;
+
+    my @cut_nodes;
+    my $group_ct = 0;
+    &identify_nodes_to_cut_by_walk_from_root($rootnode, \$cut, \@cut_nodes, \$group_ct);
+    foreach my $cutnode (@cut_nodes) { 
+	print join "\t", map {$_->id()} &_each_leaf($cutnode);
+	print "\n";
+    }
+    $print_tree = 1;
+}
+
+
+sub identify_nodes_to_cut_by_walk_from_root {
+    my $node = shift;
+    my $ref_cut = shift; 
+    my $ref_group = shift;
+    my $ref_ct = shift;
+    return if $node->{height} > $$ref_cut; # node too high
+    foreach my $des ($node->each_Descendent() ) {
+        if ($des->{height} > $$ref_cut) {  # found a branch to cut: parent height < $cut & child height > $cut
+            $des->id("cut_" . $$ref_ct++) unless $des->is_Leaf;
+            push @$ref_group, $des
+        }
+        &identify_nodes_to_cut_by_walk_from_root($des, $ref_cut, $ref_group, $ref_ct); # node too low
+    }
+}
+
 sub label_selected_nodes {
     my $label_file = $opts{'label-selected-nodes'}; # each line consists of internal_id label
     my %labs;
@@ -854,6 +892,7 @@ Call this after calling C<#initialize(\%opts)>.
 sub write_out {
     my $opts = shift;
     write_tab_tree() if $opts->{'as-text'};
+    cut_tree() if $opts->{'cut-tree'};
     mid_point_root() if $opts->{'mid-point'};
     pars_binary() if $opts->{'ci'};
     getdistance() if $opts->{'dist'};
@@ -939,6 +978,7 @@ sub _name2node {
 # _each_leaf ($node): returns a list of all OTU's descended from this node, if any
 sub _each_leaf {
 	my @leaves;
+	return $_[0] if $_[0]->is_Leaf;
 	for ($_[0]->get_all_Descendents) { push (@leaves, $_) if $_->is_Leaf }
 	return @leaves
 }

@@ -22,6 +22,7 @@ GetOptions(\%opts,
 	   "ci|c=s", # attach binary trait table
 	   "clean-br|b",
 	   "clean-boot|B",
+	   "cut-tree=f", # cut tree to identify groups
 	   "del-otus|d=s",
 	   "del-low-boot|D=f",
 	   "del-short-br|E=f",
@@ -122,6 +123,10 @@ Remove branch lengths from all nodes.
 =item --clean-boot, -B
 
 Remove all branch support values.
+
+=item --cut-tree "length"
+
+Identify clades based on branches that bisected by a cut line (half way to max by default).
 
 =item --del-otus, -d 'otu1,out2,etc'
 
