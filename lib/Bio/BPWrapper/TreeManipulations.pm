@@ -72,21 +72,24 @@ sub initialize {
 }
 
 sub cut_tree {
-    my $max_height = 0;
+    my @otu_hts;
     $rootnode->{height} = 0;
     foreach my $nd (@nodes) {
 	my $ht = &distance_to_root($nd);
 	$nd->{height} = $ht;
-	$max_height = $ht unless $ht < $max_height;
+	push @otu_hts, $ht if $nd->is_Leaf;
     }
 
-    my $cut = $opts{'cut-tree'} || 0.25 * $max_height; # default to cut the branches traversing the line that is 1/4 of max height
-    die "Cut tree at $cut, greater than max node depth ($max_height). Lower cut value.\n" if $cut >= $max_height;
+    @otu_hts = sort {$a <=> $b} @otu_hts;
+    my $least_otu_height = shift @otu_hts;
+    my $cut = $opts{'cut-tree'} || 0.5 * $least_otu_height; # default to cut the branches traversing the line that is 1/2 of least deep OTU
+    die "Cut tree at $cut, greater than least-deep OTU ($least_otu_height). Lower cut value.\n" if $cut >= $least_otu_height;
 
     my @cut_nodes;
     my $group_ct = 0;
     &identify_nodes_to_cut_by_walk_from_root($rootnode, \$cut, \@cut_nodes, \$group_ct);
-    foreach my $cutnode (@cut_nodes) { 
+    foreach my $cutnode (@cut_nodes) {
+	print $cutnode->is_Leaf() ? "cut_otu" : $cutnode->id(), ":\t"; 
 	print join "\t", map {$_->id()} &_each_leaf($cutnode);
 	print "\n";
     }
