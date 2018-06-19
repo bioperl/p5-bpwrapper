@@ -42,6 +42,7 @@ GetOptions(
     "no-gaps|g",
     "num-seq|n",
     "output|o=s",
+    "pair-diff", # pairwise sequence diff
     "pep2dna|P=s",
     "permute-states|M",
     "phy-nonint", # non-interleaved phylip (for e.g.,clique)
@@ -324,6 +325,10 @@ Print number of sequences in alignment.
 =item --output, -o 'format'
 
 Output file format. Common ones include 'clustalw' (default), 'fasta' and 'phylip'. See L<Bio::AlignIO> for supported formats. An additional format 'paml' is supported.
+
+=item --pair-diff
+
+Print pairwise sequence differences (and the total alignment length).
 
 =item --pep2dna, -P 'unaligned-cds-file' <protein_alignment>
 

@@ -80,6 +80,7 @@ my %opt_dispatch = (
     "rm-col" => \&remove_gapped_cols_in_one_seq,
     "aln-index" => \&colnum_from_residue_pos,
     "list-ids" => \&list_ids,
+    "pair-diff" => \&pair_diff,
     "permute-states" => \&permute_states,
     "pep2dna" => \&protein_to_dna,
     "resample" => \&sample_seqs,
@@ -261,6 +262,24 @@ sub phylip_non_interleaved {
 
 ###################### subroutine ######################
 
+sub pair_diff {
+    my (@seqs);
+    foreach my $seq ($aln->each_seq()) { push @seqs, $seq }
+    for (my $i=0; $i < $#seqs; $i++) {
+	my $id_i = $seqs[$i]->id();
+	for (my $j=$i+1; $j <= $#seqs; $j++) {
+	    my $id_j = $seqs[$i]->id();
+	    my $mask = $seqs[$i]->seq ^ $seqs[$j]->seq; #  (exclusive or) operator: returns "\0" if same
+	    my $ct_diff = 0;
+	    while ($mask =~ /[^\0]/g) { $ct_diff++ }
+	    print join "\t", ($id_i, $id_j, $ct_diff, $aln->length());
+	    print "\n";
+	}
+    }
+    exit;
+}
+
+
 sub split_cdhit {
     my $cls_file = $opts{'split-cdhit'};
     open IN, "<" . $cls_file || die "cdhit clstr file not found: $cls_file\n";
@@ -306,11 +325,8 @@ sub split_cdhit {
     exit;
 }
 
-sub _remove_common_gaps {
-
-
-
-}
+#sub _remove_common_gaps {
+#}
 
 sub trim_ends {
     my (@seqs, @gaps);

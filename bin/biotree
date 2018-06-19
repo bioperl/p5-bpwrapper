@@ -45,9 +45,11 @@ GetOptions(\%opts,
 	   "output|o=s",
 	   "random=i",
 	   "reroot|r=s",
+	   "rotate-node=s", # totate around an internal node (give node id)
 	   "sis-pairs", # pairwise OTU togetherness
+#	   "sort-child=s", # sort child by height (default) or others (to make output tree consistent)
 	   "subset|s=s",
-	   "swap-otus=s", # output trees with each possible pairs (with the designated one) swapped
+	   "swap-outs=s", # ??
 	   "tree-shape", # for apTreeshape package
 	   "walk|w=s",
 #	   "rmbl|R",
@@ -219,6 +221,10 @@ Builds a tree of a random subset of the original tree's OTUs.
 =item --reroot, -r 'newroot'
 
 Reroot tree to specified node by creating new branch.
+
+=item --rotate-node 'inode_internal_id'
+
+Flip two descendant nodes of an internal node (die if multi-furcation). Useful for plotting.
 
 =item --sis-pairs
 

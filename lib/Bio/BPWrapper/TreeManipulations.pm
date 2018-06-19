@@ -31,7 +31,7 @@ use Bio::Tree::Node;
 use Bio::Tree::TreeFunctionsI;
 use Data::Dumper;
 use POSIX;
-
+use List::Util qw(shuffle);
 if ($ENV{'DEBUG'}) { use Data::Dumper }
 
 use vars qw(@ISA @EXPORT @EXPORT_OK);
@@ -452,6 +452,28 @@ sub edge_length_abundance {
 	printf "%d\t%.6f\n", $k, $total/$tree->total_branch_length();
     }
 }
+
+=begin: needs work
+sub rotate_an_in_node {
+    my $nd_id = $opts{'rotate-node'};
+    my $ref_node = $tree->find_node(-id => $nd_id) || $tree->find_node(-internal_id => $nd_id) || die "node not found\n";
+    my $pa_node = $ref_node->ancestor();
+    $pa_node->each_Descendent($nd_id) || 'die: not an internal node\n';
+#    $ref_node->each_Descendent( sub { shuffle(@des) } );
+    $print_tree = 1;
+#}
+=cut
+## Not working
+#sub sort_child { # sort by height
+#    my $by = $opts{'sort-child'} || 'height';
+#    foreach my $nd (@nodes) {
+#	next if $nd->is_Leaf;
+#	my @des = $nd->each_Descendent();
+#	$nd->each_Descendent($by);
+#    $ref_node->each_Descendent( sub { shuffle(@des) } );
+#   }
+#    $print_tree = 1;
+#}
 
 sub swap_otus {
     my @otus;
@@ -915,6 +937,8 @@ sub write_out {
     print_all_lengths() if $opts->{'length-all'};
     random_tree() if defined($opts->{'random'});
     depth_to_root() if $opts->{'depth'};
+    rotate_an_in_node() if $opts->{'rotate-node'};    
+#    sort_child() if $opts->{'sort-child'};    
     alldesc() if $opts->{'otus-desc'};
     walk() if $opts->{'walk'};
     multi2bi() if $opts->{'multi2bi'};
