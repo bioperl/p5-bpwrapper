@@ -265,10 +265,11 @@ sub phylip_non_interleaved {
 sub pair_diff {
     my (@seqs);
     foreach my $seq ($aln->each_seq()) { push @seqs, $seq }
+    @seqs = sort { $a->id() cmp $b->id() } @seqs;
     for (my $i=0; $i < $#seqs; $i++) {
 	my $id_i = $seqs[$i]->id();
 	for (my $j=$i+1; $j <= $#seqs; $j++) {
-	    my $id_j = $seqs[$i]->id();
+	    my $id_j = $seqs[$j]->id();
 	    my $mask = $seqs[$i]->seq ^ $seqs[$j]->seq; #  (exclusive or) operator: returns "\0" if same
 	    my $ct_diff = 0;
 	    while ($mask =~ /[^\0]/g) { $ct_diff++ }
