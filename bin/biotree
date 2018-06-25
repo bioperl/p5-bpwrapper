@@ -44,6 +44,7 @@ GetOptions(\%opts,
 	   "otus-num|n",
 	   "output|o=s",
 	   "random=i",
+	   "rename-tips=s", 
 	   "reroot|r=s",
 	   "rotate-node=s", # totate around an internal node (give node id)
 	   "sis-pairs", # pairwise OTU togetherness
@@ -217,6 +218,10 @@ Output file format. Accepts newick, nhx, and tabtree.
 =item --random sample_size
 
 Builds a tree of a random subset of the original tree's OTUs.
+
+=item --rename-tips <file>
+
+Rename tips according to a 2-column table
 
 =item --reroot, -r 'newroot'
 

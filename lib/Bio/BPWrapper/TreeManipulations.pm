@@ -134,6 +134,30 @@ sub label_selected_nodes {
     $print_tree = 1
 }
 
+sub rename_tips {
+    my $label_file = $opts{'rename-tips'}; # each line consists of internal_id label
+    my %labs;
+    open LAB, "<", $label_file || die "label file not found\n";
+    while(<LAB>) {
+	chomp;
+	my ($a, $b) = split;
+	$labs{$a} = $b;
+    }
+    close LAB;
+    foreach my $nd (@nodes) {
+	next unless $nd->is_Leaf;
+	my $old = $nd->id();
+	if ($labs{$nd->id}) { 
+	    $nd->id($labs{$nd->id});
+	    warn "Success: old tip $old changed to new name\t", $nd->id(), "\n";
+	} else {
+	    warn "Failed: old tip $old not changed\n";
+	}
+    }
+    $print_tree = 1
+}
+
+
 sub write_tab_tree{
 #    print "*" x 200, "\n";
     my $y_space = 1; # number of lines between two neighboring nodes
@@ -916,6 +940,7 @@ Call this after calling C<#initialize(\%opts)>.
 
 sub write_out {
     my $opts = shift;
+    rename_tips() if $opts->{'rename-tips'};
     write_tab_tree() if $opts->{'as-text'};
     cut_tree() if $opts->{'cut-tree'};
     mid_point_root() if $opts->{'mid-point'};
