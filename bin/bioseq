@@ -17,6 +17,8 @@ GetOptions(
     "version|V",
     "anonymize|A:10",    # default 10 char (for phylip) (prefix + num_digits)
     "break|B",
+    "codon-info=s",
+    "codon-sim=s",
     "codon-table=s",
     "composition|c",
     "count-codons|C",
@@ -151,6 +153,18 @@ A sed script file with a C<.sed> suffix that may be used with sed's C<-f> argume
 =item --break, -B
 
 Break into individual sequences, writing a FASTA file for each sequence.
+
+=item --codon-info <CUTG file>
+
+Calculate codon bias of a CDS using Shannon information, as deviation from the genome-wide codon usage (in CUTG GCG format). (Reference: <to be added>)
+
+=item --codon-sim <CUTG file>
+
+Output a CDS with the same AA sequence with each AA replaced by a synonymous codon randomly chosen from a genome codon pool (specified by CUTG GCG file; see test-files/BbB31.cutg). Only the 1st sequence used if multiple sequences are supplied.
+
+For testing the signficcance of codon-bias information, it is necessary to run this repeatedly to generate at least 100 simulated CDSs, e.g., for i in {1..10}; do bioseq --codon-sim test-files/BbB31.cutg test-files/test-bioseq.cds; done
+
+Two non-BioPerl module dependencies: Algorithm::Numerical::Sample; Math::Random.
 
 =item --codon-table
 

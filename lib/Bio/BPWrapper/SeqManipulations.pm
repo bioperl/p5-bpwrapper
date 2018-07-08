@@ -27,6 +27,7 @@ use Bio::Tools::SeqStats;
 use Bio::SeqUtils;
 use Scalar::Util;
 use Exporter ();
+use Bio::CodonUsage::IO;
 # use Bio::Tools::GuessSeqFormat;
 
 if ($ENV{'DEBUG'}) { use Data::Dumper }
@@ -46,7 +47,7 @@ pick_by_order del_by_order find_by_id
 pick_by_id del_by_id find_by_re
 pick_by_re del_by_re
 find_by_ambig pick_by_ambig del_by_ambig find_by_length
-del_by_length);
+del_by_length codon_sim codon_info);
 
 # Package global variables
 my ($in, $out, $seq, %opts, $filename, $in_format, $out_format, $guesser);
@@ -57,6 +58,8 @@ my $VERSION = '1.0';
 ## the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.
 my %opt_dispatch = (
     'codon-table' => \&codon_table,
+    'codon-sim' => \&codon_sim,
+    'codon-info' => \&codon_info,
     'composition' => \&print_composition,
     'delete' => \&filter_seqs,
     'fetch' => \&retrieve_seqs,
@@ -177,6 +180,175 @@ sub write_out {
 
 
 ################### subroutines ########################
+
+sub codon_sim {
+    my $seq = $in->next_seq(); # only the first sequence used
+    if (&_internal_stop_or_x($seq->translate()->seq())) {
+	die "internal stop or non-standard base:\t" . $seq->id . "\texit.\n";
+    }
+    use Algorithm::Numerical::Sample  qw /sample/;
+    use Math::Random qw /random_permutation/;
+########################
+# Read CUTG and make a random codon set for each AA
+########################
+    my $cutg_file = $opts{'codon-sim'};
+    my $io = Bio::CodonUsage::IO->new(-file => $cutg_file);
+    my $cdtable = $io->next_data();
+    my @bases = qw(A T C G);
+    my @codons;
+    for (my $i=0; $i<=3; $i++) {
+	my $first = $bases[$i];
+	for (my $j=0; $j<=3; $j++) {
+	    my $second = $bases[$j];
+	    for (my $k=0; $k<=3; $k++) {
+		my $third = $bases[$k];
+		push @codons, $first . $second . $third;
+	    }
+	}
+    }
+    
+    my $myCodonTable  = Bio::Tools::CodonTable->new( -id => 1 );
+
+    my (@cd_cts, %aas, %aa_cds);
+    foreach my $cd (@codons) {
+	my $aa = $myCodonTable->translate($cd);
+	$aas{$aa}++;
+	push @cd_cts, {codon => $cd, aa => $aa, cts => $cdtable->codon_count($cd)};
+    }
+
+    foreach my $aa (keys %aas) { 
+	my @cds = grep {$_->{aa} eq $aa} @cd_cts;
+	my @cd_sets; 
+	foreach (@cds) {
+	    for (my $i=1; $i<=$_->{cts}; $i++) {
+		push @cd_sets, $_->{codon};
+	    }
+	}
+	@cd_sets = random_permutation(@cd_sets);
+	$aa_cds{$aa} = \@cd_sets;
+    }
+
+##############################
+# generate a random CDS with the same AA sequence
+###############################
+    my $pep = $seq->translate()->seq();
+    my @aas = split //, $pep;
+    my $sim_cds = "";
+    for (my $i = 0; $i <= $#aas; $i++) {
+	my @sampled_cds = sample(-set => $aa_cds{$aas[$i]}); # sample 1 by default
+	my $cd_sim = shift @sampled_cds;
+	$sim_cds .= $cd_sim;
+    }
+    my $sim_obj = Bio::Seq->new(-id => $seq->id() . "|sim", -seq => $sim_cds);
+    $out->write_seq($sim_obj);
+}
+
+
+sub codon_info {
+    my $cutg_file = $opts{'codon-info'} || "need a codon usage file in CUTG GCG format";
+    my $io = Bio::CodonUsage::IO->new(-file => $cutg_file);
+    my $cdtable = $io->next_data();
+    my @bases = qw(A T C G);
+    my @codons;
+    for (my $i=0; $i<=3; $i++) {
+	my $first = $bases[$i];
+	for (my $j=0; $j<=3; $j++) {
+	    my $second = $bases[$j];
+	    for (my $k=0; $k<=3; $k++) {
+		my $third = $bases[$k];
+		push @codons, $first . $second . $third;
+	    }
+	}
+    }
+
+    my $myCodonTable  = Bio::Tools::CodonTable->new( -id => 1 );
+#print Dumper($cdtable->all_aa_frequencies);
+
+    my (@cd_cts, %aas);
+    foreach my $cd (@codons) {
+	my $aa = $myCodonTable->translate($cd);
+	$aas{$aa}++;
+	push @cd_cts, {codon => $cd, aa => $aa, cts => $cdtable->codon_count($cd)};
+    }
+
+    my $h_genome = 0;
+    foreach my $aa (keys %aas) {
+	my @cds = grep {$_->{aa} eq $aa} @cd_cts; 
+	$h_genome += &__cd_entropy(\@cds);
+    }
+
+=begin
+    use Bio::Tools::CodonOptTable;
+    while (my $seq = $in->next_seq()) {
+	my $seqobj = Bio::Tools::CodonOptTable->new(
+	    -seq         => $seq->seq(),
+	    -genetic_code => 1,
+	    -alphabet         => 'dna',
+	    -is_circular      => 0,
+	    -id => $seq->id(),
+	    );
+	my $myCodons = $seqobj->rscu_rac_table();
+	my %oneLetterAA;
+	my @cdCTs;
+	my $numCodons = 0;
+	foreach my $rec (@$myCodons) {
+	    $numCodons += $rec->{frequency};
+	    my $codon = $rec->{codon};
+	    my $aa = $myCodonTable->translate($codon);
+	    $oneLetterAA{$aa}++;
+	    push @cdCTs, {codon => $codon, aa => $aa, cts => $rec->{frequency}};
+	}
+=cut
+    while (my $seq = $in->next_seq()) {
+	if (&_internal_stop_or_x($seq->translate()->seq())) {
+	    warn "internal stop or non-standard base:\t" . $seq->id . "\tskip.\n";
+	    next;
+	}
+	my %oneLetterAA;
+	my %codons;
+	my @cdCTs;
+	my $numCodons = 0;
+	for (my $i=0; $i<=$seq->length()-3; $i+=3) {
+	    $codons{substr($seq->seq(), $i, 3)}++;
+	    $numCodons++;
+	}
+
+	foreach my $cd (keys %codons) {
+	    my $aa = $myCodonTable->translate($cd);
+	    $oneLetterAA{$aa}++;
+	    push @cdCTs, {codon => $cd, aa => $aa, cts => $codons{$cd}};
+	}
+
+	my $h_cds = 0;
+	foreach my $aa (keys %oneLetterAA) {
+	    my @cds = grep {$_->{aa} eq $aa} @cdCTs; 
+	    $h_cds += &__cd_entropy(\@cds);
+	}
+	print $seq->id, "\t", $seq->length(), "\t", $numCodons, "\t";
+	printf "%.6f\n", $h_genome - $h_cds;
+    }    
+}
+
+sub __cd_entropy {
+    my $ref = shift;
+    my @cd_obj = @$ref;
+    return 0 if @cd_obj <= 1; # single codons (M & W)
+    my $sum = 0;
+    my $h = 0;
+    foreach (@cd_obj) {
+	$sum += $_->{cts};
+    }
+    return 0 unless $sum > 0;
+    foreach (@cd_obj) {
+	$_->{rel_freq} = $_->{cts}/$sum;
+    }
+
+    foreach (@cd_obj) {
+	next unless $_->{rel_freq} > 0;
+	$h -= $_->{rel_freq} * log($_->{rel_freq})/log(2);
+    }
+    return $h;
+}
 
 sub sort_by {
     my $match = $opts{'sort'};
