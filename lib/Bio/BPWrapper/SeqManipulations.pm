@@ -58,7 +58,7 @@ my $VERSION = '1.0';
 ## the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.
 my %opt_dispatch = (
     'codon-table' => \&codon_table,
-    'codon-sim' => \&codon_sim,
+#    'codon-sim' => \&codon_sim,
     'codon-info' => \&codon_info,
     'composition' => \&print_composition,
     'delete' => \&filter_seqs,
@@ -181,6 +181,7 @@ sub write_out {
 
 ################### subroutines ########################
 
+=begin
 sub codon_sim {
     my $seq = $in->next_seq(); # only the first sequence used
     if (&_internal_stop_or_x($seq->translate()->seq())) {
@@ -242,7 +243,7 @@ sub codon_sim {
     my $sim_obj = Bio::Seq->new(-id => $seq->id() . "|sim", -seq => $sim_cds);
     $out->write_seq($sim_obj);
 }
-
+=cut
 
 sub codon_info {
     my $cutg_file = $opts{'codon-info'} || "need a codon usage file in CUTG GCG format";
@@ -750,16 +751,19 @@ sub print_gb_gene_feats { # works only for prokaryote genome
     die "$filename: Not a GenBank file. Quit\n" unless $in_format eq 'genbank';
     my $gene_count = 0;
     foreach my $feat ($seq->get_SeqFeatures()) {
-        if ($feat->primary_tag eq 'gene') {
+        if ($feat->primary_tag eq 'CDS') {
 	    my $location = $feat->location();
 	    next if $location->isa('Bio::Location::Split');
-            my $gene_tag = "gene_" . $gene_count++;
+	    my $gene_tag = "gene_" . $gene_count++;
 	    my $gene_symbol = 'na';
+	    my $product = 'na';
             foreach my $tag ($feat->get_all_tags()) {
 		($gene_tag) = $feat->get_tag_values($tag) if $tag eq 'locus_tag';
 		($gene_symbol) = $feat->get_tag_values($tag) if $tag eq 'gene';
+		($product) = $feat->get_tag_values($tag) if $tag eq 'product';
+		$product =~ s/\s/_/g;
 	    }
-            my $gene = Bio::Seq->new(-id => (join "|", ($gene_tag, $feat->start, $feat->end, $feat->strand, $gene_symbol)),
+            my $gene = Bio::Seq->new(-id => (join "|", ($gene_tag, $feat->start, $feat->end, $feat->strand, $gene_symbol, $product)),
 				     -seq=>$seq->subseq($feat->start, $feat->end));
             if ($feat->strand() > 0) { $out->write_seq($gene) } else { $out->write_seq($gene->revcom())}
 #            print join "\t",
