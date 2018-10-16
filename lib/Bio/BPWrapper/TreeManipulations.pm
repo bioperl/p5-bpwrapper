@@ -71,6 +71,45 @@ sub initialize {
     foreach (@nodes) { push @otus, $_ if $_->is_Leaf }
 }
 
+sub reorder_by_ref {
+    die "reference node id missing\n" unless $opts{'ref'};
+    my $id = 0;
+    &_flip_if_not_in_top_clade($rootnode, $opts{'ref'}, \$id);
+    $print_tree = 1;
+}
+
+sub _flip_if_not_in_top_clade { # by resetting creation_id & sortby option of each_Descendent
+    my ($nd, $ref, $refid) = @_;
+    $nd->_creation_id($$refid++);
+#    print STDERR $nd->internal_id(), ":\t";
+    if ($nd->is_Leaf()) { 
+#	print STDERR "\n"; 
+	return }
+    my @des = $nd->each_Descendent();
+    my @des_reordered;
+    for (my $i=0; $i<=$#des; $i++) {
+	my $in_des = 0;
+	my $id = $des[$i]->internal_id();
+	my @otus = &_each_leaf($des[$i]);
+	foreach (@otus) { $in_des = 1 if $ref eq $_->id }
+#	print STDERR join("|", map { $_->id } @otus), " => ", $in_des, ";";
+	if ($in_des) {
+	    unshift @des_reordered, $des[$i];
+	} else {
+	    push @des_reordered, $des[$i];
+	}
+    }
+    foreach (@des_reordered) {
+	$_->_creation_id($$refid++);
+#	print STDERR $_->internal_id(), ";";
+    }
+#    print STDERR "\n";
+    my @des_new = $nd->each_Descendent('creation'); # key sort function!!
+    foreach my $de (@des_new) {
+	&_flip_if_not_in_top_clade($de, $opts{'ref'}, $refid);
+    }
+}
+
 sub cut_tree {
     my @otu_hts;
     $rootnode->{height} = 0;
@@ -499,7 +538,7 @@ sub rotate_an_in_node {
 #    $print_tree = 1;
 #}
 
-sub swap_otus {
+sub swap_otus { # don't know why
     my @otus;
     my $otu_ct = 0;
     foreach (@nodes) {
@@ -952,6 +991,7 @@ sub write_out {
     countOTU() if $opts->{'otus-num'};
     $print_tree = 1 if defined($opts->{'output'});
     reroot() if $opts->{'reroot'};
+    reorder_by_ref() if $opts->{'ref'};
     subset() if $opts->{'subset'};
     print_leaves_lengths() if $opts->{'otus-all'};
     getlca() if $opts->{'lca'};
