@@ -61,6 +61,7 @@ my %opt_dispatch = (
 #    'codon-sim' => \&codon_sim,
     'codon-info' => \&codon_info,
     'composition' => \&print_composition,
+    'mol-wt' => \&print_weight,
     'delete' => \&filter_seqs,
     'fetch' => \&retrieve_seqs,
     'no-gaps' => \&remove_gaps,
@@ -244,6 +245,14 @@ sub codon_sim {
     $out->write_seq($sim_obj);
 }
 =cut
+
+sub print_weight {
+    while ($seq = $in->next_seq()) { 
+	my $ref_weight = Bio::Tools::SeqStats->get_mol_wt($seq);
+	print join "\t", $seq->id(), $ref_weight->[0], $ref_weight->[1];
+	print "\n";
+    }
+}
 
 sub codon_info {
     my $cutg_file = $opts{'codon-info'} || "need a codon usage file in CUTG GCG format";

@@ -29,6 +29,7 @@ GetOptions(
     "lead-gaps|G",
     "length|l",
     "linearize|L",
+    "mol-wt",
     "no-gaps|g",
     "num-seq|n",
     "output|o=s",
@@ -226,6 +227,10 @@ Print all sequence lengths.
 =item --linearize, -L
 
 Linearize FASTA, one sequence per line.
+
+=item --mol-wt
+
+Print lower and upper bound of molecular weight
 
 =item --no-gaps, -g
 
