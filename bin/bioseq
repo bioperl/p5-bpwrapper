@@ -25,6 +25,7 @@ GetOptions(
     "delete|d=s",
     "feat2fas|F",
     "hydroB|H",
+    "iep",
     "input|i=s",
     "lead-gaps|G",
     "length|l",
@@ -209,6 +210,10 @@ Retrieves a sequence from GenBank using the provided accession number, e.g.,
 =item --hydroB, -H
 
 Return the mean Kyte-Doolittle hydropathicity for protein sequences.
+
+=item --iep
+
+Return iso-electric point for a protein sequences as well as charges at a series of pH values. Depends on Bio::Tools::pICalculator.
 
 =item --input, -i
 

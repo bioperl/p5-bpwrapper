@@ -28,6 +28,7 @@ use Bio::SeqUtils;
 use Scalar::Util;
 use Exporter ();
 use Bio::CodonUsage::IO;
+use Bio::Tools::pICalculator;
 # use Bio::Tools::GuessSeqFormat;
 
 if ($ENV{'DEBUG'}) { use Data::Dumper }
@@ -60,6 +61,7 @@ my %opt_dispatch = (
     'codon-table' => \&codon_table,
 #    'codon-sim' => \&codon_sim,
     'codon-info' => \&codon_info,
+    'iep' => \&iso_electric_point,
     'composition' => \&print_composition,
     'mol-wt' => \&print_weight,
     'delete' => \&filter_seqs,
@@ -245,6 +247,18 @@ sub codon_sim {
     $out->write_seq($sim_obj);
 }
 =cut
+
+sub iso_electric_point {
+    my $calc = Bio::Tools::pICalculator->new(-places => 2, -pKset => 'EMBOSS');
+    while ( my $seq = $in->next_seq ) {
+	$calc->seq($seq);
+	print $seq->id(), "\t", $calc->iep;
+	for(my $i = 0; $i <= 14; $i += 0.5 ){
+	    print "\t", $i, "|", sprintf("%.2f", $calc->charge_at_pH($i));
+	}
+	print "\n";
+    }
+}
 
 sub print_weight {
     while ($seq = $in->next_seq()) { 
