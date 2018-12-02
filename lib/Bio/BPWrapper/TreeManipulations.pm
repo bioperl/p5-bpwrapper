@@ -1062,7 +1062,7 @@ sub _name2node {
     my @node_objects;
     for my $node_name (@node_names) {
         $nd = $tree->find_node(-id => $node_name) || $tree->find_node(-internal_id => $node_name);
-        if ($nd) { push @node_objects, $nd } else { say "Node/leaf '$node_name' not found. Ignoring..." }
+        if ($nd) { push @node_objects, $nd } else { warn "Node/leaf '$node_name' not found. Ignoring...\n" }
     }
     return @node_objects
 }
