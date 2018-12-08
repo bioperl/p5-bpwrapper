@@ -68,6 +68,7 @@ my %opt_dispatch = (
     'fetch' => \&retrieve_seqs,
     'no-gaps' => \&remove_gaps,
     'length' => \&print_lengths,
+    'longest-orf' => \&update_longest_orf,
     'num-seq' => \&print_seq_count,
     'pick' => \&filter_seqs,
     'revcom' => \&make_revcom,
@@ -247,6 +248,67 @@ sub codon_sim {
     $out->write_seq($sim_obj);
 }
 =cut
+
+sub update_longest_orf {
+    while( my $seqobj  = $in->next_seq() ) {
+	my $pep_string = $seqobj->translate( undef, undef, 0 )->seq();
+	unless ($pep_string =~ /\*[A-Z]/) { # no internal stop; don't proceed
+	    $out->write_seq($seqobj);
+	    return;
+	}
+
+	my $longest = {
+	    'aa_start'  => 1,
+	    'aa_end'    => 1,
+	    'aa_length' => 1,
+	    'nt_start'  => 1,
+	    'nt_end'    => 1,
+	    'nt_seq'    => $seqobj->seq(),
+	    'frame'     => 1,
+	};
+
+	foreach my $fm ( 1, 2, 3, -1, -2, -3 ) {
+        #      print STDERR "checking frame $fm ...\n";
+	    my $new_seqobj = Bio::Seq->new(
+		-id  => $seqobj->id() . "|$fm",
+		-seq => $fm > 0 ? $seqobj->subseq( $fm, $seqobj->length() ) : $seqobj->revcom()->subseq( abs($fm), $seqobj->length() )
+		);    # chop seq to frame first
+	    &_get_longest($new_seqobj, $longest, $fm);
+	}
+	warn "start codon not M/V/L:", $seqobj->id() unless substr( $longest->{nt_seq}, 0, 3 ) =~ /[atg|gt[atcg]|ct[atcg]|tt[ag]/i;
+	print ">", $seqobj->id, "|f", $longest->{frame}, "|longest-orf\n", $longest->{nt_seq}, "\n";
+    }
+}
+
+sub _get_longest {
+    my ($seq, $longest, $fm) = @_;
+    my $pep_string = $seq->translate( undef, undef, 0 )->seq();
+    return unless $pep_string =~ /\*[A-Z]/; # no internal stops
+    die $seq->id(), " contains ambiguous aa (X)\n" if $pep_string =~ /X/;
+    my $three_prime = $seq->length();
+    
+    my $start = 1;
+    my @aas = split '', $pep_string;
+    for ( my $i = 0; $i <= $#aas; $i++ ) {
+	if ( $aas[$i] eq '*' || $i == $#aas ) {    # hit a stop codon or end of sequence
+	    if ( $i - $start + 2 > $longest->{aa_length} ) { # if longer than last longest
+		$longest->{aa_start}  = $start;
+		$longest->{aa_end}    = $i + 1;
+		$longest->{aa_length} = $i - $start + 2;
+		$longest->{nt_start}  = 3 * ( $start - 1 ) + 1;
+		my $end = 3 * $i + 3;
+		$end
+		    = ( $end > $three_prime )
+		    ? $three_prime
+		    : $end;    # guranteed not to go beyond 3'
+		$longest->{nt_end} = $end;
+		$longest->{frame}  = $fm;
+		$longest->{nt_seq} = $seq->subseq( 3 * ( $start - 1 ) + 1, $end );
+	    }
+	    $start = $i + 2;
+	} 
+    }
+}
 
 sub iso_electric_point {
     my $calc = Bio::Tools::pICalculator->new(-places => 2, -pKset => 'EMBOSS');

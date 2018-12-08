@@ -29,6 +29,7 @@ GetOptions(
     "input|i=s",
     "lead-gaps|G",
     "length|l",
+    "longest-orf",
     "linearize|L",
     "mol-wt",
     "no-gaps|g",
@@ -232,6 +233,10 @@ Print all sequence lengths.
 =item --linearize, -L
 
 Linearize FASTA, one sequence per line.
+
+=item --longest-orf
+
+Find and return the longest ORF (return the original if no error for -t1, i.e., no internal stop at the 1st reading frame). This is useful for fixing out-of-frame seqs.
 
 =item --mol-wt
 
