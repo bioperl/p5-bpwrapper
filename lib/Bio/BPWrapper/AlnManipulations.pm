@@ -276,10 +276,16 @@ sub pair_diff {
 	    $pair->add_seq($seqA);
 	    $pair->add_seq($seqB);
 	    $pair = $pair->remove_gaps();
-	    my $mask = $seqA->seq ^ $seqB->seq; #  (exclusive or) operator: returns "\0" if same
+#	    my $mask = $seqA->seq ^ $seqB->seq; #  (exclusive or) operator: returns "\0" if same
 	    my $ct_diff = 0;
-	    while ($mask =~ /[^\0]/g) { $ct_diff++ }
-	    print join "\t", ($idA, $idB, $ct_diff, $pair->length());
+	    my $matchLine = $pair->match_line();
+	    my @match_symbols = split //, $matchLine;
+	    for (my $i = 0; $i < $pair->length; $i++) {
+		next if $match_symbols[$i] eq '*'; 
+		$ct_diff++;
+	    }
+#	    while ($mask =~ /[^\0]/g) { $ct_diff++ }
+	    print join "\t", ($idA, $idB, $ct_diff, $pair->length(), $pair->percentage_identity());
 	    print "\n";
 	}
     }
