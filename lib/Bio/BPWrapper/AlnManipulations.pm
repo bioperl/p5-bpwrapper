@@ -267,13 +267,19 @@ sub pair_diff {
     foreach my $seq ($aln->each_seq()) { push @seqs, $seq }
     @seqs = sort { $a->id() cmp $b->id() } @seqs;
     for (my $i=0; $i < $#seqs; $i++) {
-	my $id_i = $seqs[$i]->id();
+	my $idA = $seqs[$i]->id();
+	my $seqA = $seqs[$i];
 	for (my $j=$i+1; $j <= $#seqs; $j++) {
-	    my $id_j = $seqs[$j]->id();
-	    my $mask = $seqs[$i]->seq ^ $seqs[$j]->seq; #  (exclusive or) operator: returns "\0" if same
+	    my $idB = $seqs[$j]->id();
+	    my $seqB = $seqs[$j];
+	    my $pair = new Bio::SimpleAlign;
+	    $pair->add_seq($seqA);
+	    $pair->add_seq($seqB);
+	    $pair = $pair->remove_gaps();
+	    my $mask = $seqA->seq ^ $seqB->seq; #  (exclusive or) operator: returns "\0" if same
 	    my $ct_diff = 0;
 	    while ($mask =~ /[^\0]/g) { $ct_diff++ }
-	    print join "\t", ($id_i, $id_j, $ct_diff, $aln->length());
+	    print join "\t", ($idA, $idB, $ct_diff, $pair->length());
 	    print "\n";
 	}
     }
