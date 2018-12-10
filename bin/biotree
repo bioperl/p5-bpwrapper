@@ -220,6 +220,10 @@ Output file format. Accepts newick, nhx, and tabtree.
 
 Builds a tree of a random subset of the original tree's OTUs.
 
+=item --ref <OTU>
+
+Rotate <OTU> to be the top tip
+
 =item --rename-tips <file>
 
 Rename tips according to a 2-column table
