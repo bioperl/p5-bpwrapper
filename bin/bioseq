@@ -49,7 +49,7 @@ GetOptions(
  #   "longest-orf|C",
  #   "extract|e",
  #   "dotplot|D=s",
- #   "rename|N=s",
+    "rename|N=s",
  #   "slidingwindow|S=i",
  #   "prefix=s",
  #   "split|S=i",
@@ -271,6 +271,10 @@ Select a list of sequences:
 =item --reloop, -R 'number'
 
 Re-circularize a bacterial genome by starting at a specified position. For example, for sequence "ABCDE",  C<bioseq -R'2'> would generate "BCDEA".
+
+=item --rename, -N 'file'
+
+Append sequence names specified by a file (two tab-separated columns: old_name, new_name)
 
 =item --remove-stop, -X
 

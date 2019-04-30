@@ -91,7 +91,7 @@ my %opt_dispatch = (
 #    'extract' => \&reading_frame_ops,
 #	'longest-orf' => \&reading_frame_ops,
 #	'prefix' => \&anonymize,
-#	'rename' => \&rename_id,
+	'rename' => \&rename_id,
 #	'slidingwindow' => \&sliding_window,
 #	'split' => \&split_seqs,
   );
@@ -248,6 +248,29 @@ sub codon_sim {
     $out->write_seq($sim_obj);
 }
 =cut
+
+sub rename_id {
+    open NAME, "<", $opts{rename} || die "a file with old-tab-new needed\n";
+    my %names;
+    while(<NAME>) {
+	chomp;
+	my ($oldN, $newN) = split;
+	$names{$oldN} = $newN;
+    }
+    close NAME;
+
+    while( my $seqobj  = $in->next_seq() ) {
+	my $id = $seqobj->display_id();
+	if ($names{$id}) {
+	    $seqobj->id($id . "|" . $names{$id});
+	    warn "$id appended by $names{$id}\n";
+	} else {
+	    warn "$id not changed\n";
+	}
+	$out->write_seq($seqobj);
+    }
+}
+
 
 sub update_longest_orf {
     while( my $seqobj  = $in->next_seq() ) {
