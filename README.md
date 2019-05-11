@@ -63,4 +63,4 @@ The git code generally has the newest code. If git is not your thing, you can al
 * Pedro Pagan
 * Girish Ramrattan
 * Weigang Qiu, City University of New York, Hunter College (Correspondence: [weigang@genectr.hunter.cuny.edu)](mailto://weigang@genectr.hunter.cuny.edu))
-* If you find the tools useful, please cite: Hernadez, Bernstein, et al (2018). BpWrapper::BioPerl-based sequence and tree utiliteis for rapid prototyping of bioinformatics pipelines. BMC Genomics 19:76. [Paper link](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2074-9).
+* If you find the tools useful, please cite: Hernadez, Bernstein, et al (2018). BpWrapper::BioPerl-based sequence and tree utilities for rapid prototyping of bioinformatics pipelines. BMC Genomics 19:76. [Paper link](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2074-9).
