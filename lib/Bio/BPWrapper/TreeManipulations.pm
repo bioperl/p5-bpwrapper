@@ -616,7 +616,8 @@ sub reroot {
     my $outgroup_id = $opts{'reroot'};
     my $outgroup    = $tree->find_node($outgroup_id);
 #    my $newroot     = $outgroup->create_node_on_branch(-FRACTION => 0.5, -ANNOT => {id => 'newroot'});
-    $tree->reroot($outgroup);
+#    $tree->reroot($outgroup);
+    $tree->reroot_at_midpoint($outgroup);
     $print_tree = 1;
 }
 
