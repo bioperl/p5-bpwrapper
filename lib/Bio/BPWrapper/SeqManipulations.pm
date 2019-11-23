@@ -277,7 +277,15 @@ sub update_longest_orf {
 	my $pep_string = $seqobj->translate( undef, undef, 0 )->seq();
 	unless ($pep_string =~ /\*[A-Z]/) { # no internal stop; don't proceed
 	    $out->write_seq($seqobj);
-	    return;
+#	    warn $seqobj->id, ": +1 ok\n";
+	    next;
+	}
+
+	my $pep_rev = $seqobj->revcom()->translate( undef, undef, 0 )->seq();
+	unless ($pep_rev =~ /\*[A-Z]/) { # no internal stop for revcom
+	    $out->write_seq($seqobj->revcom());
+#	    warn $seqobj->id(), ": -1 ok\n";
+	    next;
 	}
 
 	my $longest = {
@@ -290,48 +298,59 @@ sub update_longest_orf {
 	    'frame'     => 1,
 	};
 
-	foreach my $fm ( 1, 2, 3, -1, -2, -3 ) {
-        #      print STDERR "checking frame $fm ...\n";
+	foreach my $fm ( 2, 3, -2, -3 ) {
+#	    warn "checking frame $fm ...\n";
 	    my $new_seqobj = Bio::Seq->new(
 		-id  => $seqobj->id() . "|$fm",
 		-seq => $fm > 0 ? $seqobj->subseq( $fm, $seqobj->length() ) : $seqobj->revcom()->subseq( abs($fm), $seqobj->length() )
 		);    # chop seq to frame first
+	    
 	    &_get_longest($new_seqobj, $longest, $fm);
+#	    warn "longest ORF:", $longest->{aa_length}, "\n";
+
 	}
-	warn "start codon not M/V/L:", $seqobj->id() unless substr( $longest->{nt_seq}, 0, 3 ) =~ /[atg|gt[atcg]|ct[atcg]|tt[ag]/i;
-	print ">", $seqobj->id, "|f", $longest->{frame}, "|longest-orf\n", $longest->{nt_seq}, "\n";
+#	warn "start codon not M/V/L:", $seqobj->id() unless substr( $longest->{nt_seq}, 0, 3 ) =~ /[atg|gt[atcg]|ct[atcg]|tt[ag]/i;
+#	print ">", $seqobj->id, "|f", $longest->{frame}, "|longest-orf\n", $longest->{nt_seq}, "\n";
+	my $longest_seq = Bio::Seq->new(-id => $seqobj->id . "|" . $longest->{frame}, -seq => $longest->{nt_seq} );
+	$out->write_seq($longest_seq);
     }
 }
 
-sub _get_longest {
-    my ($seq, $longest, $fm) = @_;
+sub _get_longest { # for each frame
+    my ($seq, $ref, $fm) = @_;
     my $pep_string = $seq->translate( undef, undef, 0 )->seq();
-    return unless $pep_string =~ /\*[A-Z]/; # no internal stops
-    die $seq->id(), " contains ambiguous aa (X)\n" if $pep_string =~ /X/;
-    my $three_prime = $seq->length();
+    unless ($pep_string =~ /\*[A-Z]/) { # no internal stops, found the longest
+	$ref->{nt_seq} = $seq->seq();
+	$ref->{frame} = $fm > 0 ? "+$fm" : $fm;
+	$ref->{aa_length} = $seq->length()/3;
+#	return; 
+    } else { # has internal stops
+	die $seq->id(), " contains ambiguous aa (X)\n" if $pep_string =~ /X/;
+	my $three_prime = $seq->length();
     
-    my $start = 1;
-    my @aas = split '', $pep_string;
-    for ( my $i = 0; $i <= $#aas; $i++ ) {
-	if ( $aas[$i] eq '*' || $i == $#aas ) {    # hit a stop codon or end of sequence
-	    if ( $i - $start + 2 > $longest->{aa_length} ) { # if longer than last longest
-		$longest->{aa_start}  = $start;
-		$longest->{aa_end}    = $i + 1;
-		$longest->{aa_length} = $i - $start + 2;
-		$longest->{nt_start}  = 3 * ( $start - 1 ) + 1;
+	my $start = 1;
+	my @aas = split '', $pep_string;
+	for ( my $i = 0; $i <= $#aas; $i++ ) {
+	    next unless $aas[$i] eq '*' || $i == $#aas;    # hit a stop codon or end of sequence
+	    if ($i - $start + 2 > $ref->{aa_length}) { # if longer than the last longest
+		$ref->{aa_start}  = $start;
+		$ref->{aa_end}    = $i + 1;
+		$ref->{aa_length} = $i - $start + 2;
+		$ref->{nt_start}  = 3 * ( $start - 1 ) + 1;
 		my $end = 3 * $i + 3;
 		$end
 		    = ( $end > $three_prime )
 		    ? $three_prime
 		    : $end;    # guranteed not to go beyond 3'
-		$longest->{nt_end} = $end;
-		$longest->{frame}  = $fm;
-		$longest->{nt_seq} = $seq->subseq( 3 * ( $start - 1 ) + 1, $end );
+		$ref->{nt_end} = $end;
+		$ref->{frame}  = $fm;
+		$ref->{nt_seq} = $seq->subseq( 3 * ( $start - 1 ) + 1, $end );
 	    }
-	    $start = $i + 2;
-	} 
-    }
+	    $start = $i + 2; # re-start
+	}
+    } 
 }
+
 
 sub iso_electric_point {
     my $calc = Bio::Tools::pICalculator->new(-places => 2, -pKset => 'EMBOSS');
@@ -622,7 +641,6 @@ sub print_seq_count {
 }
 
 =head2 make_revcom()
-
 Reverse complement. Wraps
 L<Bio::Seq-E<gt>revcom()|https://metacpan.org/pod/Bio::Seq#revcom>.
 
@@ -685,10 +703,26 @@ sub reading_frame_ops {
 	}
         elsif ($frame == 3) {
                 my @prots = Bio::SeqUtils->translate_3frames($seq);
-                $out->write_seq($_) foreach @prots
+		foreach (@prots) {
+		    my $id = $_->id();
+		    $id =~ /^(\S+)-(\d)F$/;
+		    my ($oriId, $fm) = ($1, $2);
+		    $_->id($oriId . "|+" . ($fm+1));
+		    $out->write_seq($_);
+		}
         } elsif ($frame == 6) {
                 my @prots = Bio::SeqUtils->translate_6frames($seq);
-                $out->write_seq($_) foreach @prots
+		foreach (@prots) {
+		    my $id = $_->id();
+		    $id =~ /^(\S+)-(\d)([RF])$/;
+		    my ($oriId, $fm, $dir) = ($1, $2, $3);
+		    if ($dir eq 'F') {
+			$_->id($oriId . "|+" . ($fm+1));
+		    } else {
+			$_->id($oriId . "|-" . ($fm+1));
+		    }
+		    $out->write_seq($_);
+		}
         } else { warn "Accepted frame arguments: 1, 3, and 6\n"}
     }
 }
