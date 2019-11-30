@@ -315,7 +315,8 @@ sub update_longest_orf {
 	}
 #	warn "start codon not M/V/L:", $seqobj->id() unless substr( $longest->{nt_seq}, 0, 3 ) =~ /[atg|gt[atcg]|ct[atcg]|tt[ag]/i;
 #	print ">", $seqobj->id, "|f", $longest->{frame}, "|longest-orf\n", $longest->{nt_seq}, "\n";
-	my $longest_seq = Bio::Seq->new(-id => $seqobj->id . "|" . $longest->{frame}, -seq => $longest->{nt_seq} );
+	my $fid = $longest->{frame} > 0 ? "+" . $longest->{frame} : $longest->{frame};
+	my $longest_seq = Bio::Seq->new(-id => $seqobj->id . "|" . $fid, -seq => $longest->{nt_seq} );
 	$out->write_seq($longest_seq);
     }
 }
