@@ -276,6 +276,8 @@ sub update_longest_orf {
     while( my $seqobj  = $in->next_seq() ) {
 	my $pep_string = $seqobj->translate( undef, undef, 0 )->seq();
 	unless ($pep_string =~ /\*[A-Z]/) { # no internal stop; don't proceed
+	    my $id = $seqobj->id();
+	    $seqobj->id($id . "|+1");
 	    $out->write_seq($seqobj);
 #	    warn $seqobj->id, ": +1 ok\n";
 	    next;
@@ -283,6 +285,8 @@ sub update_longest_orf {
 
 	my $pep_rev = $seqobj->revcom()->translate( undef, undef, 0 )->seq();
 	unless ($pep_rev =~ /\*[A-Z]/) { # no internal stop for revcom
+	    my $id = $seqobj->id();
+	    $seqobj->id($id . "|-1");
 	    $out->write_seq($seqobj->revcom());
 #	    warn $seqobj->id(), ": -1 ok\n";
 	    next;
