@@ -348,7 +348,7 @@ sub _get_longest { # for each frame
 		    ? $three_prime
 		    : $end;    # guranteed not to go beyond 3'
 		$ref->{nt_end} = $end;
-#		$ref->{frame}  = $fm;
+		$ref->{frame}  = $fm;
 		$ref->{nt_seq} = $seq->subseq( 3 * ( $start - 1 ) + 1, $end );
 	    }
 	    $start = $i + 2; # re-start
