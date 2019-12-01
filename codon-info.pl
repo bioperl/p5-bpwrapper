@@ -1,7 +1,10 @@
 #!/usr/bin/env perl
 # 6/27/2018. Codon bias by entropy
 # 11/24/2019: weighting & small-sample correction by Sun, Yang, and Xia (2012), MBE
-#
+# 11/30/2019: implement small-sample correction
+# small-sample correction: 1. add pseudo counts to avoid zero (good)
+# small-sample correction: 2. use weighted average (dramatic)
+# small-sample correction: 3. add correction term to increase uncertainty (effective)
 
 use strict;
 use warnings;
@@ -10,6 +13,10 @@ use Bio::Tools::CodonTable;
 use Data::Dumper;
 use Bio::SeqIO;
 use Bio::Tools::CodonOptTable;
+use Getopt::Std;
+
+my %opts;
+getopts('c', \%opts);
 
 my $cutg_file = shift @ARGV;
 my $io = Bio::CodonUsage::IO->new(-file => $cutg_file);
@@ -99,8 +106,8 @@ while (my $seq = $in->next_seq()) {
     }
     print $seq->id, "\t", $seq->length(), "\t", $numCodons, "\t";
     printf "%.2f\t", $effectiveN;
-    printf "%.4f\t", $h_cds - $h_genome;
-    printf "%.4f\n",   $h_cds_wt/$n_cds - $h_genome_wt/$n_genome;
+    printf "%.4f\t", $h_genome - $h_cds; 
+    printf "%.4f\n", $h_genome_wt/$n_genome - $h_cds_wt/$n_cds;
 }    
 
 exit;
@@ -122,8 +129,11 @@ sub cd_entropy {
     my $Fcd = 0; # effective number of codons
     foreach (@cd_obj) {
 #	next unless $_->{rel_freq} > 0;
-	$h -= $_->{rel_freq} * log($_->{rel_freq})/log(2);
+	$h += -1 * $_->{rel_freq} * log($_->{rel_freq})/log(2);
 	$Fcd += $_->{rel_freq} ** 2; # Formula #3, 1/homozygosity as diversity
     }
+    my $s = scalar @cd_obj;
+    my $en = ($s - 1)/(2*$sum*log(2)); # increase of uncertainty due to small sample size
+    $h -= $en if $opts{'c'}; # correcton
     return ($Fcd, $sum, $h);
 }

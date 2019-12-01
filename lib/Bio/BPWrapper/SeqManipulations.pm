@@ -326,9 +326,8 @@ sub _get_longest { # for each frame
     my $pep_string = $seq->translate( undef, undef, 0 )->seq();
     unless ($pep_string =~ /\*[A-Z]/) { # no internal stops, found the longest
 	$ref->{nt_seq} = $seq->seq();
-#	$ref->{frame} = $fm > 0 ? "+$fm" : $fm;
+	$ref->{frame} = $fm;
 	$ref->{aa_length} = $seq->length()/3;
-#	return; 
     } else { # has internal stops
 	die $seq->id(), " contains ambiguous aa (X)\n" if $pep_string =~ /X/;
 	my $three_prime = $seq->length();
