@@ -262,8 +262,10 @@ sub rename_id {
     while( my $seqobj  = $in->next_seq() ) {
 	my $id = $seqobj->display_id();
 	if ($names{$id}) {
-	    $seqobj->id($id . "|" . $names{$id});
-	    warn "$id appended by $names{$id}\n";
+#	    $seqobj->id($id . "|" . $names{$id});
+#	    warn "$id appended by $names{$id}\n";
+	    $seqobj->id($names{$id});
+	    warn "$id replaced by $names{$id}\n";
 	} else {
 	    warn "$id not changed\n";
 	}
