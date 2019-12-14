@@ -306,6 +306,7 @@ sub update_longest_orf {
 
 	foreach my $fm (1, 2, 3, -1, -2, -3 ) {
 #	    warn "checking frame $fm ...\n";
+	    next if $opts{"no-revcom"} && $fm < 0;
 	    my $new_seqobj = Bio::Seq->new(
 		-id  => $seqobj->id() . "|$fm",
 		-seq => $fm > 0 ? $seqobj->subseq( $fm, $seqobj->length() ) : $seqobj->revcom()->subseq( abs($fm), $seqobj->length() )
