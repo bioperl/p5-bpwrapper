@@ -280,17 +280,20 @@ sub update_longest_orf {
 	unless ($pep_string =~ /\*[A-Z]/) { # no internal stop; don't proceed
 	    my $id = $seqobj->id();
 	    $seqobj->id($id . "|+1");
+	    $seqobj = &_trim_end_to_frame($seqobj);
 	    $out->write_seq($seqobj);
 #	    warn $seqobj->id, ": +1 ok\n";
 	    next;
 	}
 
-	unless ($opts{"no-revcom"}) {
+	unless ($opts{"no-revcom"}) { # do not search in revcom
 	    my $pep_rev = $seqobj->revcom()->translate( undef, undef, 0 )->seq();
 	    unless ($pep_rev =~ /\*[A-Z]/) { # no internal stop for revcom
 		my $id = $seqobj->id();
 		$seqobj->id($id . "|-1");
-		$out->write_seq($seqobj->revcom());
+		my $rev = $seqobj->revcom();
+		$rev = &_trim_end_to_frame($rev);
+		$out->write_seq($rev);
 #	    warn $seqobj->id(), ": -1 ok\n";
 		next;
 	    }
@@ -308,7 +311,7 @@ sub update_longest_orf {
 
 	foreach my $fm (1, 2, 3, -1, -2, -3 ) {
 #	    warn "checking frame $fm ...\n";
-	    next if $opts{"no-revcom"} && $fm < 0;
+	    next if $opts{"no-revcom"} && $fm < 0; # do not search in revcom
 	    my $new_seqobj = Bio::Seq->new(
 		-id  => $seqobj->id() . "|$fm",
 		-seq => $fm > 0 ? $seqobj->subseq( $fm, $seqobj->length() ) : $seqobj->revcom()->subseq( abs($fm), $seqobj->length() )
@@ -322,8 +325,18 @@ sub update_longest_orf {
 #	print ">", $seqobj->id, "|f", $longest->{frame}, "|longest-orf\n", $longest->{nt_seq}, "\n";
 	my $fid = $longest->{frame} > 0 ? "+" . $longest->{frame} : $longest->{frame};
 	my $longest_seq = Bio::Seq->new(-id => $seqobj->id . "|" . $fid, -seq => $longest->{nt_seq} );
+	$longest_seq = &_trim_end_to_frame($longest_seq);
 	$out->write_seq($longest_seq);
     }
+}
+
+sub _trim_end_to_frame {
+    my $seqobj = shift;
+    my $seq_len = $seqobj->length();
+    my $remainder = $seq_len % 3;
+    my $seqstr = $seqobj->subseq(1, $seq_len - $remainder);
+    $seqobj->seq($seqstr);
+    return $seqobj;
 }
 
 sub _get_longest { # for each frame

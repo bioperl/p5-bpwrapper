@@ -70,7 +70,7 @@ initialize(\%opts);
 
 for my $option (keys %opts) {
     # Don't process these options: they are for SeqIO
-    next if $option eq 'input' || $option eq 'output';
+    next if $option eq 'input' || $option eq 'output' || $option eq 'no-revcom';
 
     # If there is a function to handle the current option, execute it
     if (can_handle($option)) { handle_opt($option); exit }
