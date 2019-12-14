@@ -304,7 +304,7 @@ sub update_longest_orf {
 	    'frame'     => 1,
 	};
 
-	foreach my $fm ( 2, 3, -2, -3 ) {
+	foreach my $fm (1, 2, 3, -1, -2, -3 ) {
 #	    warn "checking frame $fm ...\n";
 	    my $new_seqobj = Bio::Seq->new(
 		-id  => $seqobj->id() . "|$fm",
