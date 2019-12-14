@@ -285,13 +285,15 @@ sub update_longest_orf {
 	    next;
 	}
 
-	my $pep_rev = $seqobj->revcom()->translate( undef, undef, 0 )->seq();
-	unless ($pep_rev =~ /\*[A-Z]/) { # no internal stop for revcom
-	    my $id = $seqobj->id();
-	    $seqobj->id($id . "|-1");
-	    $out->write_seq($seqobj->revcom());
+	unless ($opts{"no-revcom"}) {
+	    my $pep_rev = $seqobj->revcom()->translate( undef, undef, 0 )->seq();
+	    unless ($pep_rev =~ /\*[A-Z]/) { # no internal stop for revcom
+		my $id = $seqobj->id();
+		$seqobj->id($id . "|-1");
+		$out->write_seq($seqobj->revcom());
 #	    warn $seqobj->id(), ": -1 ok\n";
-	    next;
+		next;
+	    }
 	}
 
 	my $longest = {
