@@ -263,6 +263,16 @@ sub phylip_non_interleaved {
 ###################### subroutine ######################
 
 sub pair_diff {
+    my $alnBack = $aln;
+    $alnBack = $alnBack->remove_gaps();
+    my $matchLineFull = $alnBack->match_line();
+    my @match_symbols_full = split //, $matchLineFull;
+    my $num_var = 0; # de-gapped variable sites
+    for (my $i = 0; $i < $alnBack->length; $i++) {
+	next if $match_symbols_full[$i] eq '*'; 
+	$num_var++;
+    }
+
     my (@seqs);
     foreach my $seq ($aln->each_seq()) { push @seqs, $seq }
     @seqs = sort { $a->id() cmp $b->id() } @seqs;
@@ -285,8 +295,9 @@ sub pair_diff {
 		$ct_diff++;
 	    }
 #	    while ($mask =~ /[^\0]/g) { $ct_diff++ }
-	    print join "\t", ($idA, $idB, $ct_diff, $pair->length(), $pair->percentage_identity());
-	    print "\n";
+	    my $pairdiff = $pair->percentage_identity();
+	    print join "\t", ($idA, $idB, $num_var, $ct_diff, $pair->length());
+	    printf "\t%.4f\t%.4f\t%.4f\n", $pairdiff, 1-$pairdiff/100, $ct_diff/$num_var;
 	}
     }
     exit;

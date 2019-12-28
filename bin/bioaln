@@ -328,7 +328,7 @@ Output file format. Common ones include 'clustalw' (default), 'fasta' and 'phyli
 
 =item --pair-diff
 
-Print pairwise sequence differences (and the total alignment length).
+Print pairwise sequence differences, including columns: seqA, seqB, num_variable_sites (no gap), num_pair_diff (no gap), total_pair_length (no gap), percent identity, fraction diff, and pair_diff/num_variable
 
 =item --pep2dna, -P 'unaligned-cds-file' <protein_alignment>
 
