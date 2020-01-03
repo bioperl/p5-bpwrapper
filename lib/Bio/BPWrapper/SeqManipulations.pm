@@ -111,7 +111,7 @@ my %filter_dispatch = (
     'delete_by_ambig'   => \&del_by_ambig,
     'find_by_length' => \&find_by_length,
     'pick_by_length' => \&pick_by_length,
-    'del_by_length'  => \&del_by_length,
+    'delete_by_length'  => \&del_by_length,
 );
 
 ##################### initializer & option handlers ###################
