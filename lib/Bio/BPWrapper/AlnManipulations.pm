@@ -127,7 +127,6 @@ sub initialize {
 #    my $in_format;
 #    use IO::Scalar;
 #    my $s;
-    $file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line
 #    my ($guesser);
 #    if ($file eq "STDIN") {
 #	my $line_ct = 0; 
@@ -145,13 +144,16 @@ sub initialize {
 
     my $in_format = $opts{'input'} || 'clustalw';
     if ($opts{"concat"}) {
+#	foreach my $file (glob @ARGV) {
 	while ($file = shift @ARGV) {
+#	    warn "reading $file\n";
 #	       $guesser = Bio::Tools::GuessSeqFormat->new( -file => $file);
 #	       $in_format  = $guesser->guess;
 	       $in = Bio::AlignIO->new(-file => $file, -format => $in_format);
 	       while ($aln=$in->next_aln()) { push @alns, $aln }
 	}
-    } else {	
+    } else {
+	$file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line
 	if ($in_format && $in_format =~ /blast/) { # guess blastoutput as "phylip", so -i 'blast' is needed
 #	if ($opts{"input"} && $opts{"input"} =~ /blast/) { # "blastxml" (-outfmt 5 ) preferred
 	    my $searchio = Bio::SearchIO->new( -format => 'blast', ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file)); # works for regular blast output
