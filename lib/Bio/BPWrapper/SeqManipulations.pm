@@ -698,7 +698,25 @@ sub print_subseq {
 sub _internal_stop_or_x {
     my $str = shift;
     $str =~ s/\*$//; # remove last stop
-    return ($str =~ /[X\*]/) ? 1 : 0; # previously missed double **
+    my @internalStops;
+    my @nonStandardAA;
+    while ($str =~ m/\*/g) { # internal stop  # previously missed double **
+	push @internalStops, pos($str);
+    }
+
+    while ($str =~ m/X/g) { # non-standard AA
+	push @nonStandardAA, pos($str);
+    }
+
+    if (@nonStandardAA) {
+	warn "Presence of X at postions:\t", join(";", @nonStandardAA), "\n";
+    }
+
+    if (@internalStops) {
+	warn "Presence of internal stops at postions:\t", join(";", @internalStops), "\n";
+    }
+
+    return @internalStops ? 1 : 0;	
 }
 
 =head2 reading_frame_ops
