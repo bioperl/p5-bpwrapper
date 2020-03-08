@@ -29,9 +29,7 @@ our ($PGDATABASE, $PGUSER, $PGHOST, $PGPASSWORD);
 #require "dbconfig.pl"; # database connection options
 $PGHOST =  'borreliabase.org';
 $PGUSER =  'lab';
-$PGPASSWORD =  'homology';
 $PGDATABASE =  'bb3-dev';
-
 
 my @within_ss=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113); # N=14, except 1, the old B31
 my @between_sl=(100, 160, 200, 300, 302, 310, 320, 401); # N=8, not include: 400 (Pko, Glokener) & 303 (Far04, Casjens)
@@ -43,15 +41,25 @@ my @whole_genomes=(@mk_group, 200, 300, 302, 303, 310, 320, 400, 401, 405); # N=
 ################################################################################
 my %opts;
 GetOptions(
-	\%opts,
-	"help|h",
-	"man|m",
-	"genome" => \&genome,
-	"orf" => \&orf,
-	"igs" => \&igs,
-        "proteom" => \&proteom,
-        "cdhit" => \&homologs,
+    \%opts,
+    "help|h",
+    "man|m",
+    "genome",
+    "orf",
+    "igs",
+    "proteom",
+    "cdhit",
+    "pass=s",
 ) or pod2usage(2);
+
+$PGPASSWORD = $opts{pass};
+die "Need DB password: $0 --pass\n" unless $opts{pass};
+
+&genome if $opts{genome};
+&orf if $opts{orf};
+&igs if $opts{is};
+&proteom if $opts{proteom};
+&homologs if $opts{cdhit};
 
 pod2usage(1) if $opts{"help"};
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $opts{"man"};
