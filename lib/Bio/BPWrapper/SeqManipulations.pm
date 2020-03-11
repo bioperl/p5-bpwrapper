@@ -632,6 +632,7 @@ sub remove_gaps {
     while ($seq = $in->next_seq()) {
         my $string = $seq->seq();
         $string =~ s/-//g;
+        $string =~ s/\.//g;
         my $new_seq = Bio::Seq->new(-id => $seq->id(), -seq => $string);
         $out->write_seq($new_seq)
     }
