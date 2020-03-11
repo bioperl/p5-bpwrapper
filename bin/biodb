@@ -50,16 +50,47 @@ GetOptions(
     "proteom",
     "cdhit",
     "pass=s",
+    "keep-strain|k=s",
+    "syn-anchor",  # genoplotR for Barbour Bergey's manual
+    "lt-orf",
+    "rt-orf",
+    "syn-coord", # genoplotR for vlsS cassettes
+    "lt-coord",
+    "rt-coord",
 ) or pod2usage(2);
 
 $PGPASSWORD = $opts{pass};
 die "Need DB password: $0 --pass\n" unless $opts{pass};
 
+my %strKeep; 
+
+if ($opts{"keep-strain"}) {
+    open FILE, "<", $opts{"keep-strain"};
+    while(<FILE>) {
+	chomp;
+	$strKeep{$_}++;
+    }
+    close FILE;
+}
+
+my $lt_anchor; # e.g., BB_0240
+my $rt_anchor; # e.g., BB_0243
+
+if ($opts{"syn-anchor"}) {
+    die "$0 --synteny need left and right ORF\n" unless $opts{"lt-orf"} && $opts{"rt-orf"};
+    $lt_anchor = $opts{"lt-orf"}; # e.g., BB_0240
+    $rt_anchor = $opts{"rt-orf"}; # e.g., BB_0243
+}
+
+
+#print Dumper(\%strKeep);
 &genome if $opts{genome};
 &orf if $opts{orf};
 &igs if $opts{is};
 &proteom if $opts{proteom};
 &homologs if $opts{cdhit};
+&synteny_by_anchors if $opts{"syn-anchor"};
+&synteny_by_coords if $opts{"syn-coord"};
 
 pod2usage(1) if $opts{"help"};
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $opts{"man"};
@@ -76,21 +107,77 @@ exit;
 # Subs
 ####################
 
-sub homologs {
-    my %hmg_options;
-    getopts('f:', \%hmg_options); # select by genome_ids in a file
-    my ($cdhit_id) = @ARGV;
-    my %strKeep; 
+sub synteny_by_coords {
+# CLI: biodb --syn-coord --keep-strain <file> --pass <password> 5
+    my ($cdhit) = @ARGV;
+    my %orths;
+# Set up database connection ( hardcoded )
+    my $dbh = db_connect();
+    my $sth0 = $dbh->prepare("SELECT strain, locus FROM vorf WHERE strain_id = ? AND cdhit_id = ?");
+    my $sth1 = $dbh->prepare("SELECT start, stop, strand, con_acc FROM orf4 WHERE locus = ?");
 
-    if ($hmg_options{f}) {
-	open FILE, "<", $hmg_options{f};
-	while(<FILE>) {
-	    chomp;
-	    $strKeep{$_}++;
-	}
-	close FILE;
+   foreach my $gid (sort {$a <=> $b} keys %strKeep) {    
+       $sth0->execute($gid, $cdhit); 
+       while (my ( $strainNm, $locus ) = $sth0->fetchrow_array() ) {
+	   $sth1->execute($locus); 
+	   my @data = $sth1->fetchrow_array();
+	   print join "\t", ($gid, $strainNm, $locus, @data);
+	   print "\n";
+       }
+   }
+    
+    $sth0->finish();
+    $sth1->finish();
+    $dbh->disconnect;
+}
+
+sub synteny_by_anchors {
+    my %orths;
+# Set up database connection ( hardcoded )
+    my $dbh = db_connect();
+    my $sth0 = $dbh->prepare("SELECT cdhit_id, ortholog FROM vorf4 WHERE genome_id = ? AND locus = ?");
+    my $sth1 = $dbh->prepare("SELECT genome_id, locus, start, stop, strand, con_acc FROM vorf4 WHERE cdhit_id = ? and ortholog = ?");
+    my $sth2 = $dbh->prepare("SELECT genome_id, strain, locus, start, stop, strand, cdhit_id FROM vorf4 WHERE start >= ? and stop <= ? and genome_id = ? and con_acc = ? and cdhit_id > 0");
+    
+# get orth_con_id, orth_orf_id
+    $sth0->execute(120, $lt_anchor); # 120 is B31 chromosome
+    my ( $lt_cdhit, $lt_orth) = $sth0->fetchrow_array();
+    $sth0->execute(120, $rt_anchor); # 120 is B31 chromosome
+    my ( $rt_cdhit, $rt_orth) = $sth0->fetchrow_array();
+    
+    my (%genome_bounds);
+    $sth1->execute($lt_cdhit, $lt_orth); 
+    while (my ( $gid, $locus, $start, $end, $strand, $contig) = $sth1->fetchrow_array()) {
+	next unless $strKeep{$gid};
+	$genome_bounds{$gid}{'left'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
+    }
+    
+    $sth1->execute($rt_cdhit, $rt_orth); 
+    while (my ( $gid, $locus, $start, $end, $strand, $contig) = $sth1->fetchrow_array()) {
+	$genome_bounds{$gid}{'right'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
     }
 
+#print Dumper(\%genome_bounds); exit;
+
+    foreach my $gid (keys %strKeep) {
+#    print $gid, "\t";
+	$sth2->execute($genome_bounds{$gid}{'left'}->{start}, $genome_bounds{$gid}{'right'}->{end}, $gid, $genome_bounds{$gid}{'left'}->{contig});
+	while (my @gene = $sth2->fetchrow_array()) {
+	    print join "\t", @gene;
+	    print "\n";
+	}
+    }
+
+    $sth0->finish();
+    $sth1->finish();
+    $sth2->finish();
+    $dbh->disconnect;
+}
+
+
+
+sub homologs {
+    my ($cdhit_id) = @ARGV;
     my $dbh = db_connect();
     my $sth1 = $dbh->prepare("SELECT locus, strain, strain_id, species from vorf where cdhit_id = ?");
     my $sth2 = $dbh->prepare("SELECT aln FROM orf4 WHERE locus = ?"); 
@@ -100,7 +187,7 @@ sub homologs {
 
     $sth1->execute($cdhit_id);
     while ( my ($loc, $strNm, $strId, $spId) = $sth1->fetchrow_array() ) {
-	next if $hmg_options{f} && !$strKeep{$strId};
+	next if $opts{"keep-strain"} && !$strKeep{$strId};
 	push @locs, $loc;
 	$strain_by_Name{$loc} = $strNm;
 	$spId{$loc} = $spId;
