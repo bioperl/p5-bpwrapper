@@ -194,7 +194,7 @@ Delete a sequence or a comma-separated list of sequences, e.g.,
    --delete id:foo	 # by id
    --delete order:2	 # by order
    --delete length:n     # by min length, where 'n' is length
-   --delete ambig:x	 # by min % ambiguous base/aa, where 'x' is the %
+   --delete ambig:x	 # by max number of x ambiguous bases (non-ATCGs), e.g., if x=20, delete seqs w/ 20 or mroe N's
    --delete id:foo,bar   # list by id
    --delete re:REGEX     # using a regular expression (only one regex is expected)
 

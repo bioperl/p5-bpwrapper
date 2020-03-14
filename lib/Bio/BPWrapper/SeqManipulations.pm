@@ -1157,7 +1157,7 @@ sub del_by_re {
 sub find_by_ambig {
     my ($action, $currseq, $cutoff) = @_;
     my $string        = $currseq->seq();
-    my $ct            = ($string =~ s/n/n/gi);
+    my $ct            = ($string =~ s/([^ATCG])/$1/gi); # won't work for AA seqs
     my $percent_ambig = $ct / $currseq->length();
     $filter_dispatch{"$action" . "_by_ambig"}->($currseq, $cutoff, $ct, $percent_ambig)
 }
@@ -1171,7 +1171,8 @@ sub pick_by_ambig {
 sub del_by_ambig {
     my ($currseq, $cutoff, $ct, $percent_ambig) = @_;
 
-    if ($percent_ambig > $cutoff) { warn "Deleted sequence: ", $currseq->id(), " number of N: ", $ct, "\n" }
+#    if ($percent_ambig > $cutoff) { warn "Deleted sequence: ", $currseq->id(), " number of N: ", $ct, "\n" }
+    if ($ct >= $cutoff) { warn "Deleted sequence: ", $currseq->id(), " number of bad monomers: ", $ct, "\n" }
     else { $out->write_seq($currseq) }
 }
 
