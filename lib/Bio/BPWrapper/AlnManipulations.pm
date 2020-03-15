@@ -62,6 +62,7 @@ my %opt_dispatch = (
     "boot" => \&bootstrap,
     "codon-view" => \&draw_codon_view,
     "delete" => \&del_seqs,
+    "gap-char" => \&gap_char,
     "no-gaps" => \&remove_gaps,
     "length" => \&print_length,
     "match" => \&print_match,
@@ -263,6 +264,16 @@ sub phylip_non_interleaved {
 }
 
 ###################### subroutine ######################
+
+sub gap_char {
+    my $char = $opts{'gap-char'};
+    die "gap-char takes a single character\n" unless length($char) == 1;
+    foreach my $seq ($aln->each_seq()) { 
+	my $seq_str = $seq->seq();
+	$seq_str =~ tr/\./-/;
+	$seq->seq($seq_str); 
+    }
+}
 
 sub pair_diff {
     my $alnBack = $aln;

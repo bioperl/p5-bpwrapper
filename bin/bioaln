@@ -32,6 +32,7 @@ GetOptions(
     "consensus|C:50",
     "delete|d=s",
     "dna2pep|D",
+    "gap-char=s",
     "gap-states",
     "gap-states2",
     "input|i=s",
@@ -262,6 +263,10 @@ Delete sequences based on their ids. Option takes a comma-separated list of ids.
 =item --dna2pep, -D
 
 Turn an in-frame protein-coding sequence alignment to a corresponding protein alignment.
+
+=item --gap-char '.'
+
+Change '.' (e.g., from BCFtools, which causes problem for --uniq-seq) to default gap character '-'
 
 =item --gap-states
 
