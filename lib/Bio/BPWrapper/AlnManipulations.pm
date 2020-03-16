@@ -270,7 +270,7 @@ sub gap_char {
     die "gap-char takes a single character\n" unless length($char) == 1;
     foreach my $seq ($aln->each_seq()) { 
 	my $seq_str = $seq->seq();
-	$seq_str =~ tr/\./-/;
+	$seq_str =~ s/[\.-]/$char/g;
 	$seq->seq($seq_str); 
     }
 }

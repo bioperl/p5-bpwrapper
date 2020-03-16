@@ -47,6 +47,7 @@ remove_stop parse_orders find_by_order
 pick_by_order del_by_order find_by_id
 pick_by_id del_by_id find_by_re
 pick_by_re del_by_re
+pick_by_file del_by_file
 find_by_ambig pick_by_ambig del_by_ambig find_by_length
 del_by_length codon_sim codon_info);
 
@@ -105,7 +106,9 @@ my %filter_dispatch = (
     'delete_by_id'      => \&del_by_id,
     'find_by_re'     => \&find_by_re,
     'pick_by_re'     => \&pick_by_re,
-    'delete_by_re'      => \&del_by_re,
+    'find_by_file'     => \&find_by_file,
+    'pick_by_file'     => \&pick_by_file,
+    'delete_by_file'      => \&del_by_file,
     'find_by_ambig'  => \&find_by_ambig,
     'pick_by_ambig'  => \&pick_by_ambig,
     'delete_by_ambig'   => \&del_by_ambig,
@@ -603,6 +606,14 @@ sub filter_seqs {
         my %id_list = map { $_ => 1 } @selected;    # create a hash from @selected
         while (my $currseq = $in->next_seq) { $filter_dispatch{$callsub}->($action, $match, $currseq, \%id_list) }
         foreach (keys %id_list) { warn "No matches found for '$_'\n" if $id_list{$_} == 1 }
+    }
+    elsif ($tag eq 'file') {
+	open LIST, "<", $value || die "can't find file $value\n";
+	my %list;
+	while(<LIST>) { chomp; $list{$_}++ }
+	close LIST;
+        while (my $currseq = $in->next_seq) { $filter_dispatch{$callsub}->($action, $match, $currseq, \%list) }
+        foreach (keys %list) { warn "No matches found for '$_'\n" if $list{$_} == 1 }
     } else {
         while (my $currseq = $in->next_seq) { $filter_dispatch{$callsub}->($action, $currseq, $value) }
     }
@@ -1092,6 +1103,30 @@ sub _make_sed_file {
 }
 
 ################### pick/delete filters #####################
+
+sub find_by_file {
+    my ($action, $match, $currseq, $id_list) = @_;
+    my $seq_id = $currseq->id();
+    $filter_dispatch{$action . "_by_id"}->($match, $currseq, $id_list, $seq_id)
+}
+
+sub pick_by_file {
+    my ($match, $currseq, $id_list, $seq_id) = @_;
+    if ($id_list->{$seq_id}) {
+        $id_list->{$seq_id}++;
+        die "Multiple matches (" . $id_list->{$seq_id} - 1 . ") for $match found\n" if $id_list->{$seq_id} > 2;
+        $out->write_seq($currseq)
+    }
+}
+
+sub del_by_file {
+    my ($match, $currseq, $id_list, $seq_id) = @_;
+    if ($id_list->{$seq_id}) {
+        $id_list->{$seq_id}++;
+        warn "Deleted sequence: ", $currseq->id(), "\n"
+    } else { $out->write_seq($currseq) }
+}
+
 
 sub find_by_order {
     my ($action, $ct, $currseq, $order_list) = @_; # say join "\t", @_;

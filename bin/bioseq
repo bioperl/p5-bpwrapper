@@ -197,6 +197,7 @@ Delete a sequence or a comma-separated list of sequences, e.g.,
    --delete ambig:x	 # by max number of x ambiguous bases (non-ATCGs), e.g., if x=20, delete seqs w/ 20 or mroe N's
    --delete id:foo,bar   # list by id
    --delete re:REGEX     # using a regular expression (only one regex is expected)
+   --delete file:name    # by file, one id per line
 
 =item --feat2fas | -F
 
@@ -268,6 +269,7 @@ Select a list of sequences:
    --pick 'id:foo,bar'    list by id
    --pick 'order:2,3'     list by order
    --pick 'order:2-10'    list by range
+   --pick 'file:name'     id list in file, one id per line
 
 =item --reloop, -R 'number'
 
