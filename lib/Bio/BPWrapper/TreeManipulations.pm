@@ -82,8 +82,8 @@ sub _flip_if_not_in_top_clade { # by resetting creation_id & sortby option of ea
     my ($nd, $ref, $refid) = @_;
     $nd->_creation_id($$refid++);
 #    print STDERR $nd->internal_id(), ":\t";
-    if ($nd->is_Leaf()) { 
-#	print STDERR "\n"; 
+    if ($nd->is_Leaf()) {
+#	print STDERR "\n";
 	return }
     my @des = $nd->each_Descendent();
     my @des_reordered;
@@ -128,7 +128,7 @@ sub cut_tree {
     my $group_ct = 0;
     &identify_nodes_to_cut_by_walk_from_root($rootnode, \$cut, \@cut_nodes, \$group_ct);
     foreach my $cutnode (@cut_nodes) {
-	print $cutnode->is_Leaf() ? "cut_otu" : $cutnode->id(), ":\t"; 
+	print $cutnode->is_Leaf() ? "cut_otu" : $cutnode->id(), ":\t";
 	print join "\t", map {$_->id()} &_each_leaf($cutnode);
 	print "\n";
     }
@@ -138,7 +138,7 @@ sub cut_tree {
 
 sub identify_nodes_to_cut_by_walk_from_root {
     my $node = shift;
-    my $ref_cut = shift; 
+    my $ref_cut = shift;
     my $ref_group = shift;
     my $ref_ct = shift;
     return if $node->{height} > $$ref_cut; # node too high
@@ -186,7 +186,7 @@ sub rename_tips {
     foreach my $nd (@nodes) {
 	next unless $nd->is_Leaf;
 	my $old = $nd->id();
-	if ($labs{$nd->id}) { 
+	if ($labs{$nd->id}) {
 	    $nd->id($labs{$nd->id});
 	    warn "Success: old tip $old changed to new name\t", $nd->id(), "\n";
 	} else {
@@ -516,7 +516,8 @@ sub edge_length_abundance {
     }
 }
 
-=begin: needs work
+=for comment
+# Needs work
 sub rotate_an_in_node {
     my $nd_id = $opts{'rotate-node'};
     my $ref_node = $tree->find_node(-id => $nd_id) || $tree->find_node(-internal_id => $nd_id) || die "node not found\n";
@@ -525,7 +526,6 @@ sub rotate_an_in_node {
 #    $ref_node->each_Descendent( sub { shuffle(@des) } );
     $print_tree = 1;
 #}
-=cut
 ## Not working
 #sub sort_child { # sort by height
 #    my $by = $opts{'sort-child'} || 'height';
@@ -537,6 +537,7 @@ sub rotate_an_in_node {
 #   }
 #    $print_tree = 1;
 #}
+=cut
 
 sub swap_otus { # don't know why
     my @otus;
@@ -1003,8 +1004,8 @@ sub write_out {
     print_all_lengths() if $opts->{'length-all'};
     random_tree() if defined($opts->{'random'});
     depth_to_root() if $opts->{'depth'};
-    rotate_an_in_node() if $opts->{'rotate-node'};    
-#    sort_child() if $opts->{'sort-child'};    
+    rotate_an_in_node() if $opts->{'rotate-node'};
+#    sort_child() if $opts->{'sort-child'};
     alldesc() if $opts->{'otus-desc'};
     walk() if $opts->{'walk'};
     multi2bi() if $opts->{'multi2bi'};
