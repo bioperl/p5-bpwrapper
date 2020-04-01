@@ -5,7 +5,8 @@ sudo: true
 dist: bionic
 
 env:
-  - PERL_CPANM_OPT="--notest --force --skip-satisfied" PREREQS="Module::Build rlib Test::More DB_File XML::DOM::XPath Bio::Root::Version Bio::DB::GenBank Bio::Restriction::Analysis"
+  # Something weird is going on that we have to install Bio::Restriction::Analysis
+  - PREREQS="Module::Build rlib Test::More DB_File XML::DOM::XPath Bio::Root::Version Bio::DB::GenBank Bio::Restriction::Analysis"
 
 after_failure:
   - cat /home/travis/.cpanm/work/*/build.log
@@ -19,14 +20,14 @@ script:
   - perl Build.PL && ./Build && ./Build test
 
 perl:
+  - "5.30"
+  - "5.28"
   - "5.26"
-#  - "5.30"
-#  - "5.22"
-#  - "5.18"
-#  - "5.14"
-#  - "5.12"
-#  - "5.10"
-#  - "5.16"
-#  - "5.20"
-#  - "5.24"
-#  - "5.28"
+  - "5.24"
+  - "5.22"
+  - "5.18"
+  - "5.14"
+  - "5.12"
+  - "5.10"
+  - "5.16"
+  - "5.20"
