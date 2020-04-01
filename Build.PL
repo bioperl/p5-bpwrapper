@@ -50,7 +50,10 @@ my $builder = Module::Build->new(
 
     requires => {
         'perl'                              => 'v5.10',
-        'Bio::Root::Version'                => '1.6.924',
+	'DB_File'                           => '1.853',
+        'Bio::Root::Version'                => '1.007002',
+        'Bio::DB::GenBank'                  => undef,
+	'XML::DOM::XPath'                   => '0.14',
         'rlib'                              => '0.02',
     },
 
