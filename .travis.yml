@@ -12,9 +12,8 @@ after_failure:
 
 install:
   # Prerequisites
-  # libdb-dev (Berkeley DB headers) seems to be needed by BioPerl
   # By running cpanm this way without testing rather than using ./Build,
-  # we save *a lot* of time
+  # we save *a lot* of time.
   - "cpanm --notest --force $PREREQS"
 
 script:
