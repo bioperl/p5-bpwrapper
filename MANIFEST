@@ -1,5 +1,4 @@
 bin/bioaln
-bin/biodb
 bin/biopop
 bin/bioseq
 bin/biotree

@@ -16,7 +16,7 @@ build: Build
 
 #: Remove automatically generated files
 clean: Build
-	$(PERL) Build --makefile_env_macros 1 clean
+	$(PERL) Build --makefile_env_macros 1 clean || /bin/true
 	@rm bin/*.check \
         lib/Bio/BPWrapper*.check \
 	lib/Bio/BPWrapper/*.check || /bin/true
