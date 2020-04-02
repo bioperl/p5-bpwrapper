@@ -60,7 +60,7 @@ The git code generally has the newest code. If git is not your thing, you can al
 
 # Install and run from docker
 
-Use the bpwrapper docker image. It includes `bioaln`, `biodb`, `biopop`, `bioseq`, and `biotree`.
+Use the bpwrapper docker image. It includes `bioaln`, `biopop`, `bioseq`, and `biotree`.
 
 To download the image so that docker recognizes it:
 
