@@ -44,8 +44,6 @@ package will check and install that.
 
 Each script, [`bioaln`](https://github.com/bioperl/p5-bpwrapper/wiki/bioaln), [`biopop`](https://metacpan.org/pod/distribution/Bio-BPWrapper/bin/biopop), [`bioseq`](https://github.com/bioperl/p5-bpwrapper/wiki/bioseq) and [`biotree`](https://github.com/bioperl/p5-bpwrapper/wiki/biotree) give shorter usage help when given command-line option `--help`. Manual-page help is also giving the option `--man`.
 
-Documentation is maintained in [this project's wiki](https://github.com/bioperl/p5-bpwrapper/wiki).
-
 A help file with use cases is maintained at: http://diverge.hunter.cuny.edu/labwiki/Bioutils
 
 # Install from CPAN
