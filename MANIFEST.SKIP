@@ -82,3 +82,10 @@ ChangeLog
 # We use Build.PL; having Makefile.PL messes things up
 
 Makefile.PL
+codon-info-sim.pl
+codon-info.pl
+Dockerfile
+test-files/BbB31.cutg
+test-files/blast.output
+test-files/test-bioseq.embl
+test-files/test-biotree.nhx

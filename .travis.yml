@@ -5,7 +5,7 @@ sudo: true
 dist: bionic
 
 env:
-  - PREREQS="Module::Build rlib Test::More Bio::Restriction::Analysis"
+  - PREREQS="Module::Build rlib XML::DOM::XPath Test::More Bio::Restriction::Analysis"
 
 after_failure:
   - cat /home/travis/.cpanm/work/*/build.log
@@ -21,12 +21,12 @@ script:
   - perl Build.PL && ./Build && ./Build test
 
 perl:
-#  - "5.30"
+  - "5.30"
   - "5.26"
-  # - "5.26"
-  # - "5.24"
-  # - "5.22"
-  # - "5.20"
-  # - "5.18"
-  # - "5.16"
-  # - "5.14"
+  - "5.26"
+  - "5.24"
+  - "5.22"
+  - "5.20"
+  - "5.18"
+  - "5.16"
+  - "5.14"
