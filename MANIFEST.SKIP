@@ -81,10 +81,11 @@ ChangeLog
 
 # We use Build.PL; having Makefile.PL messes things up
 
+Dockerfile
 Makefile.PL
+bin/biodb
 codon-info-sim.pl
 codon-info.pl
-Dockerfile
 test-files/BbB31.cutg
 test-files/blast.output
 test-files/test-bioseq.embl

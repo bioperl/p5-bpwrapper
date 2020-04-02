@@ -58,6 +58,35 @@ The git code generally has the newest code. If git is not your thing, you can al
 
 ```
 
+# Install and run from docker
+
+Use the bpwrapper docker image. It includes `bioaln`, `biodb`, `biopop`, `bioseq`, and `biotree`.
+
+To download the image so that docker recognizes it:
+
+```console
+docker pull rockyb/bpwrapper
+```
+
+For things other than getting help, you'll often need to pass a data in file to the program. Do that by sharing the
+directory that the file is in on the `docker` invocation.
+
+You'll need to pay attention to the permissions on the data file its
+directory. The docker container runs as as a user that may not have
+access to data. I've found however that if you put the data in `/tmp`
+files will be seen inside the running docker container.
+
+For example:
+
+```console
+$ cp test-data/cds.fas /tmp/cds.fas
+$ docker run -it -v /tmp:/test-files rockyb/bpwrapper bioseq -l /test-files/cds.fas
+DK2	120
+W70332	120
+M1608	108
+F2
+```
+
 # Developers, Contact, Citation
 * Yözen Hernández
 * Pedro Pagan

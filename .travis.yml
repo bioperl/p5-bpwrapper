@@ -13,7 +13,7 @@ after_failure:
 install:
   # Prerequisites
   # By running cpanm this way without testing rather than using ./Build,
-  # we save *a lot* of time
+  # we save *a lot* of time.
   - "cpanm --notest --force $PREREQS"
 
 script:
