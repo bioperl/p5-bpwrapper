@@ -1,0 +1,77 @@
+{
+   "abstract" : "wrappers of popular BioPerl classes (`Bio::SeqIO`, `Bio::Seq`, `Bio::AlignIO`, `Bio::SimpleAlign",
+   "author" : [
+      "Y. Hernandez",
+      "P. Pagan",
+      "G. Ramrattan",
+      "W.-G. Qiu",
+      "R. Bernstein"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "Module::Build version 0.4231",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "Bio-BPWrapper",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "rlib" : "0.02"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Module::Build" : "0.4214"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Bio::DB::GenBank" : "0",
+            "Bio::Restriction::Analysis" : "0",
+            "XML::DOM::XPath" : "0.14",
+            "perl" : "v5.14.0",
+            "rlib" : "0.02"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Test::More" : "0.81",
+            "rlib" : "0.02"
+         }
+      }
+   },
+   "provides" : {
+      "Bio::BPWrapper" : {
+         "file" : "lib/Bio/BPWrapper.pm",
+         "version" : "1.13"
+      },
+      "Bio::BPWrapper::AlnManipulations" : {
+         "file" : "lib/Bio/BPWrapper/AlnManipulations.pm"
+      },
+      "Bio::BPWrapper::PopManipulations" : {
+         "file" : "lib/Bio/BPWrapper/PopManipulations.pm"
+      },
+      "Bio::BPWrapper::SeqManipulations" : {
+         "file" : "lib/Bio/BPWrapper/SeqManipulations.pm",
+         "version" : "1.0"
+      },
+      "Bio::BPWrapper::TreeManipulations" : {
+         "file" : "lib/Bio/BPWrapper/TreeManipulations.pm"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/bioperl/bp-utils/issues"
+      },
+      "repository" : {
+         "url" : "https://github.com/bioperl/bp-utils"
+      }
+   },
+   "version" : "1.13",
+   "x_serialization_backend" : "JSON::PP version 4.02"
+}

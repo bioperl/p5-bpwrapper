@@ -1,24 +1,31 @@
 language: perl
 
-sudo: false
+sudo: true
+
+dist: bionic
 
 env:
-  - PREREQS="Module::Build rlib Test::More Bio::Root::Version"
+  - PREREQS="Module::Build rlib XML::DOM::XPath Test::More Bio::Restriction::Analysis"
 
 after_failure:
   - cat /home/travis/.cpanm/work/*/build.log
 
 install:
   # Prerequisites
-  - "cpanm $PREREQS"
+  # By running cpanm this way without testing rather than using ./Build,
+  # we save *a lot* of time.
+  - "cpanm --notest --force $PREREQS"
+
+script:
+  - perl Build.PL && ./Build && ./Build test
 
 perl:
-  - "5.22"
-  - "5.18"
-  - "5.14"
-  - "5.12"
-  - "5.10"
-  - "5.16"
-  - "5.20"
-  - "5.24"
+  - "5.30"
   - "5.26"
+  - "5.26"
+  - "5.24"
+  - "5.22"
+  - "5.20"
+  - "5.18"
+  - "5.16"
+  - "5.14"

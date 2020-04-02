@@ -11,7 +11,7 @@
 #
 #
 
-use strict;    
+use strict;
 use warnings;
 use Getopt::Long qw(:config gnu_getopt);
 use Getopt::Std;
@@ -62,7 +62,7 @@ GetOptions(
 $PGPASSWORD = $opts{pass};
 die "Need DB password: $0 --pass\n" unless $opts{pass};
 
-my %strKeep; 
+my %strKeep;
 
 if ($opts{"keep-strain"}) {
     open FILE, "<", $opts{"keep-strain"};
@@ -116,16 +116,16 @@ sub synteny_by_coords {
     my $sth0 = $dbh->prepare("SELECT strain, locus FROM vorf WHERE strain_id = ? AND cdhit_id = ?");
     my $sth1 = $dbh->prepare("SELECT start, stop, strand, con_acc FROM orf4 WHERE locus = ?");
 
-   foreach my $gid (sort {$a <=> $b} keys %strKeep) {    
-       $sth0->execute($gid, $cdhit); 
+   foreach my $gid (sort {$a <=> $b} keys %strKeep) {
+       $sth0->execute($gid, $cdhit);
        while (my ( $strainNm, $locus ) = $sth0->fetchrow_array() ) {
-	   $sth1->execute($locus); 
+	   $sth1->execute($locus);
 	   my @data = $sth1->fetchrow_array();
 	   print join "\t", ($gid, $strainNm, $locus, @data);
 	   print "\n";
        }
    }
-    
+
     $sth0->finish();
     $sth1->finish();
     $dbh->disconnect;
@@ -138,21 +138,21 @@ sub synteny_by_anchors {
     my $sth0 = $dbh->prepare("SELECT cdhit_id, ortholog FROM vorf4 WHERE genome_id = ? AND locus = ?");
     my $sth1 = $dbh->prepare("SELECT genome_id, locus, start, stop, strand, con_acc FROM vorf4 WHERE cdhit_id = ? and ortholog = ?");
     my $sth2 = $dbh->prepare("SELECT genome_id, strain, locus, start, stop, strand, cdhit_id FROM vorf4 WHERE start >= ? and stop <= ? and genome_id = ? and con_acc = ? and cdhit_id > 0");
-    
+
 # get orth_con_id, orth_orf_id
     $sth0->execute(120, $lt_anchor); # 120 is B31 chromosome
     my ( $lt_cdhit, $lt_orth) = $sth0->fetchrow_array();
     $sth0->execute(120, $rt_anchor); # 120 is B31 chromosome
     my ( $rt_cdhit, $rt_orth) = $sth0->fetchrow_array();
-    
+
     my (%genome_bounds);
-    $sth1->execute($lt_cdhit, $lt_orth); 
+    $sth1->execute($lt_cdhit, $lt_orth);
     while (my ( $gid, $locus, $start, $end, $strand, $contig) = $sth1->fetchrow_array()) {
 	next unless $strKeep{$gid};
 	$genome_bounds{$gid}{'left'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
     }
-    
-    $sth1->execute($rt_cdhit, $rt_orth); 
+
+    $sth1->execute($rt_cdhit, $rt_orth);
     while (my ( $gid, $locus, $start, $end, $strand, $contig) = $sth1->fetchrow_array()) {
 	$genome_bounds{$gid}{'right'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
     }
@@ -180,7 +180,7 @@ sub homologs {
     my ($cdhit_id) = @ARGV;
     my $dbh = db_connect();
     my $sth1 = $dbh->prepare("SELECT locus, strain, strain_id, species from vorf where cdhit_id = ?");
-    my $sth2 = $dbh->prepare("SELECT aln FROM orf4 WHERE locus = ?"); 
+    my $sth2 = $dbh->prepare("SELECT aln FROM orf4 WHERE locus = ?");
     my %strain_by_Name;
     my %spId;
     my @locs;
@@ -197,12 +197,12 @@ sub homologs {
     foreach my $loc (@locs) {
 	$sth2->execute( $loc );
 	my ($aln_nt) = $sth2->fetchrow_array();
-	my $id = "sp_" . $spId{$loc} . "_" . $strain_by_Name{ $loc } . "_". $loc; 
+	my $id = "sp_" . $spId{$loc} . "_" . $strain_by_Name{ $loc } . "_". $loc;
 	my $segment;
 	$segment = Bio::Seq->new(-id=>$id, -seq=>$aln_nt);
 	$fasta->write_seq( $segment );
     }
-    
+
     $sth1->finish;
     $sth2->finish;
     $dbh->disconnect;
@@ -212,9 +212,9 @@ sub db_connect {
     my $dbh = DBI->connect("dbi:Pg:dbname=$PGDATABASE;host=$PGHOST", $PGUSER, $PGPASSWORD, {RaiseError => 1, AutoCommit => 1});
     return $dbh;
 }
-  
 
- 
+
+
 sub genome{
 	my %genome_options;
 	getopts('np', \%genome_options);
@@ -224,19 +224,19 @@ sub genome{
 	my ($genome_id) = @ARGV; #take genome_id as argument, example: genome_id = 100 (b31)
 
 	my $dbh = db_connect();
-	#prepare database connection 
-	my $sth1 = $dbh->prepare("SELECT con_id, locus, orf_id, orth_orf_id FROM view_all WHERE genome_id = ? AND locus IS NOT NULL"); 
+	#prepare database connection
+	my $sth1 = $dbh->prepare("SELECT con_id, locus, orf_id, orth_orf_id FROM view_all WHERE genome_id = ? AND locus IS NOT NULL");
 	# PULL START/STOP/STRAND FROM RELEVANT TABLE
 	my $sth2 = $dbh->prepare("SELECT start, stop, strand FROM orf WHERE genome_id = ? AND con_id = ? AND orf_id = ?");
-	# PULL 
+	# PULL
   	my $sth3 = $dbh->prepare("SELECT substr( seq, ?, ? ) FROM contig WHERE genome_id = ? AND con_id = ?");
-  
+
 	my $fasta = Bio::SeqIO->new( -format => "fasta" );
-  
+
 	# GET THE IDs
 	$sth1->execute( $genome_id );
 	while ( my @IDs = $sth1->fetchrow_array()) {
-    
+
 		my ($con_id, $locus, $orf_id, $orth_orf_id) = @IDs;
 		$sth2->execute( $genome_id, $con_id, $orf_id ); # GET THE START, STOP AND STRAND DIRECTION
     	my ( $start, $stop, $strand ) = $sth2->fetchrow_array();
@@ -265,12 +265,12 @@ sub orf {
 	# -p: Protein
 	# -w: Within species
 	# -b: Between species
-	# -k: id switch 
-#	print Dumper(\%orf_options);	
+	# -k: id switch
+#	print Dumper(\%orf_options);
 	my ($b31_locus) = @ARGV ; #b31 locus as argument, example: "BB_0814"
 	my (%strain_by_ID, %species_id, %strain_by_Name);          # hash table of strain names by ID
 	my $orf;
-	
+
 	#prepare database coonnection
 	my $dbh = db_connect();
 	my $sth0 = $dbh->prepare("SELECT cdhit_id, ortholog FROM vorf WHERE strain_id = 100 AND locus = ?");
@@ -286,7 +286,7 @@ sub orf {
 	$sth0->execute($b31_locus);
 	my ( $orth_con_id, $orth_orf_id) = $sth0->fetchrow_array();
 	#print Dumper($orth_orf_id);
-	
+
 	# get the strain genome IDs
 	$sth1->execute($orth_con_id, $orth_orf_id);
 	my @orth_locs;
@@ -320,14 +320,15 @@ sub orf {
 	$sth2->finish;
 	$dbh->disconnect;
 }
-=b
+
+=for comment
 	foreach my $gid (sort {$a <=> $b} keys %strain_by_ID) {
 #	    print $gid, "\t";
 	    if ($orf_options{w}) { next unless &retain($gid, \@within_ss) || $gid==100 }
 	    if ($orf_options{b}) { next unless &retain($gid, \@between_sl) || $gid==100 }
 	    #if ($orf_options{m}) { next unless &retain($gid, \@mk_group) || $gid==100 }
 	    next unless &retain($gid, \@whole_genomes);
-#	    print $gid, " retained\n";							
+#	    print $gid, " retained\n";
 	    $sth2->execute( $orth_orf_id, $gid );
 	    my ($con_id, $orf_id) = $sth2->fetchrow_array();
 #	    print $con_id, "\t", $orf_id, "\n";
@@ -347,7 +348,7 @@ sub orf {
 #		$id =~ s/sensu_stricto/ss/g if defined $orf_options{k};
 	    $sth4->execute( $start, $stop - $start+1, $gid, $con_id );
 	    $seq_str = $sth4->fetchrow_array();
-	    
+
 	    $segment = Bio::Seq->new(-id=>$id, -seq=>$seq_str);
 	    $segment->add_SeqFeature( &new_feat("orf", $id , 1, length($seq_str), $strand) );
 	    foreach my $feat ($segment->get_SeqFeatures()) {
@@ -369,7 +370,7 @@ sub orf {
 #	$sth3->finish;
 	#$dbh->disconnect;
 =cut
-#}	
+#}
 
 sub igs{
 	my %igs_options;
@@ -377,8 +378,8 @@ sub igs{
 	# -i: igs
 	# -s: segment (left_orf:igs:right_orf)
 	# -w: Within species
-	# -b: Between species 
-	# -k: id switch 
+	# -b: Between species
+	# -k: id switch
 
 	my ($b31_left, $b31_right) = @ARGV; # B31 orientation as reference for directionality
 	my (%strain_by_ID, %taxon_id, %species_name);		# hash table of strain names by ID
@@ -455,7 +456,7 @@ sub igs{
     	my $overlap=0;
     	my $broken=0;
     	my $same_as_b31=1; # same left orth -- right orth as in B31 input
-	
+
     	my $id = $igs_options{k} ? "gid_" . $gid : $strain_by_ID{ $gid } . ":" . $taxon_id{$gid} . ":$gid";
 #    	my $id = $strain_by_ID{ $gid } . ":" . $taxon_id{$gid} . ":$gid" || $igs_options{k};
 #		$id = $species_name{$gid} . "_" . $strain_by_ID{ $gid } if defined $igs_options{k};
@@ -471,7 +472,7 @@ sub igs{
 	    		warn "Overlapping ORFs: $gid - $con_id - $orf_id_left - $orf_id_right. Skipped.\n";
 	    		$overlap=1;
 	    		next if defined $igs_options{i}; # skip genome for IGS; get ORFs and segments anyway
-				} 
+				}
 			$sth4->execute( $start_left, $stop_right - $start_left + 1, $gid, $con_id );
 			$seq_str = $sth4->fetchrow_array();
       	} else { # beakage between 2 ORFs [LEFT: L0-L1]--[END]--[RIGHT: R0-R1]. Good news: overlapping ORF not possible
@@ -493,7 +494,7 @@ sub igs{
 			warn "Overlapping ORFs: $gid - $con_id - $orf_id_left - $orf_id_right. Skipped.\n";
 			$overlap=1;
 			next if defined $igs_options{i};
-	    	} 	    
+	    	}
 	    	$sth4->execute( $start_right, $stop_left - $start_right + 1, $gid, $con_id);
 	    	$seq_str = $sth4->fetchrow_array();
 		} else { # beakage between 2 ORFs & opposite: [RIGHT: R0-R1]--[END][1]--[LEFT: R0-R1]
@@ -513,7 +514,7 @@ sub igs{
     }
 
 
-	
+
 	## output:
     	my ($orf_left, $orf_right, $igs);
 
@@ -522,16 +523,16 @@ sub igs{
 		if ($feat->strand()) {
 		    $orf_left = $segment->trunc($feat->start(), $feat->end());
 		    #print Dumper ($segment);
-		}	
-		
+		}
+
 		else {
 		    $orf_left = $segment->trunc($feat->start(), $feat->end())->revcom();
 		}
 		$orf_left->id($feat->seq_id());
-		
+
 	    }
-	    
-	    
+
+
 	    if ($feat->primary_tag() eq "right_orf") {
 		if ($feat->strand()) {
 		    $orf_right = $segment->trunc($feat->start(), $feat->end());
@@ -539,8 +540,8 @@ sub igs{
 		    $orf_right = $segment->trunc($feat->start(), $feat->end())->revcom();
 		}
 		$orf_right->id($feat->seq_id());
-	    }	
-	    
+	    }
+
 	    if ($feat->primary_tag() eq "igs") {
 		my $sid = $segment->id();
 		$sid .= "|IGS-" . $feat->start() . "|" . $feat->end();
@@ -561,14 +562,14 @@ sub igs{
 		if ($broken && $igs->length() > 1000) {
 		    warn "Orthologs borken by a long ORF: Skipped\n";
 		    next GID;
-	    	}	
+	    	}
 	    }
 	}
-	
+
 	$fasta->write_seq( $igs ) if (defined $igs_options{i}) && !$overlap;
 	$fasta->write_seq( $same_as_b31 ? $segment : $segment->revcom() ) if defined $igs_options{s};
 	}
-	
+
 	# clean up
 	$sth0->finish();
 	$sth2->finish;
@@ -611,7 +612,7 @@ __END__
 biodb - Retrieve genome or orthologous ORFs or IGS sequences from local borrelia genome database
 
 =head1 SYNOPSIS
- # connect to Borreliabase.org and retrives sequences based on the option called. 
+ # connect to Borreliabase.org and retrives sequences based on the option called.
 
 B<biodb> [switch] [option] [arguments]
 
@@ -639,19 +640,19 @@ Switch: --genome
 
 Options: -n: nucleotide
 
-         -p: protein 
+         -p: protein
 
 Example: "biodb --genome -n 100 (b31_genome_id)"
 
 =item B<--orf, --orf -npwbk> b31_locus
 
-Parse nucleotide or protein sequences of all orthologous ORFs for user specified b31_locus in FASTA format. 
+Parse nucleotide or protein sequences of all orthologous ORFs for user specified b31_locus in FASTA format.
 
 Switch: --orf
 
 Options: -n: nucleotide
 
-         -p: protein 
+         -p: protein
 
          -w: within species (optional)
 
@@ -669,7 +670,7 @@ Examples: "biodb.pl --orf -n BB_0814 (b31_locus)"
 
 =item B<--igs, --igs -iswbk> b31_left_locus b31_right_locus
 
-Parse igs sequences or segement for user specified b31 left and right locus in FASTA format. 
+Parse igs sequences or segement for user specified b31 left and right locus in FASTA format.
 
 Switch: --igs
 
