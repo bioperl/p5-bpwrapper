@@ -1,14 +1,15 @@
+*.err
 *IGS:11.fas
 *~
-*.err
 /Build
 /MANIFEST.SKIP.bak
 /MYMETA.json
 /MYMETA.yml
 /_build
 /blib
-/tmp
+/dist
 /lib/Bio/BPWrapper/pod2htmd.tmp
+/tmp
 Bio-BPWrapper-*.tar.gz
 ChangeLog
 Makefile.PL
