@@ -54,6 +54,7 @@ GetOptions(\%opts,
 	   "swap-otus=s", # ??
 	   "tree-shape", # for apTreeshape package
 	   "walk|w=s",
+	   "walk-edge=s",
 #	   "rmbl|R",
 #          "bootclean|b:f",
 #          "collapse|c=s@",
@@ -255,6 +256,10 @@ Print a matrix of tree shapes (input file for R Package apTreeshape)
 =item --walk, -w 'otu'
 
 Walks along the tree starting from the specified OTU and prints the total distance traveled while reaching each other OTU. Does not count any segment more than once. Useful when calculating evolutionary distance from a reference OTU.
+
+=item --walk-edge 'otu'
+
+Traverse tree starting from the specified OTU and prints the edges while reaching each other OTU. Does not count any edge more than once. Used for, e.g., transforming tree into network
 
 =back
 

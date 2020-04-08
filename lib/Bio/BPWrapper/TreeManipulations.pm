@@ -40,7 +40,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 
 @EXPORT      = qw(print_tree_shape edge_length_abundance swap_otus getdistance
                   sister_pairs countOTU reroot clean_tree delete_otus initialize
-                  write_out bin);
+                  write_out bin walk_edge);
 
 =head1 SUBROUTINES
 
@@ -903,11 +903,36 @@ sub walk {
         $visited{$curnode} = 1;
         @dpair = ($last_curnode, $curnode);
         $totlen += $tree->distance(-nodes => \@dpair);
-        _desclen($curnode, \%visited, \$totlen, \$vcount);
+        &_desclen($curnode, \%visited, \$totlen, \$vcount);
         $last_curnode = $curnode;
         $curnode = $curnode->ancestor
     }
 }
+
+sub walk_edge {
+    my $startleaf = $tree->find_node($opts{'walk-edge'});
+    my $curnode   = $startleaf->ancestor;
+    my $last_curnode = $startleaf;
+    my @decs;
+    my %visited;
+    my $totlen = 0;
+    my @dpair;
+    my $vcount = 0;
+
+    $visited{$startleaf} = 1;
+
+    while ($curnode) {
+        $visited{$curnode} = 1;
+        @dpair = ($last_curnode, $curnode);
+        my $pairLen = $tree->distance(-nodes => \@dpair);
+	say join "\t", ($curnode->id() || $curnode->internal_id(), $last_curnode->id() || $last_curnode->internal_id(), $pairLen);
+	$totlen += $pairLen;
+        &_desclen($curnode, \%visited, \$totlen, \$vcount);
+        $last_curnode = $curnode;
+        $curnode = $curnode->ancestor
+    }
+}
+
 
 # works for RAxML bipartition output and FastTree output with bootstrap values as node names
 sub delete_low_boot_support {
@@ -1008,6 +1033,7 @@ sub write_out {
 #    sort_child() if $opts->{'sort-child'};
     alldesc() if $opts->{'otus-desc'};
     walk() if $opts->{'walk'};
+    walk_edge() if $opts->{'walk-edge'};
     multi2bi() if $opts->{'multi2bi'};
     clean_tree() if $opts->{'clean-br'} || $opts->{'clean-boot'};
     delete_otus() if $opts->{'del-otus'};
@@ -1103,7 +1129,7 @@ sub _wu {
 		next if exists($visited{$_});
 		$visited{$_} = 1;
 		push @$node_list_ref, $_;
-		_wu($_, \%visited, $node_list_ref)
+		&_wu($_, \%visited, $node_list_ref)
 	}
 }
 
@@ -1111,7 +1137,7 @@ sub _wu {
 sub _walk_up {
 	my %visited;
 	my @node_list = $_[0];
-	_wu($_[0], \%visited, \@node_list);
+	&_wu($_[0], \%visited, \@node_list);
 	return @node_list
 }
 
@@ -1159,7 +1185,8 @@ sub _desclen {
 	$dist = $tree->distance(-nodes => \@dpair);
 	$$totlen += $dist;
 	$$vcountref++;
-	say	$_->id, "\t$$totlen\t$$vcountref"
+	say join "\t", ($curnode->id() || $curnode->internal_id(), $_->id() || $_->internal_id(), $dist) if $opts{'walk-edge'};
+	say	$_->id, "\t$$totlen\t$$vcountref" if $opts{'walk'}
     }
 
     for (@nd) {
@@ -1168,8 +1195,9 @@ sub _desclen {
 	$dpair[0] = $curnode;
 	$dpair[1] = $_;
 	$dist = $tree->distance(-nodes => \@dpair);
+	say join "\t", ($curnode->id() || $curnode->internal_id(), $_->id() || $_->internal_id(), $dist) if $opts{'walk-edge'};
 	$$totlen += $dist;
-	_desclen($_, \%visited, $totlen, $vcountref)
+	&_desclen($_, \%visited, $totlen, $vcountref)
     }
 }
 
