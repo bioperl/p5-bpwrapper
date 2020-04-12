@@ -79,10 +79,9 @@ sub initialize {
 sub edge2tree {
     my $edgeFile = shift;
     open EG, "<", $edgeFile || die "can't read parent-child edge file\n";
-    $rootnode = Bio::Tree::Node->new(-id=>'root');
+#    $rootnode = Bio::Tree::Node->new(-id=>'root');
     my $tr = Bio::Tree::Tree->new();
-    $tr->set_root_node($rootnode);
-    my @nds = ($rootnode);
+#    my @nds = ($rootnode);
     my %parent;
     my %seen_edge;
     while(<EG>) {
@@ -97,6 +96,7 @@ sub edge2tree {
 
     my %seen_parent;
     my %add_node;
+    my @nds;
     foreach my $ch (keys %parent) {
 	my $pa = $parent{$ch};
 	$seen_parent{$pa}++; 
@@ -104,11 +104,12 @@ sub edge2tree {
 	$add_node{$ch}++;
     }
 
-    # special treatment to attach outgroup (which has no parent specified in the edge table) to root
+    # special treatment to set outgroup (which has no parent specified in the edge table) as root
     foreach my $pa (keys %seen_parent) {
 	next if $add_node{$pa};
-	push @nds, Bio::Tree::Node->new(-id=>$pa, -branch_length=>0);
-	$parent{$pa} = 'root';
+	$rootnode = Bio::Tree::Node->new(-id=>$pa); # ST213 in test file "edges-pars.tsv"
+	push @nds, $rootnode;
+#	$parent{$pa} = 'root';
     }
 
     foreach my $node (@nds) {
@@ -123,6 +124,7 @@ sub edge2tree {
 	    die "no parent $id\n";
 	}
     }    
+    $tr->set_root_node($rootnode);
     return $tr;
 }
 
