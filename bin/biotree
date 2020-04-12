@@ -165,7 +165,7 @@ Edge-length abundance distribution, a statistics of tree balance (O'Dwyer et al.
 
 =item --input, -i 'format'
 
-Input file format. Accepts newick and nhx.
+Input file format. Accepts newick and nhx. Now also a parent-child table.
 
 =item --label-nodes
 

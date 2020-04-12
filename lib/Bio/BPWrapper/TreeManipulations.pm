@@ -63,13 +63,69 @@ sub initialize {
     $out_format = $opts{"output"} // "newick";
     $print_tree = 0;    # Trigger printing the tree.
     my $file = shift || "STDIN";
-    $in = Bio::TreeIO->new(-format => $in_format, ($file eq "STDIN") ? (-fh => \*STDIN) : (-file => $file));
-    $tree  =   $in->next_tree(); # get the first tree (and ignore the rest)
+    if ($in_format eq 'edge') {
+	$tree = &edge2tree($file);
+    } else {
+	$in = Bio::TreeIO->new(-format => $in_format, ($file eq "STDIN") ? (-fh => \*STDIN) : (-file => $file));
+	$tree  =   $in->next_tree(); # get the first tree (and ignore the rest)
+    }
     $out      = Bio::TreeIO->new(-format => $out_format);
     @nodes    = $tree->get_nodes;
     $rootnode = $tree->get_root_node;
     foreach (@nodes) { push @otus, $_ if $_->is_Leaf }
 }
+
+
+sub edge2tree {
+    my $edgeFile = shift;
+    open EG, "<", $edgeFile || die "can't read parent-child edge file\n";
+    $rootnode = Bio::Tree::Node->new(-id=>'root');
+    my $tr = Bio::Tree::Tree->new();
+    $tr->set_root_node($rootnode);
+    my @nds = ($rootnode);
+    my %parent;
+    my %seen_edge;
+    while(<EG>) {
+	next unless /^(\S+)\s+(\S+)/;
+	my ($pa, $ch) = ($1, $2);
+	$seen_edge{$pa}{$ch}++; # number of events
+	$parent{$ch} = $pa unless $parent{$ch}; # seen before
+    }
+    close EG;
+
+#    print Dumper(\%parent);
+
+    my %seen_parent;
+    my %add_node;
+    foreach my $ch (keys %parent) {
+	my $pa = $parent{$ch};
+	$seen_parent{$pa}++; 
+	push @nds, Bio::Tree::Node->new(-id=>$ch, -branch_length=>$seen_edge{$pa}{$ch});
+	$add_node{$ch}++;
+    }
+
+    # special treatment to attach outgroup (which has no parent specified in the edge table) to root
+    foreach my $pa (keys %seen_parent) {
+	next if $add_node{$pa};
+	push @nds, Bio::Tree::Node->new(-id=>$pa, -branch_length=>0);
+	$parent{$pa} = 'root';
+    }
+
+    foreach my $node (@nds) {
+	next if $node eq $rootnode;
+	my $id = $node->id(); # print $id, "\t";
+	my $p_id = $parent{$id}; # print $p_id, "\n";
+	my @nds = grep { $_->id() eq $p_id } @nds;
+	if (@nds) {
+	    my $p_node = shift @nds;
+	    $p_node->add_Descendent($node);
+	} else {
+	    die "no parent $id\n";
+	}
+    }    
+    return $tr;
+}
+
 
 sub reorder_by_ref {
     die "reference node id missing\n" unless $opts{'ref'};
