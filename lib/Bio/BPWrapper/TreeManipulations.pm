@@ -40,7 +40,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 
 @EXPORT      = qw(print_tree_shape edge_length_abundance swap_otus getdistance
                   sister_pairs countOTU reroot clean_tree delete_otus initialize
-                  write_out bin walk_edge);
+                  write_out bin walk_edge cut_sister);
 
 =head1 SUBROUTINES
 
@@ -75,6 +75,25 @@ sub initialize {
     foreach (@nodes) { push @otus, $_ if $_->is_Leaf }
 }
 
+# label low-desc sisters as "cut-nodes" 
+sub cut_sister {
+    my $cutoff = $opts{'cut-sis'} || die "$0 --cut-sis <n>\n";
+    foreach my $nd (@nodes) { 
+	my $decCts = 0;
+	my $id = $nd->id() || $nd->internal_id();
+	if ($nd->is_Leaf) {
+	    $nd->id("cut_". $id); # label to cut 
+	    next;
+	}
+	
+	foreach ($nd->get_all_Descendents) {
+	    $decCts++;
+	}
+ 	next if $decCts >= $cutoff; # don't cut
+	$nd->id("cut_". $id); # label to cut 
+    }
+    $print_tree = 1;
+}
 
 sub edge2tree {
     my $edgeFile = shift;
@@ -1067,6 +1086,7 @@ sub write_out {
     rename_tips() if $opts->{'rename-tips'};
     write_tab_tree() if $opts->{'as-text'};
     cut_tree() if $opts->{'cut-tree'};
+    cut_sister() if $opts->{'cut-sis'};
     mid_point_root() if $opts->{'mid-point'};
     pars_binary() if $opts->{'ci'};
     getdistance() if $opts->{'dist'};

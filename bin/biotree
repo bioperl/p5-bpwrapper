@@ -23,6 +23,7 @@ GetOptions(\%opts,
 	   "clean-br|b",
 	   "clean-boot|B",
 	   "cut-tree=f", # cut tree to identify groups
+	   "cut-sis=i", # identify sister node with fewer than i descendants
 	   "del-otus|d=s",
 	   "del-low-boot|D=f",
 	   "del-short-br|E=f",
@@ -134,6 +135,10 @@ Remove all branch support values.
 Identify clades based on branches that bisected by a cut line (half way to max by default).
 
 Through error if cut is greater than the least deep OTU.
+
+=item --cut-sis "cutoff"
+
+Prefix node id by "cut_" to cut if the number of descendant nodes are < number
 
 =item --del-otus, -d 'otu1,out2,etc'
 
