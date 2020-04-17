@@ -40,7 +40,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 
 @EXPORT      = qw(print_tree_shape edge_length_abundance swap_otus getdistance
                   sister_pairs countOTU reroot clean_tree delete_otus initialize
-                  write_out bin);
+                  write_out bin walk_edge cut_sister);
 
 =head1 SUBROUTINES
 
@@ -63,13 +63,90 @@ sub initialize {
     $out_format = $opts{"output"} // "newick";
     $print_tree = 0;    # Trigger printing the tree.
     my $file = shift || "STDIN";
-    $in = Bio::TreeIO->new(-format => $in_format, ($file eq "STDIN") ? (-fh => \*STDIN) : (-file => $file));
-    $tree  =   $in->next_tree(); # get the first tree (and ignore the rest)
+    if ($in_format eq 'edge') {
+	$tree = &edge2tree($file);
+    } else {
+	$in = Bio::TreeIO->new(-format => $in_format, ($file eq "STDIN") ? (-fh => \*STDIN) : (-file => $file));
+	$tree  =   $in->next_tree(); # get the first tree (and ignore the rest)
+    }
     $out      = Bio::TreeIO->new(-format => $out_format);
     @nodes    = $tree->get_nodes;
     $rootnode = $tree->get_root_node;
     foreach (@nodes) { push @otus, $_ if $_->is_Leaf }
 }
+
+# label low-desc sisters as "cut-nodes" 
+sub cut_sister {
+    my $cutoff = $opts{'cut-sis'} || die "$0 --cut-sis <n>\n";
+    foreach my $nd (@nodes) { 
+	my $decCts = 0;
+	my $id = $nd->id() || $nd->internal_id();
+	if ($nd->is_Leaf) {
+	    $nd->id("cut_". $id); # label to cut 
+	    next;
+	}
+	
+	foreach ($nd->get_all_Descendents) {
+	    $decCts++;
+	}
+ 	next if $decCts >= $cutoff; # don't cut
+	$nd->id("cut_". $id); # label to cut 
+    }
+    $print_tree = 1;
+}
+
+sub edge2tree {
+    my $edgeFile = shift;
+    open EG, "<", $edgeFile || die "can't read parent-child edge file\n";
+#    $rootnode = Bio::Tree::Node->new(-id=>'root');
+    my $tr = Bio::Tree::Tree->new();
+#    my @nds = ($rootnode);
+    my %parent;
+    my %seen_edge;
+    while(<EG>) {
+	next unless /^(\S+)\s+(\S+)/;
+	my ($pa, $ch) = ($1, $2);
+	$seen_edge{$pa}{$ch}++; # number of events
+	$parent{$ch} = $pa unless $parent{$ch}; # seen before
+    }
+    close EG;
+
+#    print Dumper(\%parent);
+
+    my %seen_parent;
+    my %add_node;
+    my @nds;
+    foreach my $ch (keys %parent) {
+	my $pa = $parent{$ch};
+	$seen_parent{$pa}++; 
+	push @nds, Bio::Tree::Node->new(-id=>$ch, -branch_length=>$seen_edge{$pa}{$ch});
+	$add_node{$ch}++;
+    }
+
+    # special treatment to set outgroup (which has no parent specified in the edge table) as root
+    foreach my $pa (keys %seen_parent) {
+	next if $add_node{$pa};
+	$rootnode = Bio::Tree::Node->new(-id=>$pa); # ST213 in test file "edges-pars.tsv"
+	push @nds, $rootnode;
+#	$parent{$pa} = 'root';
+    }
+
+    foreach my $node (@nds) {
+	next if $node eq $rootnode;
+	my $id = $node->id(); # print $id, "\t";
+	my $p_id = $parent{$id}; # print $p_id, "\n";
+	my @nds = grep { $_->id() eq $p_id } @nds;
+	if (@nds) {
+	    my $p_node = shift @nds;
+	    $p_node->add_Descendent($node);
+	} else {
+	    die "no parent $id\n";
+	}
+    }    
+    $tr->set_root_node($rootnode);
+    return $tr;
+}
+
 
 sub reorder_by_ref {
     die "reference node id missing\n" unless $opts{'ref'};
@@ -903,11 +980,36 @@ sub walk {
         $visited{$curnode} = 1;
         @dpair = ($last_curnode, $curnode);
         $totlen += $tree->distance(-nodes => \@dpair);
-        _desclen($curnode, \%visited, \$totlen, \$vcount);
+        &_desclen($curnode, \%visited, \$totlen, \$vcount);
         $last_curnode = $curnode;
         $curnode = $curnode->ancestor
     }
 }
+
+sub walk_edge {
+    my $startleaf = $tree->find_node($opts{'walk-edge'});
+    my $curnode   = $startleaf->ancestor;
+    my $last_curnode = $startleaf;
+    my @decs;
+    my %visited;
+    my $totlen = 0;
+    my @dpair;
+    my $vcount = 0;
+
+    $visited{$startleaf} = 1;
+
+    while ($curnode) {
+        $visited{$curnode} = 1;
+        @dpair = ($last_curnode, $curnode);
+        my $pairLen = $tree->distance(-nodes => \@dpair);
+	say join "\t", ($curnode->id() || $curnode->internal_id(), $last_curnode->id() || $last_curnode->internal_id(), $pairLen);
+	$totlen += $pairLen;
+        &_desclen($curnode, \%visited, \$totlen, \$vcount);
+        $last_curnode = $curnode;
+        $curnode = $curnode->ancestor
+    }
+}
+
 
 # works for RAxML bipartition output and FastTree output with bootstrap values as node names
 sub delete_low_boot_support {
@@ -984,6 +1086,7 @@ sub write_out {
     rename_tips() if $opts->{'rename-tips'};
     write_tab_tree() if $opts->{'as-text'};
     cut_tree() if $opts->{'cut-tree'};
+    cut_sister() if $opts->{'cut-sis'};
     mid_point_root() if $opts->{'mid-point'};
     pars_binary() if $opts->{'ci'};
     getdistance() if $opts->{'dist'};
@@ -1008,6 +1111,7 @@ sub write_out {
 #    sort_child() if $opts->{'sort-child'};
     alldesc() if $opts->{'otus-desc'};
     walk() if $opts->{'walk'};
+    walk_edge() if $opts->{'walk-edge'};
     multi2bi() if $opts->{'multi2bi'};
     clean_tree() if $opts->{'clean-br'} || $opts->{'clean-boot'};
     delete_otus() if $opts->{'del-otus'};
@@ -1103,7 +1207,7 @@ sub _wu {
 		next if exists($visited{$_});
 		$visited{$_} = 1;
 		push @$node_list_ref, $_;
-		_wu($_, \%visited, $node_list_ref)
+		&_wu($_, \%visited, $node_list_ref)
 	}
 }
 
@@ -1111,7 +1215,7 @@ sub _wu {
 sub _walk_up {
 	my %visited;
 	my @node_list = $_[0];
-	_wu($_[0], \%visited, \@node_list);
+	&_wu($_[0], \%visited, \@node_list);
 	return @node_list
 }
 
@@ -1159,7 +1263,8 @@ sub _desclen {
 	$dist = $tree->distance(-nodes => \@dpair);
 	$$totlen += $dist;
 	$$vcountref++;
-	say	$_->id, "\t$$totlen\t$$vcountref"
+	say join "\t", ($curnode->id() || $curnode->internal_id(), $_->id() || $_->internal_id(), $dist) if $opts{'walk-edge'};
+	say	$_->id, "\t$$totlen\t$$vcountref" if $opts{'walk'}
     }
 
     for (@nd) {
@@ -1168,8 +1273,9 @@ sub _desclen {
 	$dpair[0] = $curnode;
 	$dpair[1] = $_;
 	$dist = $tree->distance(-nodes => \@dpair);
+	say join "\t", ($curnode->id() || $curnode->internal_id(), $_->id() || $_->internal_id(), $dist) if $opts{'walk-edge'};
 	$$totlen += $dist;
-	_desclen($_, \%visited, $totlen, $vcountref)
+	&_desclen($_, \%visited, $totlen, $vcountref)
     }
 }
 
