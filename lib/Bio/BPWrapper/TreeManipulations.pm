@@ -1083,6 +1083,7 @@ Call this after calling C<#initialize(\%opts)>.
 
 sub write_out {
     my $opts = shift;
+    print_all_node_ids() if $opts->{'ids-all'};
     rename_tips() if $opts->{'rename-tips'};
     write_tab_tree() if $opts->{'as-text'};
     cut_tree() if $opts->{'cut-tree'};
@@ -1217,6 +1218,15 @@ sub _walk_up {
 	my @node_list = $_[0];
 	&_wu($_[0], \%visited, \@node_list);
 	return @node_list
+}
+
+sub print_all_node_ids {
+    my %visited;
+    my @node_list = ($rootnode);
+    &_wu($rootnode, \%visited, \@node_list);
+    foreach (@node_list) {
+	print $_->id() || $_->internal_id(), "\n";
+    }
 }
 
 sub _treeheight {

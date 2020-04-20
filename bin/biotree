@@ -32,6 +32,7 @@ GetOptions(\%opts,
 	   "dist-all",
 	   "ead", # edge-length abundance distribution; O'Dwyer et al. PNAS (2015)
 	   "input|i=s",
+	   "ids-all",
 	   "label-nodes",
 	   "label-selected-nodes=s", # based on a file
 	   "lca=s",
@@ -167,6 +168,10 @@ Prints half-matrix list of distances between I<all> leaves.
 =item --ead
 
 Edge-length abundance distribution, a statistics of tree balance (O'Dwyer et al. PNAS 2015)
+
+=item --ids-all
+
+Print ids for all nodes (internal nodes included) in the order of tree traversal from root
 
 =item --input, -i 'format'
 
