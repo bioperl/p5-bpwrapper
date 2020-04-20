@@ -295,9 +295,9 @@ Predicted fragments from digestion by a specified restriction enzyme.  Outputs c
 
 Reverse complement.
 
-=item --sort 'id|length'
+=item --sort 'id|length|file:<filename>'
 
-Sort by id or length (Contributor: Jeffery Rosario; Fall 2017)
+Sort by id, length, or a file with an intended order of seq ids (Contributor: Jeffery Rosario; Fall 2017)
 
 =item --split-cdhit 'cdhit .clstr file'
 

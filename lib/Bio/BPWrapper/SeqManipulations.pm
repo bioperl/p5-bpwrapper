@@ -505,7 +505,7 @@ sub __cd_entropy {
 
 sub sort_by {
     my $match = $opts{'sort'};
-    $match =~ /length|id/ || die "Enter 'length' or 'id' to sort.\n";
+    $match =~ /length|id|file/ || die "Enter 'length', 'id', or 'file:filename' to sort.\n";
     my @seqs;
 
     while (my $seq = $in->next_seq()) {
@@ -518,6 +518,23 @@ sub sort_by {
 
     if ($match eq 'length'){
 	@seqs =  sort {$a->{len} <=> $b->{len}}  @seqs;
+    }
+
+    if ($match =~ /file:(\S+)/){
+	my $filename = $1;
+	open FL, "<", $filename || die "file not found: $filename\n";
+	my %order;
+	my $ct = 1;
+	while(<FL>) {
+	    chomp;
+	    next unless /(\S+)/;
+	    $order{$1} = $ct++;
+	}
+	close FL;
+	foreach (@seqs) {
+	    die "id not in order file: ", $_->{id}, "\n" unless $order{ $_->{id} };
+	}
+	@seqs =  sort { $order{ $a->{id} } <=> $order{ $b->{id} } }  @seqs;
     }
 
     foreach (@seqs) {
