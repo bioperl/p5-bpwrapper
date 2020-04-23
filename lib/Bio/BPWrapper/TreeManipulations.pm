@@ -98,9 +98,9 @@ sub cut_sister {
 sub edge2tree {
     my $edgeFile = shift;
     open EG, "<", $edgeFile || die "can't read parent-child edge file\n";
-#    $rootnode = Bio::Tree::Node->new(-id=>'root');
+    $rootnode = Bio::Tree::Node->new(-id=>'root');
     my $tr = Bio::Tree::Tree->new();
-#    my @nds = ($rootnode);
+    my @nds = ($rootnode);
     my %parent;
     my %seen_edge;
     while(<EG>) {
@@ -115,26 +115,30 @@ sub edge2tree {
 
     my %seen_parent;
     my %add_node;
-    my @nds;
+#    my @nds;
     foreach my $ch (keys %parent) {
 	my $pa = $parent{$ch};
 	$seen_parent{$pa}++; 
-	push @nds, Bio::Tree::Node->new(-id=>$ch, -branch_length=>$seen_edge{$pa}{$ch});
+	push @nds, Bio::Tree::Node->new(-id=>$ch, -branch_length => $seen_edge{$pa}{$ch});
 	$add_node{$ch}++;
     }
 
     # special treatment to set outgroup (which has no parent specified in the edge table) as root
+    # add all as chid of root
     foreach my $pa (keys %seen_parent) {
 	next if $add_node{$pa};
-	$rootnode = Bio::Tree::Node->new(-id=>$pa); # ST213 in test file "edges-pars.tsv"
-	push @nds, $rootnode;
-#	$parent{$pa} = 'root';
+	my $orphan = Bio::Tree::Node->new(-id=>$pa, -branch_length => 1); # ST213 in test file "edges-pars.tsv"
+	push @nds, $orphan;
+	$parent{$pa} = 'root';
     }
 
+    # attach descendant
+#    my %attached;
     foreach my $node (@nds) {
 	next if $node eq $rootnode;
 	my $id = $node->id(); # print $id, "\t";
 	my $p_id = $parent{$id}; # print $p_id, "\n";
+#	next if $attached{$p_id}++;
 	my @nds = grep { $_->id() eq $p_id } @nds;
 	if (@nds) {
 	    my $p_node = shift @nds;
