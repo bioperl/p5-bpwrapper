@@ -44,6 +44,7 @@ GetOptions(
     "num-seq|n",
     "output|o=s",
     "pair-diff", # pairwise sequence diff
+    "pair-diff-ref=s", # pairwise sequence diff to a ref seq
     "pep2dna|P=s",
     "permute-states|M",
     "phy-nonint", # non-interleaved phylip (for e.g.,clique)
@@ -334,6 +335,10 @@ Output file format. Common ones include 'clustalw' (default), 'fasta' and 'phyli
 =item --pair-diff
 
 Print pairwise sequence differences, including columns: seqA, seqB, num_variable_sites (no gap), num_pair_diff (no gap), total_pair_length (no gap), percent identity, fraction diff, and pair_diff/num_variable
+
+=item --pair-diff-ref <id>
+
+Print pairwise sequence differences to a specified sequence
 
 =item --pep2dna, -P 'unaligned-cds-file' <protein_alignment>
 

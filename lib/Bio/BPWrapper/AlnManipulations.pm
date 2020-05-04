@@ -82,6 +82,7 @@ my %opt_dispatch = (
     "aln-index" => \&colnum_from_residue_pos,
     "list-ids" => \&list_ids,
     "pair-diff" => \&pair_diff,
+    "pair-diff-ref" => \&pair_diff_ref,
     "permute-states" => \&permute_states,
     "pep2dna" => \&protein_to_dna,
     "resample" => \&sample_seqs,
@@ -273,6 +274,41 @@ sub gap_char {
 	$seq_str =~ s/[\.-]/$char/g;
 	$seq->seq($seq_str); 
     }
+}
+
+sub pair_diff_ref {
+    my $refId = $opts{'pair-diff-ref'};
+    my (@seqs, $refSeq);
+    foreach my $seq ($aln->each_seq()) { 
+	if ($seq->id eq $refId) {
+	    $refSeq = $seq;
+	} else {
+	    push @seqs, $seq;
+	}
+    }
+
+    die "ref seq $refId not found\n" unless $refSeq;
+
+    @seqs = sort { $a->id() cmp $b->id() } @seqs;
+    for (my $i=0; $i < $#seqs; $i++) {
+	my $idB = $seqs[$i]->id();
+	my $seqB = $seqs[$i];
+	my $pair = new Bio::SimpleAlign;
+	$pair->add_seq($refSeq);
+	$pair->add_seq($seqB);
+	$pair = $pair->remove_gaps();
+	my $ct_diff = 0;
+	my $matchLine = $pair->match_line();
+	my @match_symbols = split //, $matchLine;
+	for (my $i = 0; $i < $pair->length; $i++) {
+	    next if $match_symbols[$i] eq '*'; 
+	    $ct_diff++;
+	}
+	my $pairdiff = $pair->percentage_identity();
+	print join "\t", ($refId, $idB, $ct_diff, $pair->length());
+	printf "\t%.4f\t%.4f\n", $pairdiff, 1-$pairdiff/100;
+    }
+    exit;
 }
 
 sub pair_diff {
