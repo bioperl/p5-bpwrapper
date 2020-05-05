@@ -296,16 +296,22 @@ sub pair_diff_ref {
 	my $pair = new Bio::SimpleAlign;
 	$pair->add_seq($refSeq);
 	$pair->add_seq($seqB);
-	$pair = $pair->remove_gaps();
+#	$pair = $pair->remove_gaps(); # not relialbe, e.g., n/N for DNA seqs
 	my $ct_diff = 0;
-	my $matchLine = $pair->match_line();
-	my @match_symbols = split //, $matchLine;
-	for (my $i = 0; $i < $pair->length; $i++) {
-	    next if $match_symbols[$i] eq '*'; 
-	    $ct_diff++;
+	my $ct_valid = 0;
+#	my $matchLine = $pair->match_line();
+#	my @match_symbols = split //, $matchLine;
+	for (my $j = 1; $j <= $pair->length; $j++) {
+	    my $mA = $refSeq->subseq($j,$j);
+	    my $mB = $seqB->subseq($j,$j);
+	    next if $refSeq->alphabet eq 'dna' && $seqB->alphabet eq 'dna' && ($mA !~ /^[ATCG]$/i || $mB !~ /^[ATCG]$/i);
+#		next if $match_symbols[$i] eq '*'; 
+	    $ct_valid++;
+	    $ct_diff++ unless $mA eq $mB;
+#	    next if $match_symbols[$i] eq '*'; 
 	}
 	my $pairdiff = $pair->percentage_identity();
-	print join "\t", ($refId, $idB, $ct_diff, $pair->length());
+	print join "\t", ($refId, $idB, $ct_diff, $ct_valid, $pair->length());
 	printf "\t%.4f\t%.4f\n", $pairdiff, 1-$pairdiff/100;
     }
     exit;
@@ -313,14 +319,14 @@ sub pair_diff_ref {
 
 sub pair_diff {
     my $alnBack = $aln;
-    $alnBack = $alnBack->remove_gaps();
-    my $matchLineFull = $alnBack->match_line();
-    my @match_symbols_full = split //, $matchLineFull;
-    my $num_var = 0; # de-gapped variable sites
-    for (my $i = 0; $i < $alnBack->length; $i++) {
-	next if $match_symbols_full[$i] eq '*'; 
-	$num_var++;
-    }
+#    $alnBack = $alnBack->remove_gaps();
+#    my $matchLineFull = $alnBack->match_line();
+#    my @match_symbols_full = split //, $matchLineFull;
+#    my $num_var = 0; # de-gapped variable sites
+#    for (my $i = 0; $i < $alnBack->length; $i++) {
+#	next if $match_symbols_full[$i] eq '*'; 
+#	$num_var++;
+#    }
 
     my (@seqs);
     foreach my $seq ($aln->each_seq()) { push @seqs, $seq }
@@ -334,19 +340,24 @@ sub pair_diff {
 	    my $pair = new Bio::SimpleAlign;
 	    $pair->add_seq($seqA);
 	    $pair->add_seq($seqB);
-	    $pair = $pair->remove_gaps();
+#	    $pair = $pair->remove_gaps(); # unreliable: e.g., "n", "N" in DNA seqs
 #	    my $mask = $seqA->seq ^ $seqB->seq; #  (exclusive or) operator: returns "\0" if same
 	    my $ct_diff = 0;
-	    my $matchLine = $pair->match_line();
-	    my @match_symbols = split //, $matchLine;
-	    for (my $i = 0; $i < $pair->length; $i++) {
-		next if $match_symbols[$i] eq '*'; 
-		$ct_diff++;
+	    my $ct_valid = 0;
+#	    my $matchLine = $pair->match_line();
+#	    my @match_symbols = split //, $matchLine;
+	    for (my $j = 1; $j <= $pair->length; $j++) {
+		my $mA = $seqA->subseq($j,$j);
+		my $mB = $seqB->subseq($j,$j);
+		next if $seqA->alphabet eq 'dna' && $seqB->alphabet eq 'dna' && ($mA !~ /^[ATCG]$/i || $mB !~ /^[ATCG]$/i);
+#		next if $match_symbols[$i] eq '*'; 
+		$ct_valid++;
+		$ct_diff++ unless $mA eq $mB;
 	    }
 #	    while ($mask =~ /[^\0]/g) { $ct_diff++ }
 	    my $pairdiff = $pair->percentage_identity();
-	    print join "\t", ($idA, $idB, $num_var, $ct_diff, $pair->length());
-	    printf "\t%.4f\t%.4f\t%.4f\n", $pairdiff, 1-$pairdiff/100, $ct_diff/$num_var;
+	    print join "\t", ($idA, $idB, $ct_valid, $ct_diff, $pair->length());
+	    printf "\t%.4f\t%.4f\t%.4f\n", $pairdiff, 1-$pairdiff/100, $ct_diff/$ct_valid;
 	}
     }
     exit;
