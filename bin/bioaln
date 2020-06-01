@@ -25,6 +25,7 @@ GetOptions(
     "avg-pid|a",
     "binary", # 0/1 for binary sites (for phylip legacy programs)
     "bin-inform", # extract binary & informative sites (for clique): discard constant, 3/4-states, non-informative
+    "bin-ref=s",
     "boot|b",
     "codon-view|c:20",    # Optional value, default 20
     "con-blocks|B:6",
@@ -163,6 +164,10 @@ Transform sequences into binary (0/1) strings for e.g., PHYLIP suites (see below
 Print only binary informative sites (e.g., for parsimony analysis). Example PHYLIP application:
 
  bioaln --bin-inform --binary -o'phylip' foo.aln > foo.phy
+
+=item --bin-ref "ref-id"
+
+Transform DNA strings into binary strings according to a reference seq. Gapped & non-binary sites skipped (with position returned as STDERR). 
 
 =item --boot, -b
 

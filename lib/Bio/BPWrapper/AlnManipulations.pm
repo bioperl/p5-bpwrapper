@@ -95,6 +95,7 @@ my %opt_dispatch = (
     "gap-states2" => \&gap_states_matrix,
     "trim-ends" => \&trim_ends,
     "bin-inform" => \&binary_informative,
+    "bin-ref" => \&binary_ref,
     "phy-nonint" => \&phylip_non_interleaved
    );
 
@@ -875,6 +876,56 @@ sub binary_informative {
 
     $aln = $new_aln
 }
+
+sub binary_ref {
+    my $new_aln = Bio::SimpleAlign->new();
+    my $len=$aln->length();
+    my (@seq_ids, @inf_sites, %bin_chars, @ref_states);
+    my $refId = $opts{'bin-ref'} || die "need ref id as an argument\n";
+    # Go through each column and save variable sites
+    my $ref_bases = &_get_a_site_v2(); #print Dumper($ref_bases); exit;
+    my $seenRef = 0;
+    foreach (sort keys %$ref_bases) { 
+	push @seq_ids, $_;
+	next unless $_ eq $refId;
+	$seenRef++;
+    }
+    die "ref seq not found: $refId\n" unless $seenRef;
+
+    for (my $i=1; $i<=$len; $i++) {
+	my (%seen, @bases);
+	foreach my $id (@seq_ids) { push @bases, $ref_bases->{$id}->{$i}; }
+	%seen = %{&_seen_bases(\@bases)};
+	next if &_has_gap( [ values %seen ] ); # skip gaps
+	next if keys %seen != 2; # skip multi-states or constant sites
+	my ($base1, $base2) = sort keys %seen;
+	if ($base1 eq $ref_bases->{$refId}->{$i}) { # base1 is ref
+	    $bin_chars{$i}{$base1} = 1;
+	    $bin_chars{$i}{$base2} = 0;
+	} else { # base2 is ref
+	    $bin_chars{$i}{$base1} = 0;
+	    $bin_chars{$i}{$base2} = 1;
+	}
+	push @inf_sites, $i;
+    }
+
+    die "no binary sites\n" unless @inf_sites;
+    foreach (@inf_sites) { warn $_, "\n" }
+
+    # Recreate the object for output
+    foreach my $id (@seq_ids) {
+        my $seq_str;
+        foreach my $i (@inf_sites) {
+            $seq_str .= $bin_chars{$i}->{$ref_bases->{$id}->{$i}};
+        }
+        my $loc_seq = Bio::LocatableSeq->new(-seq => $seq_str, -id => $id, -start => 1);
+        my $end = $loc_seq->end;
+        $loc_seq->end($end);
+        $new_aln->add_seq($loc_seq)
+    }
+    $aln = $new_aln
+}
+
 
 =head2 variable_sites()
 
