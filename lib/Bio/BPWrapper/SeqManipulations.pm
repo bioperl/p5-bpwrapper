@@ -71,6 +71,8 @@ my %opt_dispatch = (
     'length' => \&print_lengths,
     'longest-orf' => \&update_longest_orf,
     'num-seq' => \&print_seq_count,
+    'num-gaps-dna' => \&count_gaps_dna,
+    'num-gaps-aa' => \&count_gaps_aa,
     'pick' => \&filter_seqs,
     'revcom' => \&make_revcom,
     'subseq' => \&print_subseq,
@@ -251,6 +253,60 @@ sub codon_sim {
     $out->write_seq($sim_obj);
 }
 =cut
+
+sub count_gaps_dna {
+    while( my $seqobj  = $in->next_seq() ) {
+	print $seqobj->id(), "\t";
+	my ($num, $ref) = &_count_gap($seqobj->seq(), 'dna');
+	print $num, "\n";
+	if ($num) {
+	    my @pos;
+	    foreach my $mono (keys %$ref) { 
+		foreach (@{$ref->{$mono}}) { push @pos, $_} 
+	    }
+#	    print STDERR join "\t", sort {$a <=> $b} @pos;
+#	    print STDERR "\n"; 
+	}
+    }
+    exit;
+}
+
+sub count_gaps_aa {
+    while( my $seqobj  = $in->next_seq() ) {
+	print $seqobj->id(), "\t";
+	my ($num, $ref) = &_count_gap($seqobj->seq(), 'protein');
+	print $num, "\n";
+	if ($num) {
+	    my @pos;
+	    foreach my $mono (keys %$ref) { 
+		foreach (@{$ref->{$mono}}) { push @pos, $_} 
+	    }
+#	    print STDERR join "\t", sort {$a <=> $b} @pos;
+#	    print STDERR "\n"; 
+	}
+    }
+    exit;
+}
+
+sub _count_gap {
+    my ($str, $type) = @_;
+    my @mono = split('', $str);
+    my %seen_gaps;
+    my $num_gaps = 0;
+    my $ct = 0;
+    foreach my $mon (@mono) {
+	$ct++;
+	next if ($type eq 'dna' && $mon =~ /[atcg]/i) or ($type eq 'protein' && $mon =~ /[ACDEFGHIKLMNPQRSTVWY]/i) or ($type eq 'protein' && $mon =~ /\*\s*$/);
+	$num_gaps ++;
+	if ($seen_gaps{$mon}) {
+	    push @{$seen_gaps{$mon}}, $ct;
+	} else {
+	    $seen_gaps{$mon} = [$ct]
+	}
+    }
+#    print Dumper(\%seen_gaps) if $num_gaps;
+    return ($num_gaps, \%seen_gaps);
+}
 
 sub rename_id {
     open NAME, "<", $opts{rename} || die "a file with old-tab-new needed\n";

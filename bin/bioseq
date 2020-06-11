@@ -33,6 +33,8 @@ GetOptions(
     "linearize|L",
     "mol-wt",
     "no-gaps|g",
+    "num-gaps-dna",
+    "num-gaps-aa",
     "num-seq|n",
     "output|o=s",
     "pick|p=s",
@@ -243,6 +245,20 @@ Find and return the longest ORF (return the original if no error for -t1, i.e., 
 =item --mol-wt
 
 Print lower and upper bound of molecular weight
+
+=item --num-gaps-dna
+
+Print number of non-ATCG's for a dna sequence. 
+
+Redirect STDERR to a file to view non-ATCG positions, e.g.,:
+ bioseq --num-gaps-dna seq.fas > out 2> log
+
+=item --num-gaps-aa
+
+Print number of non-AA's for a protein sequence. 
+
+Redirect STDERR to a file to view non-AA positions, e.g.,:
+ bioseq --num-gaps-aa seq.pep > out 2> log
 
 =item --no-gaps, -g
 
