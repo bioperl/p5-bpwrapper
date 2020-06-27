@@ -291,9 +291,9 @@ Select a list of sequences:
 
 Re-circularize a bacterial genome by starting at a specified position. For example, for sequence "ABCDE",  C<bioseq -R'2'> would generate "BCDEA".
 
-=item --rename, -N 'file'
+=item --rename, -N 'file'; or --rename "id:old_name;new_name" (for replacing a single id)
 
-Append sequence names specified by a file (two tab-separated columns: old_name, new_name)
+Append sequence names specified by a file (two tab-separated columns: old_name, new_name), or a single id
 
 =item --remove-stop, -X
 

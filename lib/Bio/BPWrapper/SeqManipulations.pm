@@ -309,14 +309,20 @@ sub _count_gap {
 }
 
 sub rename_id {
-    open NAME, "<", $opts{rename} || die "a file with old-tab-new needed\n";
+    my $optStr = $opts{rename};
     my %names;
-    while(<NAME>) {
-	chomp;
-	my ($oldN, $newN) = split;
-	$names{$oldN} = $newN;
+
+    if ($optStr =~  /^id:(\S+);(\S+)$/) {
+	$names{$1} = $2;
+    } else {
+	open NAME, "<", $optStr || die "a file with old-tab-new needed\n";
+	while(<NAME>) {
+	    chomp;
+	    my ($oldN, $newN) = split;
+	    $names{$oldN} = $newN;
+	}
+	close NAME;
     }
-    close NAME;
 
     while( my $seqobj  = $in->next_seq() ) {
 	my $id = $seqobj->display_id();
@@ -1187,7 +1193,7 @@ sub pick_by_file {
     my ($match, $currseq, $id_list, $seq_id) = @_;
     if ($id_list->{$seq_id}) {
         $id_list->{$seq_id}++;
-        die "Multiple matches (" . $id_list->{$seq_id} - 1 . ") for $match found\n" if $id_list->{$seq_id} > 2;
+        die "Multiple matches (" . $seq_id . ") for $match found\n" if $id_list->{$seq_id} > 2;
         $out->write_seq($currseq)
     }
 }
@@ -1228,7 +1234,7 @@ sub pick_by_id {
 
     if ($id_list->{$seq_id}) {
         $id_list->{$seq_id}++;
-        die "Multiple matches (" . $id_list->{$seq_id} - 1 . ") for $match found\n" if $id_list->{$seq_id} > 2;
+        die "Multiple matches (" . $seq_id . ":" . $id_list->{$seq_id} - 1 . ") for $match found\n" if $id_list->{$seq_id} > 2;
         $out->write_seq($currseq)
     }
 }
