@@ -254,9 +254,13 @@ alignments of the same set of samples to a single one for making a "supertree".
 
    bioaln --concat gene1.aln gene2.aln gene3.aln gene4.aln
 
-or using wildcard to specify multiple files:
+or using wildcard to specify multiple files (check with "ls *.aln" first to make sure of alignment order):
 
    bioaln --concat gene*.aln
+
+Two outputs:
+ 1. concated alignment (in STANDOUT)
+ 2. "concat.log" file, which shows mapped positions for a reference seq (specified by "-r" otherwise first sequence)
 
 =item --consensus, -C 'percent' (default 50)
 

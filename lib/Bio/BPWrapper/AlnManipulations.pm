@@ -993,11 +993,68 @@ L<Bio::Align::UtilitiesE<gt>cat()|https://metacpan.org/pod/Bio::Align::Utilities
 
 =cut
 
-
+##################################################################
+# 2/26/2021: add position map (for rate4site applications)
+##############################################################
 sub concat {
-    $aln = cat(@alns)
+    $aln = cat(@alns);
+    warn "Alignment concated. Getting position maps...\n";
+    my $refSeq = $opts{"ref-seq"} ? $aln->get_seq_by_id($opts{"ref-seq"}) : $aln->get_seq_by_pos(1);
+    my @refGenesInOrder = map { $_ -> get_seq_by_id($refSeq->id) } @alns;
+    # remap start & end for individual gene alignments, sync pos with concatenated aln:
+    my $pos = 0;
+    my %geneRange;
+    for (my $i = 0; $i <= $#refGenesInOrder; $i++) {
+	my $start = $pos + 1;
+	$pos += $refGenesInOrder[$i]->length();
+	my $end = $pos;
+	$geneRange{$i+1} = {'start' => $start, 
+			    'end' => $end, 
+	};
+    }
+
+#    warn Dumper(\%geneRange);
+
+    my @locTable;
+    for (my $i = 1; $i <= $refSeq->length(); $i++) {
+	next if $refSeq->subseq($i, $i) eq '-';
+	my ($inGene, $posGene) = &__gene_order($i, \%geneRange);
+	push @locTable, {
+	    'pos_concat' => $i,
+	    'gene_order' => $inGene,
+	    'pos_gene_aln' => $posGene,
+	    'pos_gene_unaligned' => $refGenesInOrder[$inGene-1]->location_from_column($posGene)->start() 
+	};
+    }
+    open LOG, ">concat.log";
+    print LOG join "\t", ("seq_id", "pos_concat", "gene", "pos_gene_aligned", "pos_gene_unaligned");
+    print LOG "\n"; 
+    foreach (@locTable) {
+	print LOG join "\t", (
+	    $refSeq->id(),
+	    $_->{pos_concat}, 
+	    $_->{gene_order},
+	    $_->{pos_gene_aln},
+	    $_->{pos_gene_unaligned}
+	);
+	print LOG "\n";
+    }
+    close LOG;
+    warn "Position map of reference seq is saved in file concat.log\n";
 }
 
+sub __gene_order {
+    my $pos = shift;
+    my $ref = shift;
+    my %range = %$ref;
+    foreach my $gene (keys %range) {
+	next unless $pos >= $range{$gene}->{start} && $pos <= $range{$gene}->{end};
+	return ($gene, $pos - $range{$gene}->{'start'} + 1) 
+    }
+    die "Not found in any genes: position $pos\n";
+}
+
+#######################################
 
 sub conserved_blocks {
     my $len=$aln->length();
