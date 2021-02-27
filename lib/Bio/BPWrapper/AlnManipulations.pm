@@ -776,7 +776,15 @@ L<Bio::SimpleAlign-E<gt>set_new_reference()|https://metacpan.org/pod/Bio::Simple
 =cut
 
 sub change_ref {
-    $aln = $aln->set_new_reference($opts{"ref-seq"})
+    my @newAlns;
+    if ($opts{'concat'}) {
+	foreach (@alns) {
+	    push @newAlns, $_->set_new_reference($opts{"ref-seq"})
+	}
+	@alns = @newAlns;
+    } else {
+	$aln = $aln->set_new_reference($opts{"ref-seq"})
+    }
 }
 
 
@@ -1000,6 +1008,7 @@ sub concat {
     $aln = cat(@alns);
     warn "Alignment concated. Getting position maps...\n";
     my $refSeq = $opts{"ref-seq"} ? $aln->get_seq_by_id($opts{"ref-seq"}) : $aln->get_seq_by_pos(1);
+#    my $refSeq = $aln->get_seq_by_pos(1);
     my @refGenesInOrder = map { $_ -> get_seq_by_id($refSeq->id) } @alns;
     # remap start & end for individual gene alignments, sync pos with concatenated aln:
     my $pos = 0;
@@ -1021,18 +1030,20 @@ sub concat {
 	my ($inGene, $posGene) = &__gene_order($i, \%geneRange);
 	push @locTable, {
 	    'pos_concat' => $i,
+	    'pos_unaligned' => $refSeq->location_from_column($i)->start(),
 	    'gene_order' => $inGene,
 	    'pos_gene_aln' => $posGene,
 	    'pos_gene_unaligned' => $refGenesInOrder[$inGene-1]->location_from_column($posGene)->start() 
 	};
     }
     open LOG, ">concat.log";
-    print LOG join "\t", ("seq_id", "pos_concat", "gene", "pos_gene_aligned", "pos_gene_unaligned");
+    print LOG join "\t", ("seq_id", "pos_concat", "pos_residue", "gene", "pos_gene_aligned", "pos_gene");
     print LOG "\n"; 
     foreach (@locTable) {
 	print LOG join "\t", (
 	    $refSeq->id(),
 	    $_->{pos_concat}, 
+	    $_->{pos_unaligned}, 
 	    $_->{gene_order},
 	    $_->{pos_gene_aln},
 	    $_->{pos_gene_unaligned}
