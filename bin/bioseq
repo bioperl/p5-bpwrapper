@@ -40,8 +40,8 @@ GetOptions(
     "pick|p=s",
     "reloop|R=i", # recircularize a genome at "loop_at"
     "remove-stop|X", # for PAML/codeml
-    "restrict|x=s",
-    "restrict-coord=s",
+#    "restrict|x=s",
+#    "restrict-coord=s",
     "revcom|r",
     "sort=s",
     "split-cdhit=s",
@@ -129,7 +129,7 @@ B<bioseq> [-h | --help | -V | --version | --man]
  bioseq --count-codons cds_fasta              # Codon counts (for coding sequences)
  bioseq --hydroB pep_fasta                    # Hydrophobicity score (for protein seq)
  bioseq --input 'genbank' --feat2fas file.gb  # extract genbank features to FASTA
- bioseq --restrict 'EcoRI' dna_fasta          # Fragments from restriction digest
+ # bioseq --restrict 'EcoRI' dna_fasta          # Fragments from restriction digest (disabled)
 
 =head3 Serialize with pipes
 
@@ -301,11 +301,11 @@ Remove stop codons (e.g., for PAML input)
 
 =item --restrict, -x 'RE'
 
-Predicted fragments from digestion by a specified restriction enzyme.
+Predicted fragments from digestion by a specified restriction enzyme. Disabled (not part of bioperl dist)
 
 =item --restrict-coord 'RE'
 
-Predicted fragments from digestion by a specified restriction enzyme.  Outputs cooridnates of overhangs in BED format.
+Predicted fragments from digestion by a specified restriction enzyme.  Outputs cooridnates of overhangs in BED format. Disabled (not part of bioperl dist)
 
 =item --revcom | -r
 
