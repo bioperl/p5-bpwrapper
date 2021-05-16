@@ -77,8 +77,8 @@ my %opt_dispatch = (
     'revcom' => \&make_revcom,
     'subseq' => \&print_subseq,
     'translate' => \&reading_frame_ops,
-    'restrict-coord' => \&restrict_coord,
-    'restrict' => \&restrict_digest,
+#    'restrict-coord' => \&restrict_coord,
+#    'restrict' => \&restrict_digest,
     'anonymize' => \&anonymize,
     'break' => \&shred_seq,
     'count-codons' => \&count_codons,
@@ -868,8 +868,6 @@ L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restrictio
 
 Outputs coordinates of overhangs in BED format.
 
-=cut
-
 
 sub restrict_coord {
     use Bio::Restriction::Analysis;
@@ -897,8 +895,6 @@ specified in C<$opts{restrinct}> set via L<C<#initilize(\%opts)>|/initialize>.
 An input file with sequences is expected. Wraps
 L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
 
-=cut
-
 
 sub restrict_digest {
     my $enz = $opts{"restrict"};
@@ -915,6 +911,8 @@ sub restrict_digest {
 	}
     }
 }
+
+=cut
 
 =head2 anonymize()
 
