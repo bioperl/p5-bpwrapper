@@ -306,7 +306,8 @@ sub pair_diff_ref {
 	    my $mA = $refSeq->subseq($j,$j);
 	    my $mB = $seqB->subseq($j,$j);
 	    next if $refSeq->alphabet eq 'dna' && $seqB->alphabet eq 'dna' && ($mA !~ /^[ATCG]$/i || $mB !~ /^[ATCG]$/i);
-#		next if $match_symbols[$i] eq '*'; 
+#		next if $match_symbols[$i] eq '*';
+	    next if $mA eq '-' || $mB eq '-'; 
 	    $ct_valid++;
 	    $ct_diff++ unless $mA eq $mB;
 #	    next if $match_symbols[$i] eq '*'; 
@@ -352,6 +353,7 @@ sub pair_diff {
 		my $mB = $seqB->subseq($j,$j);
 		next if $seqA->alphabet eq 'dna' && $seqB->alphabet eq 'dna' && ($mA !~ /^[ATCG]$/i || $mB !~ /^[ATCG]$/i);
 #		next if $match_symbols[$i] eq '*'; 
+		next if $mA eq '-' || $mB eq '-';
 		$ct_valid++;
 		$ct_diff++ unless $mA eq $mB;
 	    }
