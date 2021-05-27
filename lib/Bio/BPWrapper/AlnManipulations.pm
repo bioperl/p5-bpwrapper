@@ -321,16 +321,20 @@ sub pair_diff_ref {
 
 sub pair_diff {
     my $alnBack = $aln;
+    my $lenTotal = $alnBack->length();
 #    $alnBack = $alnBack->remove_gaps();
-#    my $matchLineFull = $alnBack->match_line();
-#    my @match_symbols_full = split //, $matchLineFull;
+    my $matchLineFull = $alnBack->match_line();
+    my @match_symbols_full = split //, $matchLineFull;
+    my $num_var = 0; # contain gaps
 #    my $num_var = 0; # de-gapped variable sites
-#    for (my $i = 0; $i < $alnBack->length; $i++) {
-#	next if $match_symbols_full[$i] eq '*'; 
-#	$num_var++;
-#    }
+    for (my $i = 0; $i < $alnBack->length; $i++) {
+	next if $match_symbols_full[$i] eq '*'; 
+	$num_var++;
+    }
 
     my (@seqs);
+    print join "\t", qw(seq_1 seq_2 len_gapless len_variable diff_gapless diff_variable len_aln identitty fac_diff frac_gapless frac_variable);
+    print "\n";
     foreach my $seq ($aln->each_seq()) { push @seqs, $seq }
     @seqs = sort { $a->id() cmp $b->id() } @seqs;
     for (my $i=0; $i < $#seqs; $i++) {
@@ -346,12 +350,14 @@ sub pair_diff {
 #	    my $mask = $seqA->seq ^ $seqB->seq; #  (exclusive or) operator: returns "\0" if same
 	    my $ct_diff = 0;
 	    my $ct_valid = 0;
+	    my $gap_included_diff = 0;
 #	    my $matchLine = $pair->match_line();
 #	    my @match_symbols = split //, $matchLine;
 	    for (my $j = 1; $j <= $pair->length; $j++) {
 		my $mA = $seqA->subseq($j,$j);
 		my $mB = $seqB->subseq($j,$j);
 		next if $seqA->alphabet eq 'dna' && $seqB->alphabet eq 'dna' && ($mA !~ /^[ATCG]$/i || $mB !~ /^[ATCG]$/i);
+		$gap_included_diff++ unless $mA eq $mB;
 #		next if $match_symbols[$i] eq '*'; 
 		next if $mA eq '-' || $mB eq '-';
 		$ct_valid++;
@@ -359,8 +365,8 @@ sub pair_diff {
 	    }
 #	    while ($mask =~ /[^\0]/g) { $ct_diff++ }
 	    my $pairdiff = $pair->percentage_identity();
-	    print join "\t", ($idA, $idB, $ct_valid, $ct_diff, $pair->length());
-	    printf "\t%.4f\t%.4f\t%.4f\n", $pairdiff, 1-$pairdiff/100, $ct_diff/$ct_valid;
+	    print join "\t", ($idA, $idB, $ct_valid, $num_var, $ct_diff, $gap_included_diff, $pair->length());
+	    printf "\t%.4f\t%.4f\t%.4f\t%.4f\n", $pairdiff, 1-$pairdiff/100, $ct_diff/$ct_valid, $gap_included_diff/$num_var;
 	}
     }
     exit;
