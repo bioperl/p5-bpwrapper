@@ -20,6 +20,7 @@ use warnings;
 use 5.010;
 use Bio::Seq;
 use Bio::SeqIO;
+use Bio::Seq::Quality;
 use File::Basename;
 use Bio::Tools::CodonTable;
 use Bio::DB::GenBank;
@@ -860,7 +861,7 @@ sub reading_frame_ops {
 
 =head2 restrict_coord()
 
-Finds digestion coordinates by a specified restriction enzyme
+Finds digestion coordinates of a restriction enzyme
 specified in C<$opts{restrinct}> set via L<C<#initilize(\%opts)>|/initialize>.
 
 An input file with sequences is expected. Wraps
@@ -875,21 +876,21 @@ sub restrict_coord {
 
     my $enz = $opts{"restrict-coord"};
     my $re = Bio::Restriction::EnzymeCollection->new()->get_enzyme($enz);
-    my $len = length($re->overhang_seq());
+    die("ERROR: could not find enzyme ".$enz."\n") unless($re);
+    my $len = length($re->overhang_seq()) || 0;
 
     while ( $seq = $in->next_seq() ) {
-        my $seq_str = $seq->seq();
-        die "Not a DNA sequence\n" unless $seq_str =~ /^[ATCGRYSWKMBDHVN]+$/i;
+        die "Not a DNA sequence\n" unless $seq->alphabet eq 'dna';
         my $ra = Bio::Restriction::Analysis->new(-seq=>$seq);
         foreach my $pos ($ra->positions($enz)) {
-	    print $seq->id()."\t".($pos-$len)."\t".$pos."\n";
+	    print $seq->id()."\t".$pos."\t".($pos+$len)."\n";
         }
     }
 }
 
 =head2 restrict_digest()
 
-Predicted fragments from digestion by a specified restriction enzyme
+Predicted fragments from digestion by a set of restriction enzymes (comma-separated)
 specified in C<$opts{restrinct}> set via L<C<#initilize(\%opts)>|/initialize>.
 
 An input file with sequences is expected. Wraps
@@ -897,16 +898,32 @@ L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restrictio
 
 
 sub restrict_digest {
-    my $enz = $opts{"restrict"};
     use Bio::Restriction::Analysis;
+    use Bio::Restriction::EnzymeCollection;
+
+    my @rec;
+    my $enz = $opts{"restrict"};
+    my $rec = Bio::Restriction::EnzymeCollection->new();
+    foreach my $re (split(/,/,$enz)) {
+	push(@rec, $rec->get_enzyme($re));
+	die("ERROR: could not find enzyme ".$re."\n") unless($rec[-1]);
+    }
+    $rec=Bio::Restriction::EnzymeCollection->new(-empty=>1);
+    $rec->enzymes(@rec);
+
     while ( $seq = $in->next_seq() ) {
-	my $seq_str = $seq->seq();
-	die "Not a DNA sequence\n" unless $seq_str =~ /^[ATCGRYSWKMBDHVN]+$/i;
-	my $ra = Bio::Restriction::Analysis->new(-seq=>$seq);
-	foreach my $frag ($ra->fragment_maps($enz)) {
-	    my $seq_obj = Bio::Seq->new(
-		-id=>$seq->id().'|'.$frag->{start}.'-'.$frag->{end}.'|'.($frag->{end}-$frag->{start}+1),
-		-seq=>$frag->{seq});
+	die "Not a DNA sequence\n" unless $seq->alphabet eq 'dna';
+	my $ra = Bio::Restriction::Analysis->new(-seq => $seq);
+	$ra->cut('multiple', $rec);
+	foreach my $frag ($ra->fragment_maps('multiple_digest')) {
+	    my $seq_obj = Bio::Seq::Quality->new(
+		-id => $seq->id().'|'.$frag->{start}.'-'.$frag->{end}.'|'.($frag->{end}-$frag->{start}+1),
+		-seq => $frag->{seq}
+		);
+	    if($seq->isa('Bio::Seq::Quality')) {
+		my $qual = $seq->subqual($frag->{start},$frag->{end});
+		$seq_obj->qual($qual);
+	    }
 	    $out->write_seq($seq_obj)
 	}
     }
