@@ -1,0 +1,37 @@
+name: ubuntu
+
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - '*'
+  pull_request:
+
+jobs:
+  perl:
+    env:
+      PREREQS: "Module::Build rlib Test::More Bio::Root::Version Bio::DB::GenBank Bio::Restriction::Analysis XML::DOM::XPath"
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        perl-version:
+          - 'latest'
+
+    container:
+      image: perl:${{ matrix.perl-version }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: apt packages
+        run: apt-get update -qq && apt-get install -qq libdb-dev libxml2-dev
+      - name: perl -V
+        run: perl -V
+      - name: Install Dependencies
+        # By running cpanm this way without testing rather than using ./Build,
+        # we save *a lot* of time.
+        run: cpanm --notest ---force $PREREQS
+      - name: Run Tests
+        run: perl Build.PL && ./Build && ./Build test
