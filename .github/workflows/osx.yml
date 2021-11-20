@@ -11,7 +11,7 @@ on:
 jobs:
   perl:
     env:
-      PREREQS: "Module::Build rlib Test::More Bio::Root::Version Bio::DB::GenBank Bio::Restriction::Analysis XML::DOM::XPath"
+      PREREQS: "Module::Build rlib Test::More Bio::Root::Version Bio::DB::GenBank Bio::Restriction::Analysis XML::DOM::XPath Test::Pod"
 
     runs-on: macos-latest
 
