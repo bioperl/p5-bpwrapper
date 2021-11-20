@@ -361,6 +361,11 @@ sub assign_inode_ycoord {
     $node->{'ycoord'} = $sorted[0] + 1 / 2 * ($sorted[-1] - $sorted[0])
 }
 
+sub tips_to_root {
+    foreach (@otus) {
+	printf "%s\t%.6f\n", $_->id(), distance_to_root($_);
+    }
+}
 
 sub distance_to_root {
     my $node = shift;
@@ -1112,6 +1117,7 @@ sub write_out {
     print_all_lengths() if $opts->{'length-all'};
     random_tree() if defined($opts->{'random'});
     depth_to_root() if $opts->{'depth'};
+    tips_to_root() if $opts->{'tips-to-root'};
     rotate_an_in_node() if $opts->{'rotate-node'};
 #    sort_child() if $opts->{'sort-child'};
     alldesc() if $opts->{'otus-desc'};

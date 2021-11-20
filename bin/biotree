@@ -54,6 +54,7 @@ GetOptions(\%opts,
 #	   "sort-child=s", # sort child by height (default) or others (to make output tree consistent)
 	   "subset|s=s",
 	   "swap-otus=s", # ??
+	   "tips-to-root", 
 	   "tree-shape", # for apTreeshape package
 	   "walk|w=s",
 	   "walk-edge=s",
@@ -258,6 +259,10 @@ Creates a tree of only the specified leaves/nodes and their descendants. Specify
 =item --swap-otus 'OTU'
 
 Output tree with each possible pairs swapped (can't remember why this method was written, please ignore)
+
+=item --tips-to-root
+
+Print all tip distances to root
 
 =item --tree-shape
 
