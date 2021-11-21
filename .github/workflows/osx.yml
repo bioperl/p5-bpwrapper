@@ -20,6 +20,7 @@ jobs:
         os: [macOS]
         perl-version:
           - 'latest'
+          - 'threaded'
           - '5.32'
           - '5.30'
     steps:
