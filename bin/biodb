@@ -8,8 +8,7 @@
 # Girish Ramrattan
 # Sviatoslav Kendall
 #
-# TO DO: --fam for paralogous family
-#
+
 
 use strict;
 use warnings;
@@ -44,12 +43,12 @@ GetOptions(
     \%opts,
     "help|h",
     "man|m",
-    "genome",
-    "orf",
+    "all-orfs", # all proteoms of a genome
+    "orth", # orthologs from all genomes
+    "genome", # all replicons/contigs of a genome
     "igs",
-    "proteom",
-    "fam",
-    "pass=s",
+    "fam", # all homologs of a gene family
+    "pass=s", # password
     "keep-strain|k=s",
     "syn-anchor",  # genoplotR for Barbour Bergey's manual
     "lt-orf",
@@ -57,6 +56,7 @@ GetOptions(
     "syn-coord", # genoplotR for vlsS cassettes
     "lt-coord",
     "rt-coord",
+    "list-genomes",
 ) or pod2usage(2);
 
 $PGPASSWORD = $opts{pass};
@@ -84,13 +84,14 @@ if ($opts{"syn-anchor"}) {
 
 
 #print Dumper(\%strKeep);
-&genome if $opts{genome};
-&orf if $opts{orf};
+&all_orfs if $opts{'all-orfs'};
+&orth if $opts{orth};
 &igs if $opts{is};
-&proteom if $opts{proteom};
+&contigs if $opts{genome};
 &homologs if $opts{fam};
 &synteny_by_anchors if $opts{"syn-anchor"};
 &synteny_by_coords if $opts{"syn-coord"};
+&list_available_genomes if $opts{'list-genomes'};
 
 pod2usage(1) if $opts{"help"};
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $opts{"man"};
@@ -102,10 +103,30 @@ exit;
 
 
 
-
 #####################
 # Subs
 ####################
+
+sub list_available_genomes {
+    my $dbh = db_connect();
+    my $sth0 = $dbh->prepare("SELECT a.strain_id, a.strain_name, b.short_name FROM strain a, species b where a.species_id=b.species_id order by a.strain_id");
+    my @out;
+    $sth0->execute();
+    while (my @data = $sth0->fetchrow_array() ) {
+	push @out, {'gid' => $data[0],
+		    'gname' => $data[1],
+		    'spp' => $data[2]
+	};
+    }
+
+    foreach (@out) {
+	print join "\t", ($_->{'spp'}, $_->{'gname'}, $_->{'gid'});
+	print "\n";
+    }
+
+    $sth0->finish();
+    $dbh->disconnect;
+}
 
 sub synteny_by_coords {
 # CLI: biodb --syn-coord --keep-strain <file> --pass <password> 5
@@ -175,6 +196,43 @@ sub synteny_by_anchors {
 }
 
 
+sub contigs {
+    my ($b31_locus) = @ARGV;
+    my $dbh = db_connect();
+    my $sth0 = $dbh->prepare("SELECT cdhit_id FROM vorf WHERE strain_id = ? AND locus = ?");
+    my $sth1 = $dbh->prepare("SELECT locus, strain, strain_id, species from vorf where cdhit_id = ?");
+    my $sth2 = $dbh->prepare("SELECT aln FROM orf4 WHERE locus = ?");
+    my %strain_by_Name;
+    my %spId;
+    my @locs;
+
+    $sth0->execute(100, $b31_locus);
+    my ( $cdhit_id) = $sth0->fetchrow_array();
+    die "no fam id for $b31_locus\n" unless $cdhit_id;
+    warn "Find cdhit id: $cdhit_id for locus $b31_locus\n";
+    
+    $sth1->execute($cdhit_id);
+    while ( my ($loc, $strNm, $strId, $spId) = $sth1->fetchrow_array() ) {
+	next if $opts{"keep-strain"} && !$strKeep{$strId};
+	push @locs, $loc;
+	$strain_by_Name{$loc} = $strNm;
+	$spId{$loc} = $spId;
+    }
+
+    my $fasta = Bio::SeqIO->new( -format => "fasta" );
+    foreach my $loc (@locs) {
+	$sth2->execute( $loc );
+	my ($aln_nt) = $sth2->fetchrow_array();
+	my $id = "sp_" . $spId{$loc} . "_" . $strain_by_Name{ $loc } . "_". $loc;
+	my $segment;
+	$segment = Bio::Seq->new(-id=>$id, -seq=>$aln_nt);
+	$fasta->write_seq( $segment );
+    }
+    $sth0->finish;
+    $sth1->finish;
+    $sth2->finish;
+    $dbh->disconnect;
+}
 
 sub homologs {
     my ($b31_locus) = @ARGV;
@@ -214,14 +272,14 @@ sub homologs {
     $dbh->disconnect;
 }
 
+
 sub db_connect {
     my $dbh = DBI->connect("dbi:Pg:dbname=$PGDATABASE;host=$PGHOST", $PGUSER, $PGPASSWORD, {RaiseError => 1, AutoCommit => 1});
     return $dbh;
 }
 
 
-
-sub genome{
+sub all_orfs {
 	my %genome_options;
 	getopts('np', \%genome_options);
 	# -n: Nucleotide
@@ -264,7 +322,7 @@ sub genome{
 }
 
 
-sub orf {
+sub orth {
 	my %orf_options;
 	getopts('awbk', \%orf_options);
 	# -n: Nucleotide
@@ -588,19 +646,25 @@ Print a brief help message and exits.
 
 Prints the manual page and exits.
 
-=item B<--genome, --genome -np> genome_id
+=item B<--all-orfs --all-orfs -np> genome_id
 
 Parse nucleotide or protein sequences of ORFS for a genome specified by Genome ID in FASTA format.
 
-Switch: --genome
+Switch: --all-orfs
 
 Options: -n: nucleotide
 
          -p: protein
 
-Example: "biodb --genome -n 100 (b31_genome_id)"
+Example: "biodb --all-orfs -n 100 (b31_genome_id)"
 
-=item B<--orf, --orf -npwbk> b31_locus
+=item B<--fam> B31_locus_tag
+
+Fetch all homologs (aligned) of a genome family coresponding to a B31 locus
+
+Example: "biodb --fam  (b31_genome_id)"
+
+=item B<--orth, --orth -npwbk> b31_locus
 
 Parse nucleotide or protein sequences of all orthologous ORFs for user specified b31_locus in FASTA format.
 
@@ -655,19 +719,19 @@ Examples: "biodb.pl --igs -i BB_0814 (b31_left_locus) BB_0816 (b31_right_locus)"
 
 =over 4
 
-=item B<--genome>
+=item B<--all-orfs>
 
-biodb --genome -n 100 (b31 genome_id)
+biodb --all-orfs -n 100 (b31 genome_id)
 
-biodb --genome -p 100
+biodb --akk-orfs -p 100
 
-=item B<--orf>
+=item B<--orth>
 
-biodb --orf -n BB_0814 (b31_locus)
+biodb --orth -n BB_0814 (b31_locus)
 
-biodb --orf -p BB_0814
+biodb --orth -p BB_0814
 
-biodb --orf -nw BB_0814 (optional: w = within species, b = between species)
+biodb --orth -nw BB_0814 (optional: w = within species, b = between species)
 
 =item B<--igs>
 
