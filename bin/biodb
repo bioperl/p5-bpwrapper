@@ -195,42 +195,27 @@ sub synteny_by_anchors {
     $dbh->disconnect;
 }
 
-
 sub contigs {
-    my ($b31_locus) = @ARGV;
+    my $gid = shift @ARGV;
     my $dbh = db_connect();
-    my $sth0 = $dbh->prepare("SELECT cdhit_id FROM vorf WHERE strain_id = ? AND locus = ?");
-    my $sth1 = $dbh->prepare("SELECT locus, strain, strain_id, species from vorf where cdhit_id = ?");
-    my $sth2 = $dbh->prepare("SELECT aln FROM orf4 WHERE locus = ?");
-    my %strain_by_Name;
-    my %spId;
-    my @locs;
-
-    $sth0->execute(100, $b31_locus);
-    my ( $cdhit_id) = $sth0->fetchrow_array();
-    die "no fam id for $b31_locus\n" unless $cdhit_id;
-    warn "Find cdhit id: $cdhit_id for locus $b31_locus\n";
-    
-    $sth1->execute($cdhit_id);
-    while ( my ($loc, $strNm, $strId, $spId) = $sth1->fetchrow_array() ) {
-	next if $opts{"keep-strain"} && !$strKeep{$strId};
-	push @locs, $loc;
-	$strain_by_Name{$loc} = $strNm;
-	$spId{$loc} = $spId;
-    }
-
+    my $sth0 = $dbh->prepare("SELECT a.con_acc, a.rep_id, b.rep_name, a.seq_length FROM contig4 a inner join replicon b on a.rep_id=b.rep_id  WHERE a.strain_id = ? order by a.rep_id");
     my $fasta = Bio::SeqIO->new( -format => "fasta" );
-    foreach my $loc (@locs) {
-	$sth2->execute( $loc );
-	my ($aln_nt) = $sth2->fetchrow_array();
-	my $id = "sp_" . $spId{$loc} . "_" . $strain_by_Name{ $loc } . "_". $loc;
-	my $segment;
-	$segment = Bio::Seq->new(-id=>$id, -seq=>$aln_nt);
-	$fasta->write_seq( $segment );
-    }
+	
+    $sth0->execute($gid);
+    while (my  ($con_acc, $rep_id, $rep_name, $seq_length) = $sth0->fetchrow_array()) {
+    	if ($con_acc =~ m/^[A-Z]/) {
+			my $seq = retrieve_seqs($con_acc);			
+			my $id = $con_acc . "_" . $gid .  "_". $rep_name;
+			my $segment;
+    		$segment = Bio::Seq->new(-id=>$id, -seq=>$seq);
+    		$fasta->write_seq( $segment);
+		} else {
+			warn "Isn't a valid NCBI acc #$con_acc of $rep_name in $gid. Skip.\n";
+		}
+		#print join "\t", ($con_acc, $rep_id, $rep_name, $seq_length);
+		#print "\n";
+	}
     $sth0->finish;
-    $sth1->finish;
-    $sth2->finish;
     $dbh->disconnect;
 }
 
