@@ -9,7 +9,6 @@
 # Sviatoslav Kendall
 #
 
-
 use strict;
 use warnings;
 use Getopt::Long qw(:config gnu_getopt);
@@ -20,6 +19,7 @@ use Data::Dumper;
 use Bio::SeqIO;
 use Bio::Seq;
 use Bio::SeqFeature::Generic;
+use Bio::DB::GenBank;
 
 # Get db connection info
 use FindBin;                 # Find the location
@@ -202,7 +202,9 @@ sub contigs {
     my $fasta = Bio::SeqIO->new( -format => "fasta" );
 	
     $sth0->execute($gid);
+    my $exist = 0;
     while (my  ($con_acc, $rep_id, $rep_name, $seq_length) = $sth0->fetchrow_array()) {
+	$exist++;
     	if ($con_acc =~ m/^[A-Z]/) {
 			my $seq = retrieve_seqs($con_acc);			
 			my $id = $con_acc . "_" . $gid .  "_". $rep_name;
@@ -214,9 +216,18 @@ sub contigs {
 		}
 		#print join "\t", ($con_acc, $rep_id, $rep_name, $seq_length);
 		#print "\n";
-	}
+    }
+    die "No contigs found in NCBI for this genome id $gid. Exit. Please find avaluable genomes by running --list-genomes first\n" unless $exist;
     $sth0->finish;
     $dbh->disconnect;
+}
+
+sub retrieve_seqs {
+    my $acc = shift;
+    my $gb = Bio::DB::GenBank->new();
+    my $seq = $gb->get_Seq_by_acc($acc); # Retrieve sequence with Accession Number
+    my $out = $seq->seq();
+    return $out;
 }
 
 sub homologs {
@@ -631,6 +642,18 @@ Print a brief help message and exits.
 
 Prints the manual page and exits.
 
+=item B<--list-genomes>
+
+Prints genome ids and taxonomic info.
+
+Example: "biodb --list-genomes"
+
+=item B<--genome> genome_id
+
+Retrieve from GenBank all contigs of a given genome (strain id given as argument). Output a FASTA fi;e
+
+Example: "biodb --genome 100"
+
 =item B<--all-orfs --all-orfs -np> genome_id
 
 Parse nucleotide or protein sequences of ORFS for a genome specified by Genome ID in FASTA format.
@@ -700,34 +723,6 @@ Examples: "biodb.pl --igs -i BB_0814 (b31_left_locus) BB_0816 (b31_right_locus)"
 
 =back
 
-=head1 EXAMPLES
-
-=over 4
-
-=item B<--all-orfs>
-
-biodb --all-orfs -n 100 (b31 genome_id)
-
-biodb --akk-orfs -p 100
-
-=item B<--orth>
-
-biodb --orth -n BB_0814 (b31_locus)
-
-biodb --orth -p BB_0814
-
-biodb --orth -nw BB_0814 (optional: w = within species, b = between species)
-
-=item B<--igs>
-
-biodb --igs -i BB_0814 BB_0816 ( takes two arguments, B31 left and right locus)
-
-biodb --igs -s BB_0814 BB_0816 ( segment: left_orf:IGS:right_orf)
-
-biodb --igs -iw BB_0814 BB_0816 (optional: w = within species, b = between species)
-
-=back
-
 =head1 REQUIRES
 
 Perl 5.010, BioPerl
@@ -739,9 +734,9 @@ Perl 5.010, BioPerl
 =head1 AUTHORS
 
  Weigang Qiu at genectr.hunter.cuny.edu
+ Saymon Akther saymon.akther at gmail dot com
  Yozen Hernandez yzhernand at gmail dot com
  Levy Vargas levy dot vargas at gmail dot com
- Saymon Akther saymon.akther at gmail dot com
  Girish Ramrattan gramrattan at gmail dot com
  Sviatoslav Kendall at gmail dot com
 
