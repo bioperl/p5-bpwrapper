@@ -209,6 +209,7 @@ sub contigs {
     my $exist = 0;
     while (my  ($con_acc, $rep_id, $rep_name, $seq_length) = $sth0->fetchrow_array()) {
     	if ($con_acc =~ m/^[A-Z]/) {
+	    warn "Retrieving seq from GenBank for contig $con_acc\n";
 	    $exist++;
 	    my $seq = retrieve_seqs($con_acc);			
 	    my $id = $gname . "_" . $con_acc . "_" . $gid .  "_". $rep_name;
