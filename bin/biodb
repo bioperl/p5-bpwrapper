@@ -199,26 +199,31 @@ sub contigs {
     my $gid = shift @ARGV;
     my $dbh = db_connect();
     my $sth0 = $dbh->prepare("SELECT a.con_acc, a.rep_id, b.rep_name, a.seq_length FROM contig4 a inner join replicon b on a.rep_id=b.rep_id  WHERE a.strain_id = ? order by a.rep_id");
+    my $sth1 = $dbh->prepare("SELECT strain_name FROM strain where strain_id = ?");
     my $fasta = Bio::SeqIO->new( -format => "fasta" );
-	
+
+    $sth1->execute($gid);
+    my  $gname = $sth1->fetchrow_array() || die "Not found in db: $gid\n";
+
     $sth0->execute($gid);
     my $exist = 0;
     while (my  ($con_acc, $rep_id, $rep_name, $seq_length) = $sth0->fetchrow_array()) {
-	$exist++;
     	if ($con_acc =~ m/^[A-Z]/) {
-			my $seq = retrieve_seqs($con_acc);			
-			my $id = $con_acc . "_" . $gid .  "_". $rep_name;
-			my $segment;
-    		$segment = Bio::Seq->new(-id=>$id, -seq=>$seq);
-    		$fasta->write_seq( $segment);
-		} else {
-			warn "Isn't a valid NCBI acc #$con_acc of $rep_name in $gid. Skip.\n";
-		}
-		#print join "\t", ($con_acc, $rep_id, $rep_name, $seq_length);
-		#print "\n";
+	    $exist++;
+	    my $seq = retrieve_seqs($con_acc);			
+	    my $id = $gname . "_" . $con_acc . "_" . $gid .  "_". $rep_name;
+	    my $segment;
+	    $segment = Bio::Seq->new(-id=>$id, -seq=>$seq);
+	    $fasta->write_seq($segment);
+	} else {
+	    warn "Isn't a valid NCBI acc #$con_acc of $rep_name in $gid. Skip.\n";
+	}
+	#print join "\t", ($con_acc, $rep_id, $rep_name, $seq_length);
+	#print "\n";
     }
     die "No contigs found in NCBI for this genome id $gid. Exit. Please find avaluable genomes by running --list-genomes first\n" unless $exist;
     $sth0->finish;
+    $sth1->finish;
     $dbh->disconnect;
 }
 
