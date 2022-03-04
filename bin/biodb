@@ -57,6 +57,8 @@ GetOptions(
     "lt-coord",
     "rt-coord",
     "list-genomes",
+    "list-fams",
+    "locus",
 ) or pod2usage(2);
 
 $PGPASSWORD = $opts{pass};
@@ -92,6 +94,8 @@ if ($opts{"syn-anchor"}) {
 &synteny_by_anchors if $opts{"syn-anchor"};
 &synteny_by_coords if $opts{"syn-coord"};
 &list_available_genomes if $opts{'list-genomes'};
+&list_bb_pfams if $opts{'list-fams'};
+&export_locus_seq if $opts{'locus'};
 
 pod2usage(1) if $opts{"help"};
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $opts{"man"};
@@ -106,6 +110,38 @@ exit;
 #####################
 # Subs
 ####################
+
+
+sub list_bb_pfams {
+    my $dbh = db_connect();
+    my $sth0 = $dbh->prepare("SELECT * from bb_pfam order by pfam_id");
+    my $sth1 = $dbh->prepare("SELECT locus from orf where genome_id = 100 and par_fam_id = ?");
+    my @out;
+    $sth0->execute();
+    while (my ($fam, $anno) = $sth0->fetchrow_array() ) {
+	$sth1->execute($fam);
+	my @orfs;
+	while (my ($locus) = $sth1->fetchrow_array() ) {
+	    push @orfs, $locus;
+	}
+	#print Dumper(\@orfs);
+	
+	push @out, {'fid' => $fam,
+		    'anno' => $anno,
+		    'orfs' => \@orfs
+	};
+    }
+
+    foreach (@out) {
+	print join "\t", ($_->{'fid'}, $_->{'anno'}, join(";", @{$_->{'orfs'}}));
+	print "\n";
+    }
+
+    $sth0->finish();
+    $sth1->finish();
+    $dbh->disconnect();
+}
+
 
 sub list_available_genomes {
     my $dbh = db_connect();
@@ -281,7 +317,40 @@ sub db_connect {
 }
 
 
+sub export_locus_seq {
+    my ($locus) = @ARGV; #take genome_id as argument, example: genome_id = 100 (b31)
+    my $fasta = Bio::SeqIO->new( -format => "fasta" );
+    my $dbh = db_connect();
+    my $sth2 = $dbh->prepare("SELECT seq FROM orf4 WHERE locus = ?");
+    $sth2->execute($locus);
+    my ($seq) = $sth2->fetchrow_array() || die "locus not found in db: $locus\n";
+    my $nuc = Bio::Seq->new( -seq => $seq , -id => $locus );
+    $fasta->write_seq($nuc);
+    $sth2->finish;
+    $dbh->disconnect;
+}
+
+
 sub all_orfs {
+    my ($genome_id) = @ARGV; #take genome_id as argument, example: genome_id = 100 (b31)
+    my $fasta = Bio::SeqIO->new( -format => "fasta" );
+    my $dbh = db_connect();
+    my $sth1 = $dbh->prepare("SELECT locus FROM vorf WHERE strain_id = ? AND locus IS NOT NULL");
+    my $sth2 = $dbh->prepare("SELECT seq FROM orf4 WHERE locus = ?");
+    $sth1->execute( $genome_id);
+    while ( my ($locus) = $sth1->fetchrow_array()) {
+	$sth2->execute($locus);
+	my ($seq) = $sth2->fetchrow_array();
+	my $nuc = Bio::Seq->new( -seq => $seq , -id => $locus );
+    	$fasta->write_seq($nuc);
+    }
+    $sth1->finish;
+    $sth2->finish;
+    $dbh->disconnect;
+}
+
+
+sub all_orfs_discard {
 	my %genome_options;
 	getopts('np', \%genome_options);
 	# -n: Nucleotide
@@ -291,7 +360,7 @@ sub all_orfs {
 
 	my $dbh = db_connect();
 	#prepare database connection
-	my $sth1 = $dbh->prepare("SELECT con_id, locus, orf_id, orth_orf_id FROM view_all WHERE genome_id = ? AND locus IS NOT NULL");
+	my $sth1 = $dbh->prepare("SELECT rep_id, locus, orf_id, orth_orf_id FROM vorf WHERE genome_id = ? AND locus IS NOT NULL");
 	# PULL START/STOP/STRAND FROM RELEVANT TABLE
 	my $sth2 = $dbh->prepare("SELECT start, stop, strand FROM orf WHERE genome_id = ? AND con_id = ? AND orf_id = ?");
 	# PULL
@@ -625,7 +694,7 @@ __END__
 
 =head1 NAME
 
-biodb - Retrieve genome or orthologous ORFs or IGS sequences from local borrelia genome database
+biodb - Retrieve genome or orthologous ORFs or IGS sequences from borrelia genome database
 
 =head1 SYNOPSIS
  # connect to Borreliabase.org and retrives sequences based on the option called.
@@ -634,7 +703,7 @@ B<biodb> [switch] [option] [arguments]
 
 =head1 DESCRIPTION
 
-B<biodb> will access local borrelia genome database and produce FASTA sequence file. The contents and format of the produced file/s is determined by the options called.
+B<biodb> will access a borrelia genome database and produce FASTA sequence file. The contents and format of the produced file/s is determined by the options called.
 
 =head1 OPTIONS
 
@@ -651,81 +720,59 @@ Prints the manual page and exits.
 =item B<--list-genomes>
 
 Prints genome ids and taxonomic info.
-
 Example: "biodb --list-genomes"
+
+=item B<--list-fams>
+
+Prints borrelia gene family ids and associated info.
+Example: "biodb --list-fams"
 
 =item B<--genome> genome_id
 
 Retrieve from GenBank all contigs of a given genome (strain id given as argument). Output a FASTA fi;e
-
 Example: "biodb --genome 100"
+
+=item B<--locus> locus_tag
+
+Retrieve nucleotide sequence of a locus
+Example: "biodb --locus BB_A15"
 
 =item B<--all-orfs --all-orfs -np> genome_id
 
-Parse nucleotide or protein sequences of ORFS for a genome specified by Genome ID in FASTA format.
-
-Switch: --all-orfs
-
-Options: -n: nucleotide
-
-         -p: protein
-
-Example: "biodb --all-orfs -n 100 (b31_genome_id)"
+Parse nucleotide sequences of ORFS for a genome specified by Genome ID in FASTA format.
+Example: "biodb --all-orfs 100 (b31_genome_id)"
 
 =item B<--fam> B31_locus_tag
 
 Fetch all homologs (aligned) of a genome family coresponding to a B31 locus
-
 Example: "biodb --fam  (b31_genome_id)"
 
 =item B<--orth, --orth -npwbk> b31_locus
-
 Parse nucleotide or protein sequences of all orthologous ORFs for user specified b31_locus in FASTA format.
-
-Switch: --orf
-
 Options: -n: nucleotide
-
          -p: protein
-
          -w: within species (optional)
-
          -b: between species (optional)
-
          -k: Switch id format (optional)
-
 		 	standard format: example-> "B31:1:100:3615:ORF00950" (strain_name:taxon_id:genome_id:con_id:orf_if)
-
 			with option k: example-> "B.burgdorferi_ss_B31" (species_name:strain)
 
 Examples: "biodb.pl --orf -n BB_0814 (b31_locus)"
-
           "biodb.pl --orf -nw BB_0814 (b31_locus)"
 
 =item B<--igs, --igs -iswbk> b31_left_locus b31_right_locus
 
 Parse igs sequences or segement for user specified b31 left and right locus in FASTA format.
-
-Switch: --igs
-
 Options: -i: igs
-
          -s: segement (left_orf:igs:right_orf)
-
          -w: within species (optional)
-
          -b: between species (optional)
-
          -k: Switch id format (optional)
-
 		 	standard format: example-> "B31:1:100" (strain:taxon_id:genome_id)
-
 			with option k: example-> "B.burgdorferi_ss_B31" (species_name:strain)
 
 Examples: "biodb.pl --igs -i BB_0814 (b31_left_locus) BB_0816 (b31_right_locus)"
-
           "biodb.pl --igs -iw BB_0814 (b31_left_locus) BB_0816 (b31_right_locus)"
-
 
 =back
 
