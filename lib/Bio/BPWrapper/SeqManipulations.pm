@@ -90,6 +90,7 @@ my %opt_dispatch = (
     'remove-stop' => \&remove_stop,
     'sort' => \&sort_by,
     'split-cdhit' => \&split_cdhit,
+    'syn-code' => \&synon_codons,
 #   'dotplot' => \&draw_dotplot,
 #    'extract' => \&reading_frame_ops,
 #	'longest-orf' => \&reading_frame_ops,
@@ -190,20 +191,19 @@ sub write_out {
 
 ################### subroutines ########################
 
-=begin
 sub codon_sim {
-    my $seq = $in->next_seq(); # only the first sequence used
-    if (&_internal_stop_or_x($seq->translate()->seq())) {
-	die "internal stop or non-standard base:\t" . $seq->id . "\texit.\n";
-    }
-    use Algorithm::Numerical::Sample  qw /sample/;
-    use Math::Random qw /random_permutation/;
+#    my $seq = $in->next_seq(); # only the first sequence used
+#    if (&_internal_stop_or_x($seq->translate()->seq())) {
+#	die "internal stop or non-standard base:\t" . $seq->id . "\texit.\n";
+#    }
+#    use Algorithm::Numerical::Sample  qw /sample/;
+#    use Math::Random qw /random_permutation/;
 ########################
 # Read CUTG and make a random codon set for each AA
 ########################
-    my $cutg_file = $opts{'codon-sim'};
-    my $io = Bio::CodonUsage::IO->new(-file => $cutg_file);
-    my $cdtable = $io->next_data();
+#    my $cutg_file = $opts{'codon-sim'};
+#    my $io = Bio::CodonUsage::IO->new(-file => $cutg_file);
+#    my $cdtable = $io->next_data();
     my @bases = qw(A T C G);
     my @codons;
     for (my $i=0; $i<=3; $i++) {
@@ -217,42 +217,74 @@ sub codon_sim {
 	}
     }
     
-    my $myCodonTable  = Bio::Tools::CodonTable->new( -id => 1 );
+    my $myCodonTable  = Bio::Tools::CodonTable->new( -id => 11 ); # bacterial codon table
 
     my (@cd_cts, %aas, %aa_cds);
     foreach my $cd (@codons) {
 	my $aa = $myCodonTable->translate($cd);
 	$aas{$aa}++;
-	push @cd_cts, {codon => $cd, aa => $aa, cts => $cdtable->codon_count($cd)};
+	#	push @cd_cts, {codon => $cd, aa => $aa, cts => $cdtable->codon_count($cd)};
+	push @cd_cts, {codon => $cd, aa => $aa};
     }
 
     foreach my $aa (keys %aas) { 
 	my @cds = grep {$_->{aa} eq $aa} @cd_cts;
-	my @cd_sets; 
-	foreach (@cds) {
-	    for (my $i=1; $i<=$_->{cts}; $i++) {
-		push @cd_sets, $_->{codon};
-	    }
-	}
-	@cd_sets = random_permutation(@cd_sets);
-	$aa_cds{$aa} = \@cd_sets;
+	$aa_cds{$aa} = \@cds;
+#	my @cd_sets; 
+#	foreach (@cds) {
+#	    for (my $i=1; $i<=$_->{cts}; $i++) {
+#		push @cd_sets, $_->{codon};
+#	    }
+#	}
+#	@cd_sets = random_permutation(@cd_sets);
+	#	$aa_cds{$aa} = \@cd_sets;
+#	$aa_cds{$aa} = \@cd_sets;
     }
+#    print Dumper(\%aa_cds);
+    return(\%aa_cds);
+}
 
+# fisher_yates_shuffle( \@array ) : generate a random permutation
+# of @array in place
+sub fisher_yates_shuffle {
+    my $array = shift;
+    my $i;
+    for ($i = @$array; --$i; ) {
+	my $j = int rand ($i+1);
+	next if $i == $j;
+	@$array[$i,$j] = @$array[$j,$i];
+    }
+}
+
+sub synon_codons {
+    my %codon_set = %{&codon_sim};    
+    while( my $seq  = $in->next_seq() ) {
 ##############################
 # generate a random CDS with the same AA sequence
 ###############################
-    my $pep = $seq->translate()->seq();
-    my @aas = split //, $pep;
-    my $sim_cds = "";
-    for (my $i = 0; $i <= $#aas; $i++) {
-	my @sampled_cds = sample(-set => $aa_cds{$aas[$i]}); # sample 1 by default
-	my $cd_sim = shift @sampled_cds;
-	$sim_cds .= $cd_sim;
+	my $pep = $seq->translate()->seq();
+	if (&_internal_stop_or_x($pep)) {
+	    warn "internal stop or non-standard base:\t" . $seq->id . "\tskip.\n";
+	    next;
+	}
+	my @aas = split //, $pep;
+	my $sim_cds = "";
+	#print $pep, "\n";
+	for (my $i = 0; $i <= $#aas; $i++) {
+	    my $cd_set = $codon_set{$aas[$i]};
+#	    print $aas[$i], "\t", $cd_set->[0]->{codon}, "\n";
+	    &fisher_yates_shuffle( $cd_set ) if scalar(@$cd_set) > 1;    # permutes @array in place, for each codon
+#	next if $aas[$i] eq '*';
+#	my @sampled_cds = sample(-set => $aa_cds{$aas[$i]}); # sample 1 by default
+	    my $cd_sim = $cd_set->[0];
+	    $sim_cds .= $cd_sim->{codon};
+	}
+	my $sim_obj = Bio::Seq->new(-id => $seq->id() . "|sim", -seq => $sim_cds);
+	$out->write_seq($sim_obj);
     }
-    my $sim_obj = Bio::Seq->new(-id => $seq->id() . "|sim", -seq => $sim_cds);
-    $out->write_seq($sim_obj);
+    exit;
 }
-=cut
+    
 
 sub count_gaps_dna {
     while( my $seqobj  = $in->next_seq() ) {

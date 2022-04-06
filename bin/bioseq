@@ -46,6 +46,7 @@ GetOptions(
     "sort=s",
     "split-cdhit=s",
     "subseq|s=s",
+    "syn-code",
     "translate|t=i",
     "fetch|f=s", # Retrieve sequence by accession number; broken by NCBI protocol change
  #   "longest-orf|C",
@@ -322,6 +323,10 @@ Parse cdhit output .clstr file and generate a FASTA file for each CDHIT family.
 =item --subseq | -s 'beginning_index,ending_index'
 
 Select substring (of the 1st sequence).
+
+=item --syn-code 
+
+Randomly substitute each codon with a synonymous one for a coding sequence
 
 =item --translate | -t [1|3|6]
 
