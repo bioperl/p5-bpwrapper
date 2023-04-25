@@ -896,7 +896,7 @@ Finds digestion coordinates by a specified restriction enzyme
 specified in C<$opts{restrinct}> set via L<C<#initilize(\%opts)>|/initialize>.
 
 An input file with sequences is expected. Wraps
-L<Bio::Restriction::Analysis-E<gt>cut()|https://metacpan.org/pod/Bio::Restriction::Analysis#cut>.
+L<Bio::Restriction::Analysis-E<gt>cut()|https://github.com/bioperl/Bio-Restriction>.
 
 Outputs coordinates of overhangs in BED format.
 

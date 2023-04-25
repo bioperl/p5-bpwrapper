@@ -1,6 +1,8 @@
 #!/usr/bin/env perl
-use rlib '.';
-use strict; use warnings;
+use strict;
+use warnings;
+use Path::Tiny;
+use lib path($0)->absolute->parent->stringify;
 use Test::More;
 use Helper;
 
