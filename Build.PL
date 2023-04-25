@@ -50,8 +50,8 @@ my $builder = Module::Build->new(
 
     requires => {
         'perl'                              => 'v5.14',
-        'Bio::Restriction::Analysis'        => 0,
-        'Bio::DB::GenBank'                  => 0,
+        #'Bio::Restriction::Analysis'        => 0,
+        'Bio::DB::RefSeq'                   => 0,
         'Path::Tiny'                        => '0.058',
     },
 

@@ -19,7 +19,7 @@ use Data::Dumper;
 use Bio::SeqIO;
 use Bio::Seq;
 use Bio::SeqFeature::Generic;
-use Bio::DB::GenBank;
+use Bio::DB::RefSeq;
 
 # Get db connection info
 use FindBin;                 # Find the location
@@ -266,7 +266,7 @@ sub contigs {
 
 sub retrieve_seqs {
     my $acc = shift;
-    my $gb = Bio::DB::GenBank->new();
+    my $gb = Bio::DB::RefSeq->new();
     my $seq = $gb->get_Seq_by_acc($acc); # Retrieve sequence with Accession Number
     my $out = $seq->seq();
     return $out;

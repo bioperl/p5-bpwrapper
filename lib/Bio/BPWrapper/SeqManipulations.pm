@@ -22,7 +22,7 @@ use Bio::Seq;
 use Bio::SeqIO;
 use File::Basename;
 use Bio::Tools::CodonTable;
-use Bio::DB::GenBank;
+use Bio::DB::RefSeq;
 use Bio::Tools::SeqStats;
 use Bio::SeqUtils;
 use Scalar::Util;
@@ -37,10 +37,12 @@ use vars qw(@ISA @EXPORT @EXPORT_OK);
 
 @ISA         = qw(Exporter);
 
+#restrict_coord restrict_digest
 @EXPORT      = qw(initialize can_handle handle_opt write_out
 print_composition filter_seqs retrieve_seqs remove_gaps
 print_lengths print_seq_count make_revcom
-print_subseq restrict_coord restrict_digest anonymize
+print_subseq
+anonymize
 shred_seq count_codons print_gb_gene_feats
 count_leading_gaps hydroB linearize reloop_at
 remove_stop parse_orders find_by_order
@@ -732,14 +734,14 @@ sub filter_seqs {
 
 =head2 retrieve_seqs()
 
-Retrieves a sequence from GenBank using the provided accession
-number. A wrapper for C<L<Bio::DB::GenBank>E<gt>#get_Seq_by_acc>.
+Retrieves a sequence from RefSeq using the provided accession
+number. A wrapper for C<L<Bio::DB::RefSeq>E<gt>#get_Seq_by_acc>.
 
 =cut
 
 # To do: add fetch by gi
 sub retrieve_seqs {
-    my $gb  = Bio::DB::GenBank->new();
+    my $gb  = Bio::DB::RefSeq->new();
     my $seq = $gb->get_Seq_by_acc($opts{'fetch'}); # Retrieve sequence with Accession Number
     $out->write_seq($seq)
 }
@@ -892,6 +894,8 @@ sub reading_frame_ops {
 
 =head2 restrict_coord()
 
+Note: This function is currently DEPRECATED.
+
 Finds digestion coordinates by a specified restriction enzyme
 specified in C<$opts{restrinct}> set via L<C<#initilize(\%opts)>|/initialize>.
 
@@ -920,6 +924,8 @@ sub restrict_coord {
 }
 
 =head2 restrict_digest()
+
+Note: This function is currently DEPRECATED.
 
 Predicted fragments from digestion by a specified restriction enzyme
 specified in C<$opts{restrinct}> set via L<C<#initilize(\%opts)>|/initialize>.
