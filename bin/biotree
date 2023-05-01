@@ -1,13 +1,15 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use rlib '../lib';
 use v5.10;
+
+use Path::Tiny;
+use lib path($0)->absolute->parent->sibling('lib')->stringify;
+use Pod::Usage;
+use Getopt::Long qw( :config bundling permute no_getopt_compat );
+
 use Bio::BPWrapper;
 use Bio::BPWrapper::TreeManipulations;
-use Data::Dumper;
-use Getopt::Long qw( :config bundling permute no_getopt_compat );
-use Pod::Usage;
 
 use constant PROGRAM => File::Basename::basename(__FILE__);
 

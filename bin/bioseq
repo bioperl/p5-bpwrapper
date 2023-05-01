@@ -3,10 +3,13 @@
 use strict;
 use warnings;
 use v5.10;
-use rlib '../lib';
-use Bio::BPWrapper::SeqManipulations;
-use Getopt::Long qw( :config bundling permute no_getopt_compat );
+
 use Pod::Usage;
+use Getopt::Long qw( :config bundling permute no_getopt_compat );
+use Path::Tiny;
+use lib path($0)->absolute->parent->sibling('lib')->stringify;
+
+use Bio::BPWrapper::SeqManipulations;
 
 ####################### Option parsing ######################
 my %opts;
