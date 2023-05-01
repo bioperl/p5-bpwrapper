@@ -700,10 +700,25 @@ Reroot tree to node in C<$opts{'reroot'}> by creating new branch.
 =cut
 
 sub reroot {
-    my $outgroup_id = $opts{'reroot'};
-    my $outgroup    = $tree->find_node($outgroup_id);
+    #    my $outgroup_id = $opts{'reroot'};
+    my ($tag, $out_id) = split(':', $opts{'reroot'});
+    my $outgroup;
+    if ($tag eq 'otu') { # leaf id
+	$outgroup    = $tree->find_node($out_id)
+    } elsif ($tag eq 'intid') { # internal id
+	for my $nd (@nodes) {
+	    if ($nd->internal_id() == $out_id) {
+		$outgroup = $nd;
+		last
+	    }
+	}
+    }
+    else {
+	die("option does not exist: $tag")
+    }
 #    my $newroot     = $outgroup->create_node_on_branch(-FRACTION => 0.5, -ANNOT => {id => 'newroot'});
-#    $tree->reroot($outgroup);
+    #    $tree->reroot($outgroup);
+    die "outgroup not found: $out_id" unless $outgroup;
     $tree->reroot_at_midpoint($outgroup);
     $print_tree = 1;
 }

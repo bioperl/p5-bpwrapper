@@ -242,7 +242,7 @@ Rename tips according to a 2-column table
 
 =item --reroot, -r 'newroot'
 
-Reroot tree to specified node by creating new branch.
+Reroot tree to specified node by creating new branch, by either an OTU name (-r "otu:id"), or by using an internal node id (-r "intid:xxx"). Note that an OTU could be named by either way, but an internal node by on the "intid" tag.
 
 =item --rotate-node 'inode_internal_id'
 
