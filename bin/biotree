@@ -58,6 +58,7 @@ GetOptions(\%opts,
 	   "swap-otus=s", # ??
 	   "tips-to-root", 
 	   "tree-shape", # for apTreeshape package
+	   "trim-tips=f",
 	   "walk|w=s",
 	   "walk-edge=s",
 #	   "rmbl|R",
@@ -138,7 +139,7 @@ Remove all branch support values.
 
 Identify clades based on branches that bisected by a cut line (half way to max by default).
 
-Through error if cut is greater than the least deep OTU.
+Through error if cut is greater than the least deep OTU (based on node height, which is the distance from root)
 
 =item --cut-sis "cutoff"
 
@@ -269,6 +270,10 @@ Print all tip distances to root
 =item --tree-shape
 
 Print a matrix of tree shapes (input file for R Package apTreeshape)
+
+=item --trim-tips 'num'
+
+Trim from tips, as oppose to cut-tree (from root)
 
 =item --walk, -w 'otu'
 

@@ -1,5 +1,5 @@
 =encoding utf8
-.
+
 =head1 NAME
 
 Bio::BPWrapper::TreeManipulations - Functions for biotree
@@ -191,6 +191,60 @@ sub _flip_if_not_in_top_clade { # by resetting creation_id & sortby option of ea
     }
 }
 
+
+# trim tips to a single OTU if all branch lengths of its sister nodes < $cut
+sub trim_tips {
+    die "Usage: $0 --trim-tips <num>\n" unless $opts{'trim-tips'};
+    my $cut = $opts{'trim-tips'};
+    #print $cut, "\t";
+    my @sisters; # groups of sister nodes
+    foreach my $nd (@nodes) {
+	next if $nd->is_Leaf();
+	my @sis;
+	foreach ($nd->each_Descendent()) {
+	    push @sis, $_;
+	}
+	push @sisters, \@sis;
+    }
+
+#    print Dumper(\@sisters); exit;
+    
+    foreach my $ref_sis (@sisters) {
+	my $trim = 1;
+	foreach (@$ref_sis) {
+#	    print $_->branch_length(), "\t";
+	    $trim = 0 if $_->branch_length() >= $cut; # any sister branch length > $cut, don't trim
+	}
+
+#	print $nd->internal_id(), ":";
+#	foreach (@$ref_sis) {
+#	    print "\t", $_->is_Leaf() ? $_->id() : $_->internal_id();
+#	}
+#	print "\t", $trim, "\n";
+	
+	if ($trim) { # retain the first OTU
+	    my @nds = @$ref_sis;
+	    my $retain = shift @nds;
+	    my $pa = $retain->ancestor();
+	    foreach (@nds) {
+		$pa->remove_Descendent($_)
+	    }
+
+	    my @leaf_ids;
+	    foreach my $sis (@$ref_sis) {
+		foreach (&_each_leaf($sis)) {
+		    push @leaf_ids, $_->id();
+		}
+	    }
+	    #	    print Dumper(\@leaf_ids);
+	    print STDERR join "\t", @leaf_ids;
+	    print STDERR "\n";
+	}
+    }
+    $print_tree = 1;
+}
+
+
 sub cut_tree {
     my @otu_hts;
     $rootnode->{height} = 0;
@@ -202,6 +256,7 @@ sub cut_tree {
 
     @otu_hts = sort {$a <=> $b} @otu_hts;
     my $least_otu_height = shift @otu_hts;
+    die "Usage: $0 --cut-tree <num>\n" unless $opts{'cut-tree'};
     my $cut = $opts{'cut-tree'} || 0.5 * $least_otu_height; # default to cut the branches traversing the line that is 1/2 of least deep OTU
     die "Cut tree at $cut, greater than least-deep OTU ($least_otu_height). Lower cut value.\n" if $cut >= $least_otu_height;
 
@@ -1111,6 +1166,7 @@ sub write_out {
     rename_tips() if $opts->{'rename-tips'};
     write_tab_tree() if $opts->{'as-text'};
     cut_tree() if $opts->{'cut-tree'};
+    trim_tips() if $opts->{'trim-tips'};
     cut_sister() if $opts->{'cut-sis'};
     mid_point_root() if $opts->{'mid-point'};
     pars_binary() if $opts->{'ci'};
