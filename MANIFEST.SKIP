@@ -84,6 +84,8 @@ ChangeLog
 Dockerfile
 Makefile.PL
 bin/biodb
+bin/biopop
+lib/Bio/BPWrapper/PopManipulations.pm
 codon-info-sim.pl
 codon-info.pl
 test-files/BbB31.cutg
