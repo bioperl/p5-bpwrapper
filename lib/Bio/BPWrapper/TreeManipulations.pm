@@ -192,67 +192,31 @@ sub _flip_if_not_in_top_clade { # by resetting creation_id & sortby option of ea
 }
 
 
-# trim a node to a single OTU representative if all branch lengths of its descendant sister nodes < $cut
+# trim a node to a single OTU representative if all branch lengths of its descendant OTUs <= $cut
 sub trim_tips {
     die "Usage: $0 --trim-tips <num>\n" unless $opts{'trim-tips'};
     my $cut = $opts{'trim-tips'};
-    #print $cut, "\t";
-    my @sisters; # groups of sister nodes
-    my %otu_sets; # non-redundant OTU sets
+
+    my @trim_nodes;
+    my $group_ct = 0;
+    &identify_nodes_to_trim_by_walk_from_root($rootnode, \$cut, \@trim_nodes, \$group_ct);
+    my %otu_sets;
     my $set_ct = 1;
-
-    foreach my $nd (@nodes) {
-	next if $nd->is_Leaf();
-	my @sis;
-	foreach ($nd->each_Descendent()) {
-	    push @sis, $_;
+    foreach my $ref_trim (@trim_nodes) {
+	foreach (@$ref_trim) {
+	    $otu_sets{$_} = $set_ct;
 	}
-	push @sisters, \@sis;
+	$set_ct++;
+#	print STDERR join "\t", sort @$ref_trim;
+#	print STDERR "\n";
     }
 
-#    print Dumper(\@sisters); exit;
-    
-    foreach my $ref_sis (@sisters) {
-	my $trim = 1;
-	foreach (@$ref_sis) {
-#	    print $_->branch_length(), "\t";
-	    $trim = 0 if $_->branch_length() >= $cut; # any sister branch length > $cut, don't trim
-	}
-
-#	print $nd->internal_id(), ":";
-#	foreach (@$ref_sis) {
-#	    print "\t", $_->is_Leaf() ? $_->id() : $_->internal_id();
-#	}
-#	print "\t", $trim, "\n";
-	
-	if ($trim) { # retain the first OTU
-	    my @nds = @$ref_sis;
-	    my $retain = shift @nds;
-	    my $pa = $retain->ancestor();
-	    foreach (@nds) {
-		$pa->remove_Descendent($_)
-	    }
-
-#	    my @leaf_ids;
-	    foreach my $sis (@$ref_sis) {
-		foreach (&_each_leaf($sis)) {
-		    $otu_sets{$_->id()} = $set_ct;
-#		    push @leaf_ids, $_->id();
-		}
-	    }
-	    #	    print Dumper(\@leaf_ids);
-	    # output a table of consolidated/non-reduandant OTUs for parsing/visual
-#	    print STDERR join "\t", @leaf_ids;
-#	    print STDERR "\n";
-	    $set_ct ++;
-	}
-    }
 
     foreach (@otus) {
-	next if $otu_sets{$_->id()};
-	$otu_sets{$_->id()} = $set_ct++;
+	next if $otu_sets{$_->id};
+	$otu_sets{$_->id} = $set_ct++;
     }
-
+    #    print Dumper(\%otu_sets);
     print STDERR "#Trim tree from tip  with a cutoff of d=$cut\n";
     print STDERR "otu\tnr_set_id\n";
     foreach (sort {$otu_sets{$a} <=> $otu_sets{$b}} keys %otu_sets) {
@@ -262,6 +226,41 @@ sub trim_tips {
     $print_tree = 1;
 }
 
+sub identify_nodes_to_trim_by_walk_from_root {
+    my $node = shift; # internal node only
+    my $ref_cut = shift;
+    my $ref_group = shift;
+    my $ref_ct = shift;
+
+    return if $node->is_Leaf;
+    my %des_otus; # save distances
+    my $trim = 1; # default to trim
+    # trim a node if all OTU distance to it is <= cut
+    foreach my $des ($node -> get_all_Descendents()) {
+	next unless $des->is_Leaf;
+	#push @des_otus, $des;
+	# distance to a desc OTU
+	my $dist = $tree->distance($node, $des);
+	$des_otus{$des->id} = { 'otu' => $des, 'dist' => $dist };
+	$trim = 0 if $dist > $$ref_cut; # don't trim is any distance to OTU > $cut
+    }
+
+    if ($trim) { # trim &  retain the first OTU; stop descending
+	my @leafs = sort keys %des_otus; # make a copy 
+	$node -> remove_all_Descendents(); # clear all desc
+	my $retain = shift @leafs;
+	$node->add_Descendent($des_otus{$retain}->{'otu'});
+	
+	# collect all OTUs for a trimmed inode
+	push @$ref_group, [keys %des_otus];
+	$$ref_ct++;
+	return;
+    } else { # don't trim
+	foreach my $des ($node->each_Descendent()) {
+	    &identify_nodes_to_trim_by_walk_from_root($des, $ref_cut, $ref_group, $ref_ct); 
+	}
+    }
+}
 
 sub cut_tree {
     my @otu_hts;
@@ -919,7 +918,7 @@ sub subset {
 
 # Print OTU names and lengths
 sub print_leaves_lengths {
-    foreach (@nodes) { say $_->id(), "\t", $_->branch_length() if $_->is_Leaf() }
+    foreach (@nodes) { say $_->id(), "\t", $_->branch_length() || 0 if $_->is_Leaf() }
 }
 
 # Get LCA
@@ -1275,10 +1274,11 @@ sub _name2node {
 
 # _each_leaf ($node): returns a list of all OTU's descended from this node, if any
 sub _each_leaf {
-	my @leaves;
-	return $_[0] if $_[0]->is_Leaf;
-	for ($_[0]->get_all_Descendents) { push (@leaves, $_) if $_->is_Leaf }
-	return @leaves
+    my $nd = shift;
+    my @leaves;
+    return ($nd) if $nd->is_Leaf;
+    for ($nd->get_all_Descendents) { push (@leaves, $_) if $_->is_Leaf }
+    return @leaves
 }
 
 # main routine to walk up from root
