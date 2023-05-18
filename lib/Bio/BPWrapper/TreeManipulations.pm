@@ -246,10 +246,14 @@ sub identify_nodes_to_trim_by_walk_from_root {
     }
 
     if ($trim) { # trim &  retain the first OTU; stop descending
-	my @leafs = sort keys %des_otus; # make a copy 
-	$node -> remove_all_Descendents(); # clear all desc
+	my @leafs = sort keys %des_otus; # make a copy
+	my $pa = $node->ancestor();
+	$pa -> remove_Descendent($node); # clear this node as a des of parent
 	my $retain = shift @leafs;
-	$node->add_Descendent($des_otus{$retain}->{'otu'});
+	my $retain_node = $des_otus{$retain}->{'otu'};
+	my $d = $node->branch_length() + $des_otus{$retain}->{'dist'};  
+	$retain_node->branch_length($d); # keep distance to tip
+	$pa->add_Descendent($retain_node); # add retained OTU to parent
 	
 	# collect all OTUs for a trimmed inode
 	push @$ref_group, [keys %des_otus];
@@ -786,7 +790,7 @@ sub reroot {
 	}
     }
     else {
-	die("option does not exist: $tag")
+	die("Need a tag: otu:<otu_id>, or intid:<internal_id>\n");
     }
 #    my $newroot     = $outgroup->create_node_on_branch(-FRACTION => 0.5, -ANNOT => {id => 'newroot'});
     #    $tree->reroot($outgroup);
@@ -1402,7 +1406,7 @@ L<bioatree>: command-line tool for tree manipulations
 
 =item *
 
-L<Qiu Lab wiki page|http://diverge.hunter.cuny.edu/labwiki/Bioutils>
+L<Qiu Lab wiki page|http://wiki.genometracker.org/>
 
 =item *
 

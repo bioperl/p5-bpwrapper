@@ -335,12 +335,6 @@ Rocky Bernstein (testing & release)
 =item  *
 Yözen Hernández yzhernand at gmail dot com (initial design of implementation)
 
-=item *
-Pedro Pegan (developer)
-
-=item *
-Lia Di (developer, --mid-point)
-
 =item  *
 Weigang Qiu <weigang@genectr.hunter.cuny.edu> (maintainer)
 
@@ -366,10 +360,7 @@ Add documentation in POD in biotree
 =over 4
 
 =item *
-Bug: Bio::Tree reroot produces trees unreadable by R package "ape"
-
-=item *
-consistency index for DNA/protein alignments
+Place holder
 
 =back
 
@@ -378,7 +369,7 @@ consistency index for DNA/protein alignments
 =over 4
 
 =item *
-Hernandez, Bernstein, Qiu, et al (2017). "BpWrappers: Command-line utilities for manipulation of sequences, alignments, and phylogenetic trees based on BioPerl". (In prep).
+Hernandez, Bernstein, Pagan, Vargas, McCaig, Laracuente, Di, Vieira, and Qiu (2018). "BpWrapper: BioPerl-based sequence and tree utilities for rapid prototyping of bioinformatics pipelines". BMC Bioinformatics. 19:76. https://doi.org/10.1186/s12859-018-2074-9
 
 =item *
 Stajich et al (2002). "The BioPerl Toolkit: Perl Modules for the Life Sciences". Genome Research 12(10):1611-1618.
