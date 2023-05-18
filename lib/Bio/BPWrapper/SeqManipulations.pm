@@ -1002,8 +1002,9 @@ sub shred_seq {
     while ($seq = $in->next_seq()) {
         my $newid = $seq->id();
         $newid =~ s/[\s\|]/_/g;
-        print $newid, "\n";
-        my $newout = Bio::SeqIO->new(-format => $out_format, -file => ">" . $newid . ".fas");
+        warn $newid, "\n";
+	my $suffix = $out_format || "fas";  
+        my $newout = Bio::SeqIO->new(-format => $out_format, -file => ">" . $newid . ".$suffix");
         $newout->write_seq($seq)
     }
     exit
