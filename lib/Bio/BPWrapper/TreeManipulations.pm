@@ -192,12 +192,15 @@ sub _flip_if_not_in_top_clade { # by resetting creation_id & sortby option of ea
 }
 
 
-# trim tips to a single OTU if all branch lengths of its sister nodes < $cut
+# trim a node to a single OTU representative if all branch lengths of its descendant sister nodes < $cut
 sub trim_tips {
     die "Usage: $0 --trim-tips <num>\n" unless $opts{'trim-tips'};
     my $cut = $opts{'trim-tips'};
     #print $cut, "\t";
     my @sisters; # groups of sister nodes
+    my %otu_sets; # non-redundant OTU sets
+    my $set_ct = 1;
+
     foreach my $nd (@nodes) {
 	next if $nd->is_Leaf();
 	my @sis;
@@ -230,17 +233,32 @@ sub trim_tips {
 		$pa->remove_Descendent($_)
 	    }
 
-	    my @leaf_ids;
+#	    my @leaf_ids;
 	    foreach my $sis (@$ref_sis) {
 		foreach (&_each_leaf($sis)) {
-		    push @leaf_ids, $_->id();
+		    $otu_sets{$_->id()} = $set_ct;
+#		    push @leaf_ids, $_->id();
 		}
 	    }
 	    #	    print Dumper(\@leaf_ids);
-	    print STDERR join "\t", @leaf_ids;
-	    print STDERR "\n";
+	    # output a table of consolidated/non-reduandant OTUs for parsing/visual
+#	    print STDERR join "\t", @leaf_ids;
+#	    print STDERR "\n";
+	    $set_ct ++;
 	}
     }
+
+    foreach (@otus) {
+	next if $otu_sets{$_->id()};
+	$otu_sets{$_->id()} = $set_ct++;
+    }
+
+    print STDERR "#Trim tree from tip  with a cutoff of d=$cut\n";
+    print STDERR "otu\tnr_set_id\n";
+    foreach (sort {$otu_sets{$a} <=> $otu_sets{$b}} keys %otu_sets) {
+	print STDERR $_, "\t", $otu_sets{$_}, "\n";
+    }
+
     $print_tree = 1;
 }
 
