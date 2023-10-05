@@ -28,7 +28,7 @@ our ($PGDATABASE, $PGUSER, $PGHOST, $PGPASSWORD);
 #require "dbconfig.pl"; # database connection options
 $PGHOST =  'borreliabase.org';
 $PGUSER =  'lab';
-$PGDATABASE =  'bb3-dev';
+$PGDATABASE =  'bb4'; # since Oct 1, 2023 (add U19)
 
 my @within_ss=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113); # N=14, except 1, the old B31
 my @between_sl=(100, 160, 200, 300, 302, 310, 320, 401); # N=8, not include: 400 (Pko, Glokener) & 303 (Far04, Casjens)
@@ -51,14 +51,15 @@ GetOptions(
     "pass=s", # password
     "keep-strain|k=s",
     "syn-anchor",  # genoplotR for Barbour Bergey's manual
-    "lt-orf",
-    "rt-orf",
+    "lt-orf=s",
+    "rt-orf=s",
     "syn-coord", # genoplotR for vlsS cassettes
     "lt-coord",
     "rt-coord",
     "list-genomes",
     "list-fams",
     "locus",
+    "orth-set|i" # 1:1 ortholog on a replicon
 ) or pod2usage(2);
 
 $PGPASSWORD = $opts{pass};
@@ -96,6 +97,7 @@ if ($opts{"syn-anchor"}) {
 &list_available_genomes if $opts{'list-genomes'};
 &list_bb_pfams if $opts{'list-fams'};
 &export_locus_seq if $opts{'locus'};
+&export_orth_set if $opts{'orth-set'};
 
 pod2usage(1) if $opts{"help"};
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $opts{"man"};
@@ -110,6 +112,51 @@ exit;
 #####################
 # Subs
 ####################
+
+sub export_orth_set {
+    my $rep = $opts{'orth-set'};
+    my $complete_set = 78; # number of old genomes (31) + num of U19 genomes (47), as of Oct 8, 2023
+    my $ref_strain_id = 100;
+    my $dbh = db_connect();
+    my $sth0 = $dbh->prepare("SELECT cdhit_id, count(*) FROM v_synteny WHERE rep_id = 1 AND pseudo IS NULL AND seq_err IS NULL GROUP BY cdhit_id HAVING count(cdhit_id) = ? limit 10");
+    my $sth1 = $dbh->prepare("SELECT a.locus, a.seq, b.strain_id FROM orf a, v_synteny b WHERE a.cdhit_id = ? AND a.locus = b.locus");
+    my $sth2 = $dbh->prepare("SELECT locus, cdhit_id FROM v_synteny WHERE strain_id = ? AND cdhit_id IS NOT NULL");
+    my $sth3 = $dbh->prepare("SELECT a.strain_id, a.strain_name, b.species_name FROM strain a, species b WHERE a.species_id = b.species_id");
+
+    # for output file names
+    my %refs;
+    $sth2->execute($ref_strain_id);
+    while (my ($loc, $cd) = $sth2->fetchrow_array() ) {
+	$refs{$cd} = $loc;
+    }
+
+    # for output seq names
+    my %species;
+    my %strains;
+    $sth3->execute();
+    while (my ($sid, $str, $spe) = $sth3->fetchrow_array() ) {
+	$species{$sid} = $spe;
+	$strains{$sid} = $str;
+    }
+
+    my @out;
+    $sth0->execute($complete_set);
+    while (my ($fam, $ct) = $sth0->fetchrow_array() ) {
+	$sth1->execute($fam);
+	my $outfile = "orthFam_" . $refs{$fam} . ".nuc";
+	my $out = Bio::SeqIO->new(-file => ">$outfile", -format => 'fasta');
+	while (my ($locus, $seq, $str) = $sth1->fetchrow_array() ) {
+	    my $id = $locus . "|" . $strains{$str} . "|" . $species{$str};
+	    $out->write_seq(Bio::Seq->new(-id => $id, -seq => $seq));
+	}
+    }
+
+    $sth0->finish();
+    $sth1->finish();
+    $sth2->finish();
+    $sth3->finish();
+    $dbh->disconnect();
+}
 
 
 sub list_bb_pfams {
@@ -189,23 +236,26 @@ sub synteny_by_coords {
 }
 
 sub synteny_by_anchors {
+    # exclude anchors
     my %orths;
 # Set up database connection ( hardcoded )
     my $dbh = db_connect();
-    my $sth0 = $dbh->prepare("SELECT cdhit_id, ortholog FROM vorf4 WHERE genome_id = ? AND locus = ?");
-    my $sth1 = $dbh->prepare("SELECT genome_id, locus, start, stop, strand, con_acc FROM vorf4 WHERE cdhit_id = ? and ortholog = ?");
-    my $sth2 = $dbh->prepare("SELECT genome_id, strain, locus, start, stop, strand, cdhit_id FROM vorf4 WHERE start >= ? and stop <= ? and genome_id = ? and con_acc = ? and cdhit_id > 0");
+    my $sth0 = $dbh->prepare("SELECT cdhit_id, ortholog FROM v_synteny WHERE locus = ?");
+    my $sth1 = $dbh->prepare("SELECT strain_id, locus, start, stop, strand, rep_id FROM v_synteny WHERE cdhit_id = ? and ortholog = ?");
+    my $sth2 = $dbh->prepare("SELECT locus, start, stop, strand FROM v_synteny WHERE start > ? and stop < ? and strain_id = ? and rep_id = ? and pseudo is null and seq_err is null");
 
 # get orth_con_id, orth_orf_id
-    $sth0->execute(120, $lt_anchor); # 120 is B31 chromosome
+    $sth0->execute($lt_anchor); # 100 is B31 chromosome
     my ( $lt_cdhit, $lt_orth) = $sth0->fetchrow_array();
-    $sth0->execute(120, $rt_anchor); # 120 is B31 chromosome
+    $sth0->execute($rt_anchor); # 100 is B31 chromosome
     my ( $rt_cdhit, $rt_orth) = $sth0->fetchrow_array();
 
+    die "No orthologs for $lt_anchor, $rt_anchor, or both\n" unless $lt_orth && $rt_orth;
+	
     my (%genome_bounds);
     $sth1->execute($lt_cdhit, $lt_orth);
     while (my ( $gid, $locus, $start, $end, $strand, $contig) = $sth1->fetchrow_array()) {
-	next unless $strKeep{$gid};
+#	next unless $strKeep{$gid};
 	$genome_bounds{$gid}{'left'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
     }
 
@@ -214,10 +264,11 @@ sub synteny_by_anchors {
 	$genome_bounds{$gid}{'right'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
     }
 
-#print Dumper(\%genome_bounds); exit;
+#    print Dumper(\%genome_bounds); exit;
 
-    foreach my $gid (keys %strKeep) {
-#    print $gid, "\t";
+#    foreach my $gid (keys %strKeep) {
+    foreach my $gid (keys %genome_bounds) {
+#	print $gid, "\t";
 	$sth2->execute($genome_bounds{$gid}{'left'}->{start}, $genome_bounds{$gid}{'right'}->{end}, $gid, $genome_bounds{$gid}{'left'}->{contig});
 	while (my @gene = $sth2->fetchrow_array()) {
 	    print join "\t", @gene;
@@ -321,7 +372,7 @@ sub export_locus_seq {
     my ($locus) = @ARGV; #take genome_id as argument, example: genome_id = 100 (b31)
     my $fasta = Bio::SeqIO->new( -format => "fasta" );
     my $dbh = db_connect();
-    my $sth2 = $dbh->prepare("SELECT seq FROM orf4 WHERE locus = ?");
+    my $sth2 = $dbh->prepare("SELECT seq FROM orf WHERE locus = ?");
     $sth2->execute($locus);
     my ($seq) = $sth2->fetchrow_array() || die "locus not found in db: $locus\n";
     my $nuc = Bio::Seq->new( -seq => $seq , -id => $locus );
@@ -742,12 +793,24 @@ Example: "biodb --locus BB_A15"
 Parse nucleotide sequences of ORFS for a genome specified by Genome ID in FASTA format.
 Example: "biodb --all-orfs 100 (b31_genome_id)"
 
+=item B<--syn-anchor>
+
+Find synteny fragments between two B31 anchor ORFs (exclusive)
+Example: "biodb --lt-orf BB_A66 --rt-orf BB_A73 --syn-anchor"
+
 =item B<--fam> B31_locus_tag
 
 Fetch all homologs (aligned) of a genome family coresponding to a B31 locus
 Example: "biodb --fam  (b31_genome_id)"
 
+=item B<--orth-set> rep_id
+
+Export 1:1 & complete ortholog sets for a replicon id (for e.g., BPP analysis of species tree)
+
+Examples: "biodb --orth-set 1" # all 1:1 orthologs from the main chromosome
+
 =item B<--orth, --orth -npwbk> b31_locus
+
 Parse nucleotide or protein sequences of all orthologous ORFs for user specified b31_locus in FASTA format.
 Options: -n: nucleotide
          -p: protein
