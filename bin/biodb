@@ -118,7 +118,7 @@ sub export_orth_set {
     my $complete_set = 78; # number of old genomes (31) + num of U19 genomes (47), as of Oct 8, 2023
     my $ref_strain_id = 100;
     my $dbh = db_connect();
-    my $sth0 = $dbh->prepare("SELECT cdhit_id, count(*) FROM v_synteny WHERE rep_id = 1 AND pseudo IS NULL AND seq_err IS NULL GROUP BY cdhit_id HAVING count(cdhit_id) = ? limit 10");
+    my $sth0 = $dbh->prepare("SELECT cdhit_id, count(*) FROM v_synteny WHERE rep_id = 1 AND pseudo IS NULL AND seq_err IS NULL GROUP BY cdhit_id HAVING count(cdhit_id) = ?");
     my $sth1 = $dbh->prepare("SELECT a.locus, a.seq, b.strain_id FROM orf a, v_synteny b WHERE a.cdhit_id = ? AND a.locus = b.locus");
     my $sth2 = $dbh->prepare("SELECT locus, cdhit_id FROM v_synteny WHERE strain_id = ? AND cdhit_id IS NOT NULL");
     my $sth3 = $dbh->prepare("SELECT a.strain_id, a.strain_name, b.species_name FROM strain a, species b WHERE a.species_id = b.species_id");
@@ -241,7 +241,7 @@ sub synteny_by_anchors {
 # Set up database connection ( hardcoded )
     my $dbh = db_connect();
     my $sth0 = $dbh->prepare("SELECT cdhit_id, ortholog FROM v_synteny WHERE locus = ?");
-    my $sth1 = $dbh->prepare("SELECT strain_id, locus, start, stop, strand, rep_id FROM v_synteny WHERE cdhit_id = ? and ortholog = ?");
+    my $sth1 = $dbh->prepare("SELECT a.strain_id, a.locus, a.start, a.stop, a.strand, a.rep_id, b.direction FROM v_synteny a, contig b WHERE a.cdhit_id = ? and a.ortholog = ? and a.con_acc = b.con_acc");
     my $sth2 = $dbh->prepare("SELECT locus, start, stop, strand FROM v_synteny WHERE start > ? and stop < ? and strain_id = ? and rep_id = ? and pseudo is null and seq_err is null");
 
 # get orth_con_id, orth_orf_id
@@ -254,26 +254,43 @@ sub synteny_by_anchors {
 	
     my (%genome_bounds);
     $sth1->execute($lt_cdhit, $lt_orth);
-    while (my ( $gid, $locus, $start, $end, $strand, $contig) = $sth1->fetchrow_array()) {
-#	next unless $strKeep{$gid};
-	$genome_bounds{$gid}{'left'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
+    while (my ( $gid, $locus, $start, $end, $strand, $contig, $rep_dir) = $sth1->fetchrow_array()) {
+#	warn "Anchor left:\t", $gid, "\t", $locus, "\t", $rep_dir, "\n";
+	#	next unless $strKeep{$gid};
+	if ($rep_dir) {
+	    $genome_bounds{$gid}{'left'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
+	} else {
+	    $genome_bounds{$gid}{'right'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
+	}
     }
 
     $sth1->execute($rt_cdhit, $rt_orth);
-    while (my ( $gid, $locus, $start, $end, $strand, $contig) = $sth1->fetchrow_array()) {
-	$genome_bounds{$gid}{'right'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
-    }
+    while (my ( $gid, $locus, $start, $end, $strand, $contig, $rep_dir) = $sth1->fetchrow_array()) {
+#	warn "Anchor right:\t", $gid, "\t", $locus, "\t", $rep_dir, "\n";
+	if ($rep_dir) {	    
+	    $genome_bounds{$gid}{'right'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
+	} else {
+	    $genome_bounds{$gid}{'left'} = {locus => $locus, start => $start, end => $end, strand => $strand, contig => $contig};
+	}
+    }    
 
+    foreach my $gid (keys %genome_bounds) {
+	next if $genome_bounds{$gid}{'left'} && $genome_bounds{$gid}{'right'};
+	warn "$gid\t", $genome_bounds{$gid}{'left'}{'locus'} || 'absent left anchor', "\t", $genome_bounds{$gid}{'right'}{'locus'} || 'absent right anchor', "\n";
+    }
+    
 #    print Dumper(\%genome_bounds); exit;
 
 #    foreach my $gid (keys %strKeep) {
     foreach my $gid (keys %genome_bounds) {
-#	print $gid, "\t";
 	$sth2->execute($genome_bounds{$gid}{'left'}->{start}, $genome_bounds{$gid}{'right'}->{end}, $gid, $genome_bounds{$gid}{'left'}->{contig});
+	my $orf_ct = 0;
 	while (my @gene = $sth2->fetchrow_array()) {
 	    print join "\t", @gene;
 	    print "\n";
+	    $orf_ct++;
 	}
+	warn "No fragment found (perahps extract manually):", $gid, "\t", $orf_ct, "\n" unless $orf_ct;
     }
 
     $sth0->finish();
@@ -454,15 +471,27 @@ sub orth {
 	# -k: id switch
 #	print Dumper(\%orf_options);
 	my ($b31_locus) = @ARGV ; #b31 locus as argument, example: "BB_0814"
-	my (%strain_by_ID, %species_id, %strain_by_Name);          # hash table of strain names by ID
-	my $orf;
+#	my (%strain_by_ID, %species_id, %strain_by_Name);          # hash table of strain names by ID
+#	my $orf;
 
 	#prepare database coonnection
 	my $dbh = db_connect();
-	my $sth0 = $dbh->prepare("SELECT cdhit_id, ortholog FROM vorf WHERE strain_id = 100 AND locus = ?");
-	my $sth1 = $dbh->prepare("SELECT species, strain_id, strain, locus FROM vorf WHERE cdhit_id = ? and ortholog = ?");
+	my $sth0 = $dbh->prepare("SELECT cdhit_id, ortholog FROM v_synteny WHERE strain_id = 100 AND locus = ?");
+	my $sth1 = $dbh->prepare("SELECT strain_id, locus FROM v_synteny WHERE cdhit_id = ? and ortholog = ?");
+	my $sth3 = $dbh->prepare("SELECT a.strain_id, a.strain_name, b.species_name FROM strain a, species b WHERE a.species_id = b.species_id");
+
+	# for output seq names
+	my %species;
+	my %strains;
+	$sth3->execute();
+	while (my ($sid, $str, $spe) = $sth3->fetchrow_array() ) {
+	    $species{$sid} = $spe;
+	    $strains{$sid} = $str;
+	}
+
+	
 #	my $sth2 = $dbh->prepare("SELECT aln_aa, aln_nt FROM orf4 WHERE locus = ?");
-	my $sth2 = $dbh->prepare("SELECT aln FROM orf4 WHERE locus = ?");
+#	my $sth2 = $dbh->prepare("SELECT aln FROM orf4 WHERE locus = ?");
 #	my $sth0 = $dbh->prepare("SELECT con_id, orth_orf_id FROM view_orth WHERE genome_id = 100 AND locus = ?");
 #	my $sth1 = $dbh->prepare("SELECT g.genome_id, g.strain_name, g.taxon_id, t.species_name FROM genome g join taxonomy t using (taxon_id)");
 #	my $sth2 = $dbh->prepare("SELECT con_id, orf_id FROM orth_orf where orth_orf_id = ? AND exclude IS NOT TRUE AND genome_id = ?");
@@ -470,41 +499,41 @@ sub orth {
 #	my $sth4 = $dbh->prepare("SELECT substr( seq, ?, ? ) FROM contig WHERE genome_id = ? AND con_id = ?");
 	# Get orth_orf_id
 	$sth0->execute($b31_locus);
-	my ( $orth_con_id, $orth_orf_id) = $sth0->fetchrow_array();
+	my ( $fam, $orth_orf_id) = $sth0->fetchrow_array();
 	die "no orthologs for $b31_locus\n" unless $orth_orf_id;
 	#print Dumper($orth_orf_id);
 
 	# get the strain genome IDs
-	$sth1->execute($orth_con_id, $orth_orf_id);
+	$sth1->execute($fam, $orth_orf_id);
 	my @orth_locs;
-	while ( my ( $speId, $strId, $strNm, $loc ) = $sth1->fetchrow_array() )
+	while ( my ( $strId, $loc ) = $sth1->fetchrow_array() )
 	{
 	    push @orth_locs, $loc;
-	    $strain_by_ID{$loc} = $strId;
-	    $strain_by_Name{$loc} = $strNm;
-	    $species_id{$loc} = $speId;
+	    print join "\t", ($loc, $strId, $strains{$strId}, $species{$strId});
+	    print "\n";
 	}
 #	$sth1->finish();
 #	print Dumper(\@whole_genomes);
 
-	my $fasta = Bio::SeqIO->new(-format => "fasta" );
-	foreach my $loc (@orth_locs) {
-	    $sth2->execute( $loc );
+#	my $fasta = Bio::SeqIO->new(-format => "fasta" );
+#	foreach my $loc (@orth_locs) {
+#	    $sth2->execute( $loc );
 #	    my ($aln_aa, $aln_nt) = $sth2->fetchrow_array();
-	    my ($aln_nt) = $sth2->fetchrow_array();
-	    my $id = "sp" . $species_id{$loc} . "_" . $strain_by_Name{ $loc };
-	    my $segment;
+#	    my ($aln_nt) = $sth2->fetchrow_array();
+#	    my $id = "sp" . $species_id{$loc} . "_" . $strain_by_Name{ $loc };
+#	    my $segment;
 #	    if (defined $orf_options{a}) {
 #		$segment = Bio::Seq->new(-id=>$id, -seq=>$aln_aa);
 #	    } else {
-	    $segment = Bio::Seq->new(-id=>$id, -seq=>$aln_nt);
+#	    $segment = Bio::Seq->new(-id=>$id, -seq=>$aln_nt);
 #	    }
-	    $fasta->write_seq( $segment );
-	}
+#	    $fasta->write_seq( $segment );
+#	}
 
 	$sth0->finish();
 	$sth1->finish;
-	$sth2->finish;
+	#	$sth2->finish;
+	$sth3->finish;
 	$dbh->disconnect;
 }
 
