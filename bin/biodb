@@ -59,7 +59,8 @@ GetOptions(
     "list-genomes",
     "list-fams",
     "locus",
-    "orth-set|i" # 1:1 ortholog on a replicon
+    "orth-set=i", # 1:1 ortholog on a replicon
+    "orth-bbss=i" # 1:1 ortholog on a replicon
 ) or pod2usage(2);
 
 $PGPASSWORD = $opts{pass};
@@ -97,7 +98,9 @@ if ($opts{"syn-anchor"}) {
 &list_available_genomes if $opts{'list-genomes'};
 &list_bb_pfams if $opts{'list-fams'};
 &export_locus_seq if $opts{'locus'};
-&export_orth_set if $opts{'orth-set'};
+&export_orth_set if $opts{'orth-set'}; # hard coded; not ideal
+&export_orth_bbss if $opts{'orth-bbss'}; 
+
 
 pod2usage(1) if $opts{"help"};
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $opts{"man"};
@@ -112,6 +115,92 @@ exit;
 #####################
 # Subs
 ####################
+
+sub export_orth_bbss {
+    my $rep = $opts{'orth-bbss'};
+    my $ref_strain_id = 100;
+    my $dbh = db_connect();
+    my $sth2 = $dbh->prepare("SELECT a.locus, a.cdhit_id, a.ortholog, b.aln_nt FROM v_synteny a, orf_seq b WHERE a.strain_id = ? AND a.rep_id = ? AND a.cdhit_id IS NOT NULL AND a.ortholog IS NOT NULL AND a.locus = b.locus");
+    my $sth3 = $dbh->prepare("SELECT a.strain_id, a.strain_name, b.species_name FROM strain a, species b WHERE a.species_id = b.species_id and a.species_id = 139");
+
+    # get strain ids
+    my %strains;
+    my %orth_sets;
+    $sth3->execute();
+    while (my ($sid, $sname, $spe) = $sth3->fetchrow_array() ) {
+	my @orfs = ();
+	$strains{$sid} = {'str_name' => $sname,
+			      'spe_name' => $spe,
+			      'is_ref' => ($sid == $ref_strain_id) ? 1 : 0,
+			      'orfs' => \@orfs
+	};
+	
+	$sth2->execute($sid, $rep);
+	while (my ($locus, $cd, $orth, $aln) = $sth2->fetchrow_array() ) {
+	    my $orf = {'locus' => $locus,
+			   'strain_id' => $sid,
+			   'strain' => $sname,
+			   'cdhit' => $cd,
+			   'orth' => $orth,
+			   'seq' => $aln
+	    };
+	    push @{$strains{$sid}->{'orfs'}}, $orf;
+	    if ($orth_sets{$cd}{$orth}) {
+		push @{$orth_sets{$cd}{$orth}}, $orf;
+	    } else {
+		$orth_sets{$cd}{$orth} = [ $orf ]
+	    }
+	}
+    }
+
+    my @refs = sort {$a->{'locus'} cmp $b->{'locus'}} @{$strains{$ref_strain_id}->{'orfs'}};
+    foreach my $ref (@refs) {
+	my $outfile = "orth_" . $ref->{'locus'} . ".nuc";
+	my $out = Bio::SeqIO->new(-file => ">$outfile", -format => 'fasta');
+	my $seq_len = length($ref->{'seq'});
+	
+	my %seen_strain;
+#	print $ref->{'locus'}, "\t";
+	foreach (keys %strains) {$seen_strain{$_} = 0}
+#	$seen_strain{1000} = 0; # collect sum
+#	print Dumper($ref); next;
+	foreach my $orf (@{$orth_sets{$ref->{'cdhit'}}{$ref->{'orth'}}}) {
+	    $seen_strain{$orf->{'strain_id'}}++;
+	    #	    my $id = $orf->{'locus'} . "|" . $orf->{'strain'};
+	    my $id = "Bb_" . $orf->{'strain'};
+	    $out->write_seq(Bio::Seq->new(-id => $id, -seq => $orf->{'seq'}));
+	}
+
+	for my $sid (keys %strains) {
+	    next if $seen_strain{$sid};
+	    #my $id = 'NA' . "|" . $strains{$sid}->{'str_name'};
+	    my $id = "Bb_" . $strains{$sid}->{'str_name'};
+	    $out->write_seq(Bio::Seq->new(-id => $id, -seq => "-" x $seq_len));
+	}
+
+#	    $seen_strain{1000}++;
+#	    print join "\t", map {$_->{'locus'}} @{$orth_sets{$cd}{$orth}};
+#	}
+#	my @cts = sort { $a  <=> $b }  keys %seen_strain;
+#	print join "\t", (map {$seen_strain{$_}} @cts);
+#	print Dumper(\%seen_strain);
+#	print "\n";
+    }
+    #   
+#    print Dumper(\@refs);
+=begin    
+    while (my ($fam, $ct) = $sth0->fetchrow_array() ) {
+	$sth1->execute($fam);
+    }
+
+    $sth1->finish();
+=cut
+    $sth2->finish();
+    $sth3->finish();
+    $dbh->disconnect();
+}
+
+
 
 sub export_orth_set {
     my $rep = $opts{'orth-set'};
