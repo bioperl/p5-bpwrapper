@@ -120,7 +120,7 @@ sub export_orth_bbss {
     my $rep = $opts{'orth-bbss'};
     my $ref_strain_id = 100;
     my $dbh = db_connect();
-    my $sth2 = $dbh->prepare("SELECT a.locus, a.cdhit_id, a.ortholog, b.aln_nt FROM v_synteny a, orf_seq b WHERE a.strain_id = ? AND a.rep_id = ? AND a.cdhit_id IS NOT NULL AND a.ortholog IS NOT NULL AND a.locus = b.locus");
+    my $sth2 = $dbh->prepare("SELECT a.locus, a.strand, a.cdhit_id, a.ortholog, b.aln_nt FROM v_synteny a, orf_seq b WHERE a.strain_id = ? AND a.rep_id = ? AND a.cdhit_id IS NOT NULL AND a.ortholog IS NOT NULL AND a.locus = b.locus");
     my $sth3 = $dbh->prepare("SELECT a.strain_id, a.strain_name, b.species_name FROM strain a, species b WHERE a.species_id = b.species_id and a.species_id = 139");
 
     # get strain ids
@@ -134,12 +134,15 @@ sub export_orth_bbss {
 			      'is_ref' => ($sid == $ref_strain_id) ? 1 : 0,
 			      'orfs' => \@orfs
 	};
-	
+    }
+
+    for my $sid (keys %strains) {
 	$sth2->execute($sid, $rep);
-	while (my ($locus, $cd, $orth, $aln) = $sth2->fetchrow_array() ) {
+	while (my ($locus, $strand, $cd, $orth, $aln) = $sth2->fetchrow_array() ) {
 	    my $orf = {'locus' => $locus,
+			   'strand' => $strand,
 			   'strain_id' => $sid,
-			   'strain' => $sname,
+			   'strain' => $strains{$sid}->{'str_name'},
 			   'cdhit' => $cd,
 			   'orth' => $orth,
 			   'seq' => $aln
@@ -168,7 +171,9 @@ sub export_orth_bbss {
 	    $seen_strain{$orf->{'strain_id'}}++;
 	    #	    my $id = $orf->{'locus'} . "|" . $orf->{'strain'};
 	    my $id = "Bb_" . $orf->{'strain'};
-	    $out->write_seq(Bio::Seq->new(-id => $id, -seq => $orf->{'seq'}));
+	    my $seq = Bio::Seq->new(-id => $id, -seq => $orf->{'seq'});
+	    $seq = $seq->revcom() if !$orf->{'strand'};
+	    $out->write_seq($seq);
 	}
 
 	for my $sid (keys %strains) {
