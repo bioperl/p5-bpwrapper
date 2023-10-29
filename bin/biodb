@@ -172,7 +172,7 @@ sub export_orth_bbss {
 	    #	    my $id = $orf->{'locus'} . "|" . $orf->{'strain'};
 	    my $id = "Bb_" . $orf->{'strain'};
 	    my $seq = Bio::Seq->new(-id => $id, -seq => $orf->{'seq'});
-	    $seq = $seq->revcom() if !$orf->{'strand'};
+	    $seq = $seq->revcom() if !$ref->{'strand'}; # revcom if B31 ORF is on the opposite strand
 	    $out->write_seq($seq);
 	}
 
