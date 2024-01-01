@@ -223,6 +223,11 @@ sub trim_tips {
 	print STDERR $_, "\t", $otu_sets{$_}, "\n";
     }
 
+    foreach my $nd ($tree->get_nodes()) {
+	next unless $nd->is_Leaf;
+	$nd->id("trim_" . $otu_sets{$nd->id});
+    }
+    
     $print_tree = 1;
 }
 

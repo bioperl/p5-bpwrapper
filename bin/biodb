@@ -209,10 +209,10 @@ sub export_orth_bbss {
 
 sub export_orth_set {
     my $rep = $opts{'orth-set'};
-    my $complete_set = 78; # number of old genomes (31) + num of U19 genomes (47), as of Oct 8, 2023
+    my $complete_set = 50; # number of old genomes (31) + num of U19 genomes (47), as of Oct 8, 2023
     my $ref_strain_id = 100;
     my $dbh = db_connect();
-    my $sth0 = $dbh->prepare("SELECT cdhit_id, count(*) FROM v_synteny WHERE rep_id = 1 AND pseudo IS NULL AND seq_err IS NULL GROUP BY cdhit_id HAVING count(cdhit_id) = ?");
+    my $sth0 = $dbh->prepare("SELECT cdhit_id, count(*) FROM v_synteny WHERE rep_id = ? AND pseudo IS NULL AND seq_err IS NULL GROUP BY cdhit_id HAVING count(cdhit_id) > ?");
     my $sth1 = $dbh->prepare("SELECT a.locus, a.seq, b.strain_id FROM orf a, v_synteny b WHERE a.cdhit_id = ? AND a.locus = b.locus");
     my $sth2 = $dbh->prepare("SELECT locus, cdhit_id FROM v_synteny WHERE strain_id = ? AND cdhit_id IS NOT NULL");
     my $sth3 = $dbh->prepare("SELECT a.strain_id, a.strain_name, b.species_name FROM strain a, species b WHERE a.species_id = b.species_id");
@@ -234,7 +234,7 @@ sub export_orth_set {
     }
 
     my @out;
-    $sth0->execute($complete_set);
+    $sth0->execute($rep, $complete_set);
     while (my ($fam, $ct) = $sth0->fetchrow_array() ) {
 	$sth1->execute($fam);
 	my $outfile = "orthFam_" . $refs{$fam} . ".nuc";
