@@ -97,7 +97,5 @@ F2
 
 # Developers, Contact, Citation
 * Yözen Hernández
-* Pedro Pagan
-* Girish Ramrattan
-* Weigang Qiu, City University of New York, Hunter College (Correspondence: [weigang@genectr.hunter.cuny.edu)](mailto://weigang@genectr.hunter.cuny.edu))
+* Weigang Qiu, City University of New York, Hunter College (Correspondence: [wqiu at hunter dot cuny dot edu])
 * If you find the tools useful, please cite: Hernadez, Bernstein, et al (2018). BpWrapper::BioPerl-based sequence and tree utilities for rapid prototyping of bioinformatics pipelines. BMC Genomics 19:76. [Paper link](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2074-9).
