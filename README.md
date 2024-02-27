@@ -66,6 +66,20 @@ So something like "sudo su -" followed by cpan or cpanm probably would work bett
 
 If this is intended to be installed only for one person, better in my opinion would be for the user to install her/his own Perl rather than use the system Perl using Perlbrew and not use sudo su or root at all.
 
+# Install using Conda/Mamba
+
+bpwrapper is available as a package on [Bioconda](https://bioconda.github.io/). First, follow the directions on adding the Bioconda repository. Then, using either `conda` (or [`mamba`](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html)) install:
+
+```
+conda install -n bpwrapper perl-bio-bpwrapper
+```
+
+or
+
+```
+mamba install -n bpwrapper perl-bio-bpwrapper
+```
+
 # Install and run from docker
 
 Use the bpwrapper docker image. It includes `bioaln`, `biopop`, `bioseq`, and `biotree`.
