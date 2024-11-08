@@ -345,6 +345,8 @@ Weigang Qiu <weigang@genectr.hunter.cuny.edu> (maintainer)
 =over 4
 
 =item *
+Add query for sister, child, ancestral, and mrca nodes
+
 Insert an option in biotree
 
 =item *
