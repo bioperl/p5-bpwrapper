@@ -416,17 +416,18 @@ Generate an alignment of every-third (mostly synonymous) bases (assuming a CDS a
 
 Make a shuffled (not bootstrapped, which is sampling I<with> replacement) alignment. This operation I<permutes> alignment columns. It is used for testing the significance of long-runs of conserved sites in an alignment (e.g., conserved intergenic spacer sequences).
 
-=item --slice, -s 'start|-,end|-'
+=item --slice, -s 'start|-,end|-'; or -s"file:orfs.tsv"
 
 Get a slice of the alignment.
 
 Using a '-' character in the first or second position defaults to the beginning or end, respectively. Therefore specifying -s'-,-' is the same as grabbing the whole alignment.
 
- --slice'20,80' or --slice '20,80' or -s='20,80' or --slice='20,80': Slice from position 20 to 80, inclusive.
- --slice'-,80':  Slice from beginning up to, and including position 80
- --slice'20,-':  Slice from position 20 up to, and including, the end of the alignment
+ --slice '20,80' or --slice '20,80' or -s='20,80' or --slice='20,80': Slice from position 20 to 80, inclusive.
+ --slice '-,80':  Slice from beginning up to, and including position 80
+ --slice '20,-':  Slice from position 20 up to, and including, the end of the alignment
+ --slice 'file:orfs.tsv': slice using coordinates from a file. The file should contain 4 tab/space-delimited columns: locus_tag (no space), start (numerical), end (numerical), strand(0/1)
 
-NOTE: --slice'-,x' (where x is '-' or a position) does NOT work. Use --slice='-,x' (or a space in place of =) instead.
+NOTE: --slice'-,x' (where x is '-' or a position) without a space does NOT work. Use --slice='-,x' (or a space in place of =) instead.
 
 =item --split-cdhit <cdhit clrs file>
 

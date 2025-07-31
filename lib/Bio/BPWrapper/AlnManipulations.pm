@@ -809,13 +809,37 @@ with improvements.
 
 
 sub aln_slice {    # get alignment slice
-    my ($begin, $end) = split(/\s*,\s*/, $opts{"slice"});
-
+    my $opt_str = $opts{"slice"};
+    my $id;
+    my $begin;
+    my $end;
+    my $strand;
+    if ($opt_str =~ /^file:(\S+)$/) {
+	my $fname = $1;
+	open COORD, "<", $fname;
+	while(<COORD>) {
+	    chomp;
+	    ($id, $begin, $end, $strand) = split;
+	}
+    } else {
+	($begin, $end) = split(/\s*,\s*/, $opt_str);
+    }
+    
     # Allow for one parameter to be omitted. Default $begin to the
     # beginning of the alignment, and $end to the end.
     $begin = 1            if $begin eq "-";
     $end   = $aln->length if $end   eq "-";
-    $aln = $aln->slice($begin, $end)
+    $aln = $aln->slice($begin, $end);
+    if ($strand && $strand == 0) {
+	my $new_aln = Bio::SimpleAlign -> new();
+	foreach ($aln->each_seq) {
+	    my $revcom = $_ -> revcom();
+	    my $end = $_ -> end;
+	    $revcom->end($end);
+	    $new_aln->add_seq($revcom);
+	}
+	$aln = $new_aln;
+    }
 }
 
 =head2 get_unique()

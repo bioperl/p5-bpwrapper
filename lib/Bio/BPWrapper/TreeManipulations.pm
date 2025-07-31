@@ -1188,6 +1188,7 @@ Call this after calling C<#initialize(\%opts)>.
 
 sub write_out {
     my $opts = shift;
+    print_all_boots() if $opts->{'boot-all'};
     print_all_node_ids() if $opts->{'ids-all'};
     rename_tips() if $opts->{'rename-tips'};
     write_tab_tree() if $opts->{'as-text'};
@@ -1334,6 +1335,17 @@ sub print_all_node_ids {
     &_wu($rootnode, \%visited, \@node_list);
     foreach (@node_list) {
 	print $_->id() || $_->internal_id(), "\n";
+    }
+}
+
+
+sub print_all_boots {
+    my %visited;
+    my @node_list = ($rootnode);
+    &_wu($rootnode, \%visited, \@node_list);
+    foreach (@node_list) {
+	next if $_->is_Leaf || $_ eq $rootnode;
+	print $_->internal_id(), "\t", $_->id() || "NA", "\n";
     }
 }
 

@@ -21,6 +21,7 @@ GetOptions(\%opts,
 	   "man",
 	   "version|V",
 	   "as-text|t", # for preview text tree
+	   "boot-all",  # show support values
 	   "ci|c=s", # attach binary trait table
 	   "clean-br|b",
 	   "clean-boot|B",
@@ -122,6 +123,10 @@ B<biotree> supports reading from STDIN, so that multiple tree manipulations coul
 =item --as-text, -t
 
 Draw an ASCII tree for quick preview (needs refinement). Default max screen width 100 characters.
+
+=item --boot-all
+
+Show support values for all nodes
 
 =item --ci, -c 'binary-trait-file'
 
