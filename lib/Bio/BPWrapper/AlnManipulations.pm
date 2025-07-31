@@ -45,7 +45,7 @@ avg_id_by_win concat conserve_blocks get_consensus dns_to_protein
 remove_gapped_cols_in_one_seq colnum_from_residue_pos
 list_ids premute_states protein_to_dna sample_seqs
 shuffle_sites random_slice select_third_sites remove_third_sites
-upper_case );
+upper_case slice_orfs);
 
 use Bio::BPWrapper;
 # Package global variables
@@ -70,6 +70,7 @@ my %opt_dispatch = (
     "pick" => \&pick_seqs,
     "ref-seq" => \&change_ref,
     "slice" => \&aln_slice,
+    "slice-orfs" => \&orf_slice,
     "split-cdhit" => \&split_cdhit,
     "uniq" => \&get_unique,
     "var-sites" => \&variable_sites,
@@ -807,39 +808,56 @@ with improvements.
 
 =cut
 
-
 sub aln_slice {    # get alignment slice
     my $opt_str = $opts{"slice"};
-    my $id;
-    my $begin;
-    my $end;
-    my $strand;
-    if ($opt_str =~ /^file:(\S+)$/) {
-	my $fname = $1;
-	open COORD, "<", $fname;
-	while(<COORD>) {
-	    chomp;
-	    ($id, $begin, $end, $strand) = split;
-	}
-    } else {
-	($begin, $end) = split(/\s*,\s*/, $opt_str);
-    }
+    my ($begin, $end) = split(/\s*,\s*/, $opt_str);
     
     # Allow for one parameter to be omitted. Default $begin to the
     # beginning of the alignment, and $end to the end.
     $begin = 1            if $begin eq "-";
     $end   = $aln->length if $end   eq "-";
     $aln = $aln->slice($begin, $end);
-    if ($strand && $strand == 0) {
-	my $new_aln = Bio::SimpleAlign -> new();
-	foreach ($aln->each_seq) {
-	    my $revcom = $_ -> revcom();
-	    my $end = $_ -> end;
-	    $revcom->end($end);
-	    $new_aln->add_seq($revcom);
+}
+
+sub orf_slice {    # get alignment slice
+    my $opt_str = $opts{"slice-orfs"};
+    my @orf_coords;
+    $opt_str =~ /^(\S+)$/;
+    my $fname = $1;
+    open COORD, "<", $fname;
+    while(<COORD>) {
+	chomp;
+	my ($id, $begin, $end, $strand) = split;
+	push @orf_coords, {
+	    id => $id,
+	    begin => $begin,
+	    end => $end,
+	    strand => $strand
 	}
-	$aln = $new_aln;
     }
+
+    foreach (@orf_coords) {
+	my $new_aln = Bio::SimpleAlign -> new();
+	my $orf = $_->{id};
+	my $begin = $_ -> {begin};
+	my $end = $_ -> {end};
+	my $strand = $_ -> {strand};
+	my $fname = $orf . ".aln";
+	my $slice = $aln->slice($begin, $end);
+	if ($strand < 1 || $strand eq '-') { # could be 0, -1, or -
+	    my $new_slice = Bio::SimpleAlign -> new();
+	    foreach ($slice->each_seq) {
+		my $revcom = $_ -> revcom();
+		my $end = $_ -> end;
+		$revcom->end($end);
+		$new_slice->add_seq($revcom);
+	    }
+	    $slice = $new_slice;
+	}
+	my $out = Bio::AlignIO -> new(-file => ">$fname", -format => "fasta");
+	$out->write_aln($slice);
+    }
+    exit;
 }
 
 =head2 get_unique()
