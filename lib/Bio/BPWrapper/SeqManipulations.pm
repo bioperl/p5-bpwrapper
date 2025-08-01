@@ -1162,7 +1162,11 @@ sub remove_stop {
         my $newstr = "";
         for (my $i = 1; $i <= $seq->length() / 3; $i++) {
             my $codon = $seq->subseq(3 * ($i - 1) + 1, 3 * ($i - 1) + 3);
-            if ($myCodonTable->is_ter_codon($codon)) { warn "Found and removed stop codon\n"; next }
+            if ($myCodonTable->is_ter_codon($codon)) {
+		warn "Found and replace stop codon with gaps: ", $seq->id(), "\n";
+		$codon = '---';
+#		next
+	    }
             $newstr .= $codon
         }
         my $new = Bio::Seq->new(-id  => $seq->id(), -seq => $newstr);
