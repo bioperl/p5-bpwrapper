@@ -857,6 +857,7 @@ sub orf_slice {    # get alignment slice
 
 	# remove stop codon
 	$slice = $slice->slice(1, $slice->length() - 3);
+	$slice->set_displayname_flat();
 	my $out = Bio::AlignIO -> new(-file => ">$fname", -format => "fasta");
 	$out->write_aln($slice);
     }
