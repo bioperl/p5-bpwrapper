@@ -933,8 +933,8 @@ sub print_leaves_lengths {
 # Get LCA
 sub getlca {
     my @lca_nodes;
-	if (_name2node($opts{'lca'})) { @lca_nodes = _name2node($opts{'lca'}) }
-	else { my $ar = $_[0]; @lca_nodes = @$ar }
+    if (_name2node($opts{'lca'})) { @lca_nodes = _name2node($opts{'lca'}) }
+    else { my $ar = $_[0]; @lca_nodes = @$ar }
     my @nd_pair;
     my $lca;
 
@@ -945,11 +945,12 @@ sub getlca {
             $lca = $tree->get_lca(-nodes => \@nd_pair);
             $nd_pair[0] = $lca
         }
-		if (_name2node($opts{'lca'})) { say $lca->internal_id } else { return $lca }
+
+	if (_name2node($opts{'lca'})) { say $lca->internal_id } else { return $lca }
     } elsif (@lca_nodes == 1) {
-		if (_name2node($opts{'lca'})) { say $lca_nodes[0]->ancestor->internal_id }
-		else { return $lca_nodes[0]->ancestor->internal_id }
-	}
+	if (_name2node($opts{'lca'})) { say $lca_nodes[0]->ancestor->internal_id }
+	else { return $lca_nodes[0]->ancestor->internal_id }
+    }
 }
 
 # Label nodes with their internal ID's

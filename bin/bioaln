@@ -32,6 +32,7 @@ GetOptions(
     "con-blocks|B:6",
     "concat|A",
     "consensus|C:50",
+    "diff-two=s",
     "delete|d=s",
     "dna2pep|D",
     "gap-char=s",
@@ -271,6 +272,10 @@ Add a consensus sequence to the end of the alignment with a certain threshold pe
 =item --delete, -d 'seq_id1,seq_id2,etc'
 
 Delete sequences based on their ids. Option takes a comma-separated list of ids.
+
+=item --diff-two
+
+Print differences between two aligned sequences, including position and states. This is designed to parse ClonalFrameML alignments.
 
 =item --dna2pep, -D
 

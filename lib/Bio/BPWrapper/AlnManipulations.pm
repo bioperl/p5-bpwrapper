@@ -45,7 +45,7 @@ avg_id_by_win concat conserve_blocks get_consensus dns_to_protein
 remove_gapped_cols_in_one_seq colnum_from_residue_pos
 list_ids premute_states protein_to_dna sample_seqs
 shuffle_sites random_slice select_third_sites remove_third_sites
-upper_case slice_orfs);
+upper_case orf_slice diff_two_seqs);
 
 use Bio::BPWrapper;
 # Package global variables
@@ -62,6 +62,7 @@ my %opt_dispatch = (
     "boot" => \&bootstrap,
     "codon-view" => \&draw_codon_view,
     "delete" => \&del_seqs,
+    "diff-two" => \&diff_two_seqs,
     "gap-char" => \&gap_char,
     "no-gaps" => \&remove_gaps,
     "length" => \&print_length,
@@ -277,6 +278,31 @@ sub gap_char {
 	$seq->seq($seq_str); 
     }
 }
+
+
+sub diff_two_seqs {
+    my @ids = split /,/, $opts{'diff-two'};
+    die "$0: --diff-two id1,id2\n" unless @ids == 2;
+    my @seq_strs;
+    my $len = $aln->length();
+    foreach my $seq ($aln->each_seq()) { 
+	next unless $seq->id eq $ids[0] || $seq->id eq $ids[1];
+	push @seq_strs, {
+	    id=> $seq->id(),
+	    seq => [split //, $seq->seq()]
+	};
+    }
+
+    die "$0: ids not found", join ";", @ids, "\n" unless @seq_strs == 2;
+
+    for(my $i = 0; $i < $len; $i++) {
+	next unless $seq_strs[0]->{seq}->[$i] ne $seq_strs[1]->{seq}->[$i];
+	print $i+1, "\t", $seq_strs[0]->{id}, "\t", $seq_strs[0]->{seq}->[$i], "\n";
+	print $i+1, "\t", $seq_strs[1]->{id}, "\t", $seq_strs[1]->{seq}->[$i], "\n";
+    }
+    exit;
+}
+
 
 sub pair_diff_ref {
     my $refId = $opts{'pair-diff-ref'};
