@@ -51,7 +51,7 @@ pick_by_id del_by_id find_by_re
 pick_by_re del_by_re
 pick_by_file del_by_file
 find_by_ambig pick_by_ambig del_by_ambig find_by_length
-del_by_length codon_sim codon_info);
+del_by_length codon_sim codon_info trim_ends);
 
 # Package global variables
 my ($in, $out, $seq, %opts, $filename, $in_format, $out_format, $guesser);
@@ -99,7 +99,7 @@ my %opt_dispatch = (
 #	'prefix' => \&anonymize,
 	'rename' => \&rename_id,
 #	'slidingwindow' => \&sliding_window,
-#	'split' => \&split_seqs,
+	'trim-ends' => \&trim_ends,
   );
 
 my %filter_dispatch = (
@@ -192,6 +192,28 @@ sub write_out {
 
 
 ################### subroutines ########################
+
+# from vapid trim python code
+sub trim_ends {
+    while ($seq = $in->next_seq()) {
+	my $xip = 0;
+	my $len = $seq->length();
+	my @mono = split //, $seq->seq();
+	for(my $i = 0; $i < $len; $i++) {
+	    $xip ++ if $mono[$i] =~ /[NX\-\?]/i;
+	    last unless $mono[$i] =~ /[NX\-\?]/i;
+	}
+
+	my $y = $len;
+	for(my $i = $len - 1; $i >=0; $i--) {
+	    $y-- if $mono[$i] =~ /[NX\-\?]/i;
+	    last unless $mono[$i] =~ /[NX\-\?]/i;
+	}
+	$seq->seq($seq->subseq($xip+1, $y));
+	$out->write_seq($seq);
+    }
+}
+
 
 sub codon_sim {
 #    my $seq = $in->next_seq(); # only the first sequence used

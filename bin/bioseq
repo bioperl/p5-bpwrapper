@@ -27,6 +27,10 @@ GetOptions(
     "count-codons|C",
     "delete|d=s",
     "feat2fas|F",
+    "fetch|f=s", # Retrieve sequence by accession number; broken by NCBI protocol change
+ #   "longest-orf|C",
+ #   "extract|e",
+ #   "dotplot|D=s",
     "hydroB|H",
     "iep",
     "input|i=s",
@@ -36,6 +40,7 @@ GetOptions(
     "linearize|L",
     "mol-wt",
     "no-gaps|g",
+    "no-revcom|Z",
     "num-gaps-dna",
     "num-gaps-aa",
     "num-seq|n",
@@ -45,21 +50,17 @@ GetOptions(
     "remove-stop|X", # for PAML/codeml
 #    "restrict|x=s",
 #    "restrict-coord=s",
+    "rename|N=s",
     "revcom|r",
     "sort=s",
     "split-cdhit=s",
     "subseq|s=s",
     "syn-code",
     "translate|t=i",
-    "fetch|f=s", # Retrieve sequence by accession number; broken by NCBI protocol change
- #   "longest-orf|C",
- #   "extract|e",
- #   "dotplot|D=s",
-    "rename|N=s",
-    "no-revcom|Z",
  #   "slidingwindow|S=i",
  #   "prefix=s",
- #   "split|S=i",
+    #   "split|S=i",
+    "trim-ends",
 ) or pod2usage(2);
 
 use Pod::Usage;
