@@ -297,8 +297,7 @@ sub diff_two_seqs {
 
     for(my $i = 0; $i < $len; $i++) {
 	next unless $seq_strs[0]->{seq}->[$i] ne $seq_strs[1]->{seq}->[$i];
-	print $i+1, "\t", $seq_strs[0]->{id}, "\t", $seq_strs[0]->{seq}->[$i], "\n";
-	print $i+1, "\t", $seq_strs[1]->{id}, "\t", $seq_strs[1]->{seq}->[$i], "\n";
+	print $i+1, "\t", $seq_strs[0]->{id}, "\t", $seq_strs[0]->{seq}->[$i], "\t", $seq_strs[1]->{id}, "\t", $seq_strs[1]->{seq}->[$i], "\n";
     }
     exit;
 }
