@@ -948,8 +948,16 @@ sub getlca {
 
 	if (_name2node($opts{'lca'})) { say $lca->internal_id } else { return $lca }
     } elsif (@lca_nodes == 1) {
-	if (_name2node($opts{'lca'})) { say $lca_nodes[0]->ancestor->internal_id }
-	else { return $lca_nodes[0]->ancestor->internal_id }
+	if (_name2node($opts{'lca'})) {
+	    if($lca_nodes[0] eq $rootnode) {
+		say $lca_nodes[0]->internal_id, " is root";
+	    } else {
+		say $lca_nodes[0]->ancestor->internal_id;
+	    }
+	}
+	else {
+	    return $lca_nodes[0]->ancestor->internal_id;
+	}
     }
 }
 
