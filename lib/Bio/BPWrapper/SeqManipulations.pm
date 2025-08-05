@@ -51,7 +51,7 @@ pick_by_id del_by_id find_by_re
 pick_by_re del_by_re
 pick_by_file del_by_file
 find_by_ambig pick_by_ambig del_by_ambig find_by_length
-del_by_length codon_sim codon_info trim_ends);
+del_by_length codon_sim codon_info trim_ends gff_pos);
 
 # Package global variables
 my ($in, $out, $seq, %opts, $filename, $in_format, $out_format, $guesser);
@@ -69,6 +69,7 @@ my %opt_dispatch = (
     'mol-wt' => \&print_weight,
     'delete' => \&filter_seqs,
     'fetch' => \&retrieve_seqs,
+    'gff-pos' => \&gff_pos,
     'no-gaps' => \&remove_gaps,
     'length' => \&print_lengths,
     'longest-orf' => \&update_longest_orf,
@@ -157,7 +158,7 @@ sub initialize {
 #    }
 #    $in_format  = $guesser->guess() unless $opts{'input'};
 
-    $in_format = $opts{"input"} // 'fasta';
+    $in_format = $opts{'gff-pos'} ? 'genbank' : $opts{"input"} ? $opts{"input"} : 'fasta';
 
 #    die "Reads only fasta, fastq, embl, genbank. Not aligment file formats like clustalw\n" unless $in_format =~ /fasta|fastq|embl|genbank/;
     $in = Bio::SeqIO->new(-format => $in_format, ($filename eq "STDIN")? (-fh => \*STDIN) : (-file => $filename));
@@ -192,6 +193,27 @@ sub write_out {
 
 
 ################### subroutines ########################
+
+sub gff_pos {
+    my $pos = $opts{"gff-pos"};
+    die "$filename: Not a GenBank file. Quit\n" unless $in_format eq 'genbank';
+    $seq = $in->next_seq();
+    my $gene_count = 0;
+    foreach my $feat ($seq->get_SeqFeatures()) {
+        if ($feat->primary_tag eq 'CDS') {
+	    my $location = $feat->location();
+	    next if $location->isa('Bio::Location::Split');
+	    my $gene_tag = "gene_" . $gene_count++;
+	    my $gene_symbol = 'na';
+	    my $product = 'na';
+            foreach my $tag ($feat->get_all_tags()) {
+		($gene_tag) = $feat->get_tag_values($tag) if $tag eq 'locus_tag';
+	    }
+	    print $gene_tag, "\n";
+	}
+    }
+}
+
 
 # from vapid trim python code
 sub trim_ends {

@@ -32,6 +32,7 @@ GetOptions(
  #   "extract|e",
  #   "dotplot|D=s",
     "hydroB|H",
+    "gff-pos=i",
     "iep",
     "input|i=s",
     "lead-gaps|G",
@@ -216,6 +217,14 @@ Extract gene sequences in FASTA from a GenBank file of bacterial genome. Won't w
 
 Retrieves a sequence from GenBank using the provided accession number, e.g.,
    bioseq -f 'NC_003078' -o 'genbank'
+
+=item --gff-pos <pos> <genbank_file> 
+
+Given a genbank file, find the genome location of a given position.
+
+The coord file is a 4-tab delimited file where each row is a gene location, consisting of locus_tag, begin, end, and strand.
+
+The output is the form of locus_tag1:locus_tag2, where the two tags are the same if the position falls on a coding region and different otherwise.
 
 =item --hydroB, -H
 
