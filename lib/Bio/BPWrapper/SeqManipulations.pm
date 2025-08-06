@@ -198,20 +198,72 @@ sub gff_pos {
     my $pos = $opts{"gff-pos"};
     die "$filename: Not a GenBank file. Quit\n" unless $in_format eq 'genbank';
     $seq = $in->next_seq();
+    die "$0 --gff-pos\n" unless $pos >= 1 && $pos <= $seq->length();
     my $gene_count = 0;
+    my @orfs;
+    push @orfs, {
+	id => 'query',
+	start => $pos,
+	end => $pos,
+	strand => undef
+    };
+
+    my $last_end;
     foreach my $feat ($seq->get_SeqFeatures()) {
         if ($feat->primary_tag eq 'CDS') {
+	    if ($gene_count == 0) { # add 5-UTR
+		push @orfs, {
+		    id => '5UTR',
+		    start => 1,
+		    end => $feat->start() - 1,
+		    strand => undef
+		};
+	    }
+    
 	    my $location = $feat->location();
 	    next if $location->isa('Bio::Location::Split');
 	    my $gene_tag = "gene_" . $gene_count++;
-	    my $gene_symbol = 'na';
-	    my $product = 'na';
             foreach my $tag ($feat->get_all_tags()) {
 		($gene_tag) = $feat->get_tag_values($tag) if $tag eq 'locus_tag';
 	    }
-	    print $gene_tag, "\n";
+	    push @orfs, {
+		id => $gene_tag,
+		start => $feat->start,
+		end => $feat->end,
+		strand => $feat->strand
+	    };
 	}
+	$last_end = $feat->end();
     }
+    
+    push @orfs, { # append 3-UTR
+	id => '3UTR',
+	start => $last_end + 1,
+	end => $seq->length(),
+	strand => undef
+    };
+
+    @orfs = sort{$a->{start} <=> $b->{start}} @orfs;
+#   print Dumper(\@orfs); exit;
+    my $order_query = 0;
+    for(my $i = 0; $i < @orfs; $i++) {
+	$order_query = $i if $orfs[$i]->{id} eq 'query';
+    }
+
+    my $before = $orfs[$order_query - 1];
+    my $after = $orfs[$order_query + 1];
+    my ($tag_before, $tag_after);
+    if ($pos <= $before->{end}) {
+	$tag_before = $before->{id};
+	$tag_after = $before->{id};
+    } elsif ($pos > $before->{end} && $pos < $after->{start}) {
+	$tag_before = $before->{id};
+	$tag_after = $after->{id};
+    } else {
+	$tag_before = $after->{id};
+	$tag_after = $after->{id};
+    }
+    print join "\t", ($pos, $tag_before, $tag_after), "\n"    
 }
 
 

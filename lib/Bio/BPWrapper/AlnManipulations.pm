@@ -124,38 +124,53 @@ sub initialize {
     %opts = %{$opts_ref};
 
     # This is the format that aln-manipulations expects by default
-    my $default_format = "clustalw";
+    my $default_format = "fasta";
 
+=begin
     # assume we're getting input from standard input
-
-#    my $in_format = $opts{"input"} || $default_format;
-#    my $in_format;
-#    use IO::Scalar;
-#    my $s;
-#    my ($guesser);
-#    if ($file eq "STDIN") {
-#	my $line_ct = 0; 
-#	my $lines;
-#	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 100 } # read the first 100 lines
-#	$guesser = Bio::Tools::GuessSeqFormat->new( -text => $lines );
-#   } else {
-#	open $ifh, "<", $file or die $!;
-#	$guesser = Bio::Tools::GuessSeqFormat->new( -file => $file );
-#    }
-#    $in_format  = $guesser->guess();
-#    die "unknown file format. Try specify with -i flag.\n" unless $in_format;
+    my $in_format = $opts{"input"} || $default_format;
+    my $in_format;
+    use IO::Scalar; this dependency breaks Vonda environment 
+    my $s;
+    my ($guesser);
+    $file = shift @ARGV;
+    if ($file eq "STDIN") {
+	my $line_ct = 0; 
+	my $lines;
+	while(<>) { $lines .= $_; $line_ct++; last if $line_ct >= 100 } # read the first 100 lines
+	$guesser = Bio::Tools::GuessSeqFormat->new( -text => $lines );
+   } else {
+       open my $ifh, "<", $file or die $!;
+       $guesser = Bio::Tools::GuessSeqFormat->new( -fh => $file );
+    }
+    $in_format  = $guesser->guess();
+    die "unknown file format. Try specify with -i flag.\n" unless $in_format;
 #    seek (STDIN, 0, 0);
-#    warn "$in_format\n";
+    warn "$in_format\n";
+=cut
 
-    my $in_format = $opts{'input'} || 'clustalw';
+    my $in_format = $opts{'input'} || $default_format;
     if ($opts{"concat"}) {
 #	foreach my $file (glob @ARGV) {
 	while ($file = shift @ARGV) {
 #	    warn "reading $file\n";
 #	       $guesser = Bio::Tools::GuessSeqFormat->new( -file => $file);
-#	       $in_format  = $guesser->guess;
-	       $in = Bio::AlignIO->new(-file => $file, -format => $in_format);
-	       while ($aln=$in->next_aln()) { push @alns, $aln }
+	    #	       $in_format  = $guesser->guess;
+	    
+	    open IN, "<", $file;
+	    my $ct_line = 1;
+	    my $first_line;
+	    while(<>){
+		chomp;
+		if($ct_line == 1) {
+		    $first_line = $_;
+		    last;
+		}
+	    }
+	    close IN;
+	    $in_format = 'clustalw' if $first_line =~ /CLUSTAL/;
+	    $in = Bio::AlignIO->new(-file => $file, -format => $in_format);
+	    while ($aln=$in->next_aln()) { push @alns, $aln }
 	}
     } else {
 	$file = shift @ARGV || "STDIN";    # If no more arguments were given on the command line
@@ -171,7 +186,30 @@ sub initialize {
 	    }
 	} else { # would throw error if format guessed wrong
 #	    $in = Bio::AlignIO->new(-format => $in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file));
-#	    $in = Bio::AlignIO->new(-format => $in_format, -fh => $ifh);
+	    #	    $in = Bio::AlignIO->new(-format => $in_format, -fh => $ifh);
+	    my $ct_line = 1;
+	    my $first_line;
+	    if ($file eq 'STDIN') { 
+		while(<>){
+		    chomp;
+		    if($ct_line == 1) {
+			$first_line = $_;
+			last;
+		    }
+		}
+	    } else {
+		open IN, "<", $file;
+		while(<IN>){
+		    chomp;
+		    if($ct_line == 1) {
+			$first_line = $_;
+			last;
+		    }
+		}
+		close IN;
+	    }
+	    $in_format = 'clustalw' if $first_line =~ /^CLUSTAL/;
+	    
 	    $in = Bio::AlignIO->new(-format=>$in_format, ($file eq "STDIN")? (-fh => \*STDIN) : (-file => $file) );
 	    $aln = $in->next_aln()
 	}
