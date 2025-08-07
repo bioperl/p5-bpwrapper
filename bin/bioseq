@@ -33,6 +33,7 @@ GetOptions(
  #   "dotplot|D=s",
     "hydroB|H",
     "gff-pos=i",
+    "gff-pos-file=s",
     "iep",
     "input|i=s",
     "lead-gaps|G",
@@ -222,7 +223,13 @@ Retrieves a sequence from GenBank using the provided accession number, e.g.,
 
 Given a genbank file, find the genome location of a given position.
 
-The coord file is a 4-tab delimited file where each row is a gene location, consisting of locus_tag, begin, end, and strand.
+This is inspired by the need to parse ClonalFrameML output files (ML alignment) to identify the locus tags of SNP patterns.
+
+The output is the form of locus_tag1:locus_tag2, where the two tags are the same if the position falls on a coding region and different otherwise.
+
+=item --gff-pos-file <file> <genbank_file> 
+
+Given a genbank file, find the genome locations in an input file. It is the batch version of the previous option --gff-pos. The first col contains genome positions.
 
 The output is the form of locus_tag1:locus_tag2, where the two tags are the same if the position falls on a coding region and different otherwise.
 

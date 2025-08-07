@@ -51,7 +51,7 @@ pick_by_id del_by_id find_by_re
 pick_by_re del_by_re
 pick_by_file del_by_file
 find_by_ambig pick_by_ambig del_by_ambig find_by_length
-del_by_length codon_sim codon_info trim_ends gff_pos);
+del_by_length codon_sim codon_info trim_ends gff_pos gff_pos_file);
 
 # Package global variables
 my ($in, $out, $seq, %opts, $filename, $in_format, $out_format, $guesser);
@@ -61,46 +61,47 @@ my $VERSION = '1.0';
 ## For new options, just add an entry into this table with the same key as in
 ## the GetOpts function in the main program. Make the key be a reference to the handler subroutine (defined below), and test that it works.
 my %opt_dispatch = (
+    'anonymize' => \&anonymize,
+    'break' => \&shred_seq,
     'codon-table' => \&codon_table,
 #    'codon-sim' => \&codon_sim,
     'codon-info' => \&codon_info,
-    'iep' => \&iso_electric_point,
     'composition' => \&print_composition,
-    'mol-wt' => \&print_weight,
+    'count-codons' => \&count_codons,
     'delete' => \&filter_seqs,
+    'feat2fas' => \&print_gb_gene_feats,
     'fetch' => \&retrieve_seqs,
     'gff-pos' => \&gff_pos,
-    'no-gaps' => \&remove_gaps,
+    'gff-pos-file' => \&gff_pos_file,
+    'hydroB' => \&hydroB,
+    'iep' => \&iso_electric_point,
+    'lead-gaps' => \&count_leading_gaps,
     'length' => \&print_lengths,
+    'linearize' => \&linearize,
     'longest-orf' => \&update_longest_orf,
+    'mol-wt' => \&print_weight,
+    'no-gaps' => \&remove_gaps,
     'num-seq' => \&print_seq_count,
     'num-gaps-dna' => \&count_gaps_dna,
     'num-gaps-aa' => \&count_gaps_aa,
     'pick' => \&filter_seqs,
-    'revcom' => \&make_revcom,
-    'subseq' => \&print_subseq,
-    'translate' => \&reading_frame_ops,
-#    'restrict-coord' => \&restrict_coord,
-#    'restrict' => \&restrict_digest,
-    'anonymize' => \&anonymize,
-    'break' => \&shred_seq,
-    'count-codons' => \&count_codons,
-    'feat2fas' => \&print_gb_gene_feats,
-    'lead-gaps' => \&count_leading_gaps,
-    'hydroB' => \&hydroB,
-    'linearize' => \&linearize,
     'reloop' => \&reloop_at,
     'remove-stop' => \&remove_stop,
-    'sort' => \&sort_by,
+    'rename' => \&rename_id,
+    'revcom' => \&make_revcom,
+    'subseq' => \&print_subseq,
+    #    'restrict-coord' => \&restrict_coord,
+    #    'restrict' => \&restrict_digest,
     'split-cdhit' => \&split_cdhit,
+    'sort' => \&sort_by,
     'syn-code' => \&synon_codons,
 #   'dotplot' => \&draw_dotplot,
 #    'extract' => \&reading_frame_ops,
 #	'longest-orf' => \&reading_frame_ops,
 #	'prefix' => \&anonymize,
-	'rename' => \&rename_id,
 #	'slidingwindow' => \&sliding_window,
-	'trim-ends' => \&trim_ends,
+    'translate' => \&reading_frame_ops,
+    'trim-ends' => \&trim_ends,
   );
 
 my %filter_dispatch = (
@@ -158,7 +159,7 @@ sub initialize {
 #    }
 #    $in_format  = $guesser->guess() unless $opts{'input'};
 
-    $in_format = $opts{'gff-pos'} ? 'genbank' : $opts{"input"} ? $opts{"input"} : 'fasta';
+    $in_format = $opts{'gff-pos'} || $opts{'gff-pos-file'}  ? 'genbank' : $opts{"input"} ? $opts{"input"} : 'fasta';
 
 #    die "Reads only fasta, fastq, embl, genbank. Not aligment file formats like clustalw\n" unless $in_format =~ /fasta|fastq|embl|genbank/;
     $in = Bio::SeqIO->new(-format => $in_format, ($filename eq "STDIN")? (-fh => \*STDIN) : (-file => $filename));
@@ -194,21 +195,14 @@ sub write_out {
 
 ################### subroutines ########################
 
-sub gff_pos {
-    my $pos = $opts{"gff-pos"};
+# this is used by the two gff-pos functions
+sub _gb2orf {
     die "$filename: Not a GenBank file. Quit\n" unless $in_format eq 'genbank';
     $seq = $in->next_seq();
-    die "$0 --gff-pos\n" unless $pos >= 1 && $pos <= $seq->length();
     my $gene_count = 0;
     my @orfs;
-    push @orfs, {
-	id => 'query',
-	start => $pos,
-	end => $pos,
-	strand => undef
-    };
-
     my $last_end;
+    my $order = 1;
     foreach my $feat ($seq->get_SeqFeatures()) {
         if ($feat->primary_tag eq 'CDS') {
 	    if ($gene_count == 0) { # add 5-UTR
@@ -216,7 +210,8 @@ sub gff_pos {
 		    id => '5UTR',
 		    start => 1,
 		    end => $feat->start() - 1,
-		    strand => undef
+		    strand => undef,
+		    order => $order++
 		};
 	    }
     
@@ -228,9 +223,10 @@ sub gff_pos {
 	    }
 	    push @orfs, {
 		id => $gene_tag,
-		start => $feat->start,
-		end => $feat->end,
-		strand => $feat->strand
+		start => $feat->start + 0,
+		end => $feat->end() + 0,
+		strand => $feat->strand + 0,
+		order => $order++
 	    };
 	}
 	$last_end = $feat->end();
@@ -240,11 +236,96 @@ sub gff_pos {
 	id => '3UTR',
 	start => $last_end + 1,
 	end => $seq->length(),
+	strand => undef,
+	order => $order
+    };
+    return \@orfs;
+}
+
+sub gff_pos_file {
+    open POS, "<", $opts{"gff-pos-file"} || die "File not found:", $opts{"gff-pos-file"}, "\n";  
+    my @queries;
+    my $ct_pos = 1;
+    while(<POS>){
+	chomp;
+	my @data = split /\t/, $_; # first col contains genome positions
+	next unless $data[0] =~ /^\d+$/;
+	my $pos = shift @data;
+	push @queries, {
+	    id => 'query',
+	    start => $pos + 0,
+	    data => \@data,
+	    order => $ct_pos++
+	};
+    }
+    close POS;
+#    print Dumper(\@pos); exit;
+    
+    my $ref_orfs = _gb2orf();
+    my @orfs = @$ref_orfs;
+    @orfs = sort{$a->{start} <=> $b->{start}} @orfs;
+#    print Dumper(\@orfs); exit;
+#    print Dumper(\@queries); exit;
+
+    my @output;
+    my @mixed = sort{$a->{start} <=> $b->{start}} (@orfs, @queries);
+#    print Dumper(\@mixed); exit;
+    my $previous_orf;
+    my $next_orf;
+    for(my $i = 0; $i < @mixed; $i++) {
+	if ($mixed[$i]->{id} eq 'query') {
+	    ($next_orf) = grep {$_->{order} == $previous_orf->{order} + 1} @orfs;
+	    push @output, {
+		query => $mixed[$i],
+		orf_before => $previous_orf,
+		orf_after => $next_orf
+	    };
+	} else {
+	    $previous_orf = $mixed[$i];
+	}
+    }
+    &_print_positions(\@output)
+}
+
+sub _print_positions {
+    my $ref = shift @_;
+    my @out = @$ref;
+    foreach (sort {$a->{query}->{order} <=> $b->{query}->{order}} @out ) {
+	my $query = $_->{query};
+	my $before = $_->{orf_before};
+	my $after = $_->{orf_after};
+	
+	my ($tag_before, $tag_after); 
+	my $pos = $query->{start};
+	my $ref_data = $query->{data};
+    
+	if ($pos <= $before->{end}) {
+	    $tag_before = $before->{id};
+	    $tag_after = $before->{id};
+	} elsif ($pos > $before->{end} && $pos < $after->{start}) {
+	    $tag_before = $before->{id};
+	    $tag_after = $after->{id};
+	} else {
+	    $tag_before = $after->{id};
+	    $tag_after = $after->{id};
+	}
+	print join "\t", ($pos, $tag_before, $tag_after, @$ref_data), "\n";
+    }
+}
+
+sub gff_pos {
+    my $pos = $opts{"gff-pos"};
+    my $ref_orfs = _gb2orf();
+    my @orfs = @$ref_orfs;
+
+    push @orfs, {
+	id => 'query',
+	start => $pos,
+	end => $pos,
 	strand => undef
     };
 
     @orfs = sort{$a->{start} <=> $b->{start}} @orfs;
-#   print Dumper(\@orfs); exit;
     my $order_query = 0;
     for(my $i = 0; $i < @orfs; $i++) {
 	$order_query = $i if $orfs[$i]->{id} eq 'query';
