@@ -309,7 +309,7 @@ sub _print_positions {
 	    $tag_before = $after->{id};
 	    $tag_after = $after->{id};
 	}
-	print join "\t", ($pos, $tag_before, $tag_after, @$ref_data), "\n";
+	print join("\t", ($pos, $tag_before, $tag_after, @$ref_data)), "\n";
     }
 }
 
