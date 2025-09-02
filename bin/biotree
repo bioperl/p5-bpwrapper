@@ -278,7 +278,7 @@ Print a matrix of tree shapes (input file for R Package apTreeshape)
 
 =item --trim-tips 'num'
 
-Trim from tips, as oppose to cut-tree (from root)
+Trim from tips, as oppose to cut-tree (from root). The trimmed tips are represented by a single OTU. Capture the trimmed groups in STDERR.
 
 =item --walk, -w 'otu'
 

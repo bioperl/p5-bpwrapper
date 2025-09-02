@@ -201,10 +201,12 @@ sub trim_tips {
     my $group_ct = 0;
     &identify_nodes_to_trim_by_walk_from_root($rootnode, \$cut, \@trim_nodes, \$group_ct);
     my %otu_sets;
+    my %set_rep;
     my $set_ct = 1;
     foreach my $ref_trim (@trim_nodes) {
 	foreach (@$ref_trim) {
 	    $otu_sets{$_} = $set_ct;
+	    $set_rep{$set_ct} =  $_ unless $set_rep{$set_ct}; # first OTU as trim rep 
 	}
 	$set_ct++;
 #	print STDERR join "\t", sort @$ref_trim;
@@ -225,7 +227,8 @@ sub trim_tips {
 
     foreach my $nd ($tree->get_nodes()) {
 	next unless $nd->is_Leaf;
-	$nd->id("trim_" . $otu_sets{$nd->id});
+	#	$nd->id("trim_" . $otu_sets{$nd->id});
+	$nd->id($set_rep{$otu_sets{$nd->id}});
     }
     
     $print_tree = 1;
